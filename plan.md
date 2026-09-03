@@ -46,8 +46,8 @@ counts belong in `CURRENT_CHECKPOINT.md`.
 
 As of 2026-09-03: the templates, the five playbooks, the CLI and its test suite are
 `IMPLEMENTED` and `GREEN`. JumpStarter runs its own control set (`check .` is green).
-Nothing is `VALIDATED`: the CLI has not yet been run against a real existing repository,
-which is gate 1.
+Nothing is `VALIDATED`. Gate 1 is partly met: one mature repository has been audited
+(report only), which found two real size violations and one false positive.
 
 ## 4. Authority and change control
 
@@ -101,11 +101,15 @@ Until then it ships as the default but is described in the playbook as unproven.
 
 ### Phase 0 — NOW: first real retrofit
 
-1. **Audit a real existing repository, report only.** — `PLANNED`. Run
-   `retrofit <path>` against a mature repo that grew without a control set. Record every
-   finding, and separately record the false positives and the misses. Gate 1.
+1. **Audit a real existing repository, report only.** — `IMPLEMENTED`, gate 1 **partly
+   met**. One mature repo audited on 2026-09-03 (a clone): 22 checks, 3 gaps, 1 of them a
+   false positive. Still owed: a repo that grew *without* a control set — the case the
+   audit was actually written for — and a run against a working copy rather than a clone.
+   Gate 1.
 2. **Fix what the audit gets wrong.** — `PLANNED`. Each false positive becomes a test
-   with a fixture built from the shape that produced it. Gated on item 1.
+   with a fixture built from the shape that produced it. One is already known: the
+   allow-list check cannot tell "absent" from "correctly gitignored", so it should read
+   `.gitignore` and downgrade to an advisory when `.claude/*` is ignored. Gated on item 1.
 
 ### Phase 1 — NEXT: close the loop on the templates
 

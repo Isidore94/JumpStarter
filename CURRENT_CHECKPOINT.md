@@ -40,10 +40,51 @@ dated entry named beside it.
 |---|---|---|
 | 3 | **The declared Python floor is real** — `pytest` and all four subcommands run on a 3.9 interpreter. Everything so far was measured on 3.11.15; the floor in `README.md` and `plan.md` is a claim, not a measurement | 2026-09-03 first-build entry |
 | 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer | `plan.md` Phase 1 item 1 |
-| 1 | **One real existing repository audited** — `retrofit <path>` against a mature repo that grew without a control set, report only. Record every finding, and **separately** the false positives and the misses. A report that names a gap that is not a gap is the failure mode to look for | `plan.md` Phase 0 item 1 |
+| 1 | **One real existing repository audited** — **PARTLY MET 2026-09-03**: audited a clone of one mature repo (22 checks, 3 gaps, 1 of them a false positive — see the entry below). Still owed: a repo that grew *without* a control set, which is the case the audit was written for, and a run against a working copy rather than a clone | `plan.md` Phase 0 item 1 |
 
 A gate is closed by striking its row through and writing what was observed — never by
 deleting the row.
+
+---
+
+### 2026-09-03 — First retrofit dry run, on a clone of the source project
+
+**Report only. Nothing was changed in that repository, and nothing could be:** it was a
+read-only clone, and `retrofit` writes nothing by invariant.
+
+`python tools/jumpstart.py retrofit <clone>` → **22 checks, 3 gaps, exit 1.**
+
+Seventeen checks passed, which is the expected result: this repo's templates were
+distilled from that project, so the audit is partly checking its own homework. The three
+gaps are the useful part.
+
+**Two real gaps, both the size rule:**
+
+- `CURRENT_CHECKPOINT.md` is **4,284 lines** against a limit of 1,500 — the file carries
+  its own archive-at-1,500 rule and is nearly three times over it.
+- `CHANGELOG.md`'s "Recent changes" section is **1,341 lines** against a limit of 800,
+  in a file whose header says the section holds "the last two build days".
+
+Both are the principle-1 failure in its natural habitat: the rule is written down, it is
+correct, and nothing enforces it, so the file grows until the mandatory read stops being
+followable. This is the strongest argument found so far for wiring `check` into CI
+(`plan.md` Phase 2 item 1).
+
+**One false positive:**
+
+- `command allow-list: .claude/settings.json not found`. That file is **deliberately
+  machine-local** in that project — its own `docs/AGENT_TEAM.md` says so, and its
+  `.gitignore` tracks `.claude/agents/` while ignoring the rest. The file exists on the
+  owner's machine and cannot exist in a clone.
+
+  The audit cannot tell "absent" from "correctly untracked" by looking at a checkout. The
+  fix is not to drop the check — a project with no allow-list at all is a real finding —
+  but to read `.gitignore` and downgrade the result to an advisory when `.claude/*` is
+  ignored. Not yet built; recorded here so gate 1's record is honest rather than tidy.
+
+**What this run did NOT establish.** The audited repo already had a full control set, so
+this exercised the *pass* path, not the path the audit was written for: a repo that grew
+without one. Gate 1 stays open for that.
 
 ---
 
