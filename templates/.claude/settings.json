@@ -1,0 +1,38 @@
+{
+  "$comment": [
+    "Allow-list for the agent team. Anything not listed here prompts {{OWNER}},",
+    "which is intended for destructive commands. Keep it narrow: an allow-list that",
+    "covers 'git *' covers 'git reset --hard' and 'git push --force'.",
+    "Replace the {{TEST_CMD}} / {{LINT_CMD}} / {{RUN_CMD}} / {{BRANCH_PREFIX}} tokens",
+    "with this project's real commands and branch prefix, then delete this comment.",
+    "Narrow the run entry to the sub-commands agents actually need: allowing the",
+    "whole run command allows every flag it takes."
+  ],
+  "permissions": {
+    "allow": [
+      "Bash({{TEST_CMD}}*)",
+      "Bash({{LINT_CMD}}*)",
+      "Bash({{RUN_CMD}}*)",
+      "Bash(git worktree *)",
+      "Bash(git checkout -b {{BRANCH_PREFIX}}*)",
+      "Bash(git checkout {{BRANCH_PREFIX}}*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push -u origin {{BRANCH_PREFIX}}*)",
+      "Bash(git push origin {{BRANCH_PREFIX}}*)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git status *)",
+      "Bash(git show *)",
+      "Bash(git stash *)",
+      "Bash(git merge-base *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard*)",
+      "Bash(git branch -D *)",
+      "Bash(git worktree remove --force*)"
+    ]
+  }
+}
