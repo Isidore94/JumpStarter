@@ -1,6 +1,6 @@
 # JumpStarter documentation index
 
-Last reconciled: **2026-09-03**
+Last reconciled: **2026-09-03** (second pass)
 
 Start here when a supporting detail is not in the root control set. This index classifies
 **every** maintained Markdown file, so a historical plan can never be mistaken for
@@ -36,7 +36,7 @@ Describe actions someone may perform **now**.
 |---|---|
 | [`../playbooks/new-project.md`](../playbooks/new-project.md) | Bootstrap a new project: questionnaire, `init`, placeholders, commands, first checkpoint |
 | [`../playbooks/retrofit.md`](../playbooks/retrofit.md) | Retrofit an existing repo: audit, report, add what is missing without rewriting history |
-| [`../playbooks/build-review-loop.md`](../playbooks/build-review-loop.md) | The recon → packet → build → review → fix → integrate loop, with the exact prompts |
+| [`../playbooks/build-review-loop.md`](../playbooks/build-review-loop.md) | The recon → packet → **tests-first** → build → review → fix → integrate loop, with the exact prompts |
 | [`../playbooks/review-by-reproduction.md`](../playbooks/review-by-reproduction.md) | The reviewer checklist and the eight traps |
 | [`../playbooks/packet-writing.md`](../playbooks/packet-writing.md) | How to write a packet from verified premises |
 | [`AGENT_TEAM.md`](AGENT_TEAM.md) | How a session in *this* repo plans, builds, reviews and integrates |
@@ -57,6 +57,21 @@ Retain detailed contracts. They do **not** own roadmap order or status.
 |---|---|
 | [`decisions/0000-template.md`](decisions/0000-template.md) | The template for a new record. Keeps its placeholders on purpose |
 | [`decisions/0001-owner-goals-and-priorities.md`](decisions/0001-owner-goals-and-priorities.md) | **The owner's goals in their own words — the tie-breaker for every prioritisation call** |
+
+## Agent definitions
+
+Not prose: front-mattered role briefs the harness loads. Listed so the rule above holds
+— every Markdown file is classified.
+
+| File | Role |
+|---|---|
+| [`../.claude/agents/tester.md`](../.claude/agents/tester.md) | Writes the packet's tests, proves each fails, commits them red. **Never writes the fix** |
+| [`../.claude/agents/builder.md`](../.claude/agents/builder.md) | Builds one packet on its own branch, with fail-before-fix tests |
+| [`../.claude/agents/reviewer.md`](../.claude/agents/reviewer.md) | Reviews one branch by reproduction. GO / NO-GO. Never edits |
+| [`../.claude/agents/recon.md`](../.claude/agents/recon.md) | Read-only reconnaissance with `file:line` evidence |
+
+These are generated from `templates/.claude/agents/` — JumpStarter runs its own control
+set, so a template change that does not reach them is stale dogfood.
 
 ## Historical evidence
 

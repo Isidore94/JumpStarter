@@ -75,6 +75,11 @@ changing the behaviour a rule governs.**
 **Rules**
 - **`retrofit` writes nothing, ever.** It audits and prints. A retrofit that starts by
   editing is a retrofit that gets reverted. *(INTERNALS: "retrofit is report-only")*
+- **An `ADVISORY` is reported and is not a gap.** A machine-local allow-list, an
+  active-state block under the repo's own heading, a stray root ledger: named in the
+  report, `Finding.ok` true, exit code unchanged. A check that fires on correct work gets
+  ignored and takes the real findings with it.
+  *(INTERNALS: "An advisory is not a gap")*
 - **`init` never overwrites without `--force`.** A repo's existing `CLAUDE.md` is the
   project's own rules, not a stale copy of ours.
   *(INTERNALS: "init does not overwrite")*
@@ -112,7 +117,10 @@ changing the behaviour a rule governs.**
 - Test (before every commit): `python -m pytest tests/ -q` — must be fully green.
   **Check the process exit code, not a piped tail's.**
 - Lint (before every commit): `ruff check .` — must be clean. **Fix the code, not the
-  config**; a suppression needs its reason beside it.
+  config**; a suppression needs its reason beside it. The rules and the target version
+  are pinned in `ruff.toml`; **an unpinned linter is not a gate**, and `target-version`
+  must match the floor `README.md` declares. *(INTERNALS: "An unpinned linter is not a
+  gate")*
 - Self-check (before every commit): `python tools/jumpstart.py check .` — JumpStarter
   runs its own control set; a red self-check means the tool does not believe its own
   rules.
@@ -120,7 +128,9 @@ changing the behaviour a rule governs.**
 
 ## Working agreement for agents
 - **The agent team.** A session builds and reviews through the sub-agents in
-  `.claude/agents/`; the contract is in [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md).
+  `.claude/agents/` (`tester`, `builder`, `reviewer`, `recon`); the contract, the loop and
+  the delegation policy are in [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). `tester`
+  writes the failing tests and never the fix.
 - `main` is the trunk; branch per packet as `claude/<slug>`.
 - Commit small and green; one commit per component. Push after each commit.
 - **File-scoped ask-first rule.** Any edit to a file that changes what a *downstream

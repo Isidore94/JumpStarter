@@ -166,3 +166,76 @@ installed file forever. `test_no_template_uses_a_dotted_placeholder_name` pins t
 
 **Reopen trigger.** If a template ever genuinely needs a dotted or hyphenated placeholder
 name, this constraint and the prose convention have to change together.
+
+---
+
+## An advisory is not a gap (2026-09-03, second pass)
+
+**The rule, as it appears in `CLAUDE.md`:** *An `ADVISORY` is reported and is not a gap.*
+
+**What happened.** `retrofit` ran against three real repositories for the first time. Two
+of its findings were wrong in a specific and expensive way: they were **literally true
+and practically false**.
+
+1. `command allow-list: .claude/settings.json not found`. That file is machine-local by
+   design — `.gitignore` keeps `.claude/` out of the repository — so it cannot be in a
+   checkout, ever. The finding first appeared against a clone of the source project on
+   2026-09-03, and then against **this repository itself**.
+2. `active state block: no 'Active state at a glance' block`, against a repo that keeps
+   exactly that block under the heading `## Active item`, complete with a measured gate
+   stamp. The report read as "this repo has no idea where it is". It knew perfectly well.
+
+**What was measured.** Three audits, 22 checks each. On the source project's working copy
+the three gaps found were all real and all size violations (4,587/1,500; 1,549/800;
+418/400). The false positives were the two above.
+
+**What is deliberately NOT done, and why.** Neither check was dropped. A project with no
+allow-list at all is a real finding, and a project with no active-state block anywhere is
+the finding this whole tool exists to make. What changed is the *status*: `ADVISORY` is
+printed with its own remedy, `Finding.ok` is true for it, and the exit code does not
+move. The report prints a count of advisories separately, so they are visible without
+failing CI.
+
+The third advisory, stray root ledgers, is an advisory for a different reason: it matches
+on words in a filename, which is a heuristic, and a repo is allowed its own names.
+
+The principle underneath all three: **a check that fires on correct work is a check that
+gets ignored, and it takes the real findings with it.** That is also why
+`TEMPLATES_BY_NATURE` and the identifier-only placeholder rule exist — same lesson,
+third and fourth time.
+
+**Reopen trigger.** If an advisory is ever the thing that should have blocked a merge,
+it was the wrong status; promote it and say what it missed.
+
+---
+
+## An unpinned linter is not a gate (2026-09-03, second pass)
+
+**The rule, as it appears in `CLAUDE.md`:** *The rules and the target version are pinned
+in `ruff.toml`; an unpinned linter is not a gate, and `target-version` must match the
+floor `README.md` declares.*
+
+**What happened.** `CURRENT_CHECKPOINT.md` recorded the lint baseline as
+`ruff check .` → "All checks passed, exit 0", measured hours earlier. Re-run on the same
+tree with ruff 0.16.6 it reported **75 findings**. Nothing in the code had changed. There
+was no ruff configuration in the repository at all, so "clean" meant whatever rule set
+the installed ruff defaulted to that day.
+
+**What was measured.** 75 findings: 46 UP032, 17 UP006, 4 UP035, 2 UP045, 2 FURB105, and
+one each of UP037, RUF100, I001 and DTZ011. All 74 style findings were fixed in the code;
+DTZ011 is suppressed with its reason beside it.
+
+**The trap inside the fix.** UP006 rewrites `List[str]` to `list[str]`, which is not
+legal at runtime on the 3.9 floor this project declares — *unless*
+`from __future__ import annotations` is present, which it is (`tools/jumpstart.py:17`).
+So `target-version = "py39"` is in `ruff.toml` beside the rule selection: a linter told
+to assume a newer Python will suggest code the declared floor cannot run. Change the
+floor and that line changes with it, or the gate quietly starts lying in the other
+direction.
+
+**What is deliberately NOT done, and why.** The findings were not configured away. The
+rule is fix the code, not the config; pinning the version and the rule list is not a
+suppression, it is a statement of what the gate *is*.
+
+**Reopen trigger.** A ruff release that changes the meaning of a selected rule set, or a
+change to the Python floor.

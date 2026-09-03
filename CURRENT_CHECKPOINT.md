@@ -17,12 +17,16 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`claude/jumpstarter-repo-setup-dn3rof`** — the first build. Nothing has been merged to `main`; `main` does not exist yet |
+| Working branch | **`claude/jumpstarter-repo-setup-dn3rof`**. Nothing has been merged to `main`; `main` does not exist yet |
 | Also in flight | **NOTHING unmerged.** No other branch, no worktree |
-| Active items | `plan.md` **Phase 0 item 1** — run `retrofit` against a real existing repository and record what the audit gets wrong. Not started |
-| Last verified baseline | `python -m pytest tests/ -q` **38 passed, process exit 0, 0.3 s** (2026-09-03, on the first-build tree). `ruff check .` **All checks passed**, exit 0. `python tools/jumpstart.py check .` **9 checks, no gaps**, exit 0 |
-| Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only, on the Python in `PATH`. Verified on **Python 3.11.15**; the declared floor is 3.9 and **that floor has not been tested** — see gate 3 |
+| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates, questionnaire first. Not started. Phase 0 is done |
+| Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**: `python -m pytest tests/ -q` **49 passed, process exit 0, 2.0 s**; `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **6 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory**. The same four re-run identically on 3.12.13 |
+| Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
+
+**Correction to the previous block.** It recorded `check .` as "9 checks" (it is 5, now 6
+with `plan size`) and the interpreter as "Python 3.11.15" (no 3.11 exists on this
+machine; the working interpreters are 3.9.25 and 3.12.13). The code is the fact.
 
 Rules for this block:
 
@@ -38,12 +42,105 @@ dated entry named beside it.
 
 | # | Gate | Owed by |
 |---|---|---|
-| 3 | **The declared Python floor is real** — `pytest` and all four subcommands run on a 3.9 interpreter. Everything so far was measured on 3.11.15; the floor in `README.md` and `plan.md` is a claim, not a measurement | 2026-09-03 first-build entry |
-| 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer | `plan.md` Phase 1 item 1 |
-| 1 | **One real existing repository audited** — **PARTLY MET 2026-09-03**: audited a clone of one mature repo (22 checks, 3 gaps, 1 of them a false positive — see the entry below). Still owed: a repo that grew *without* a control set, which is the case the audit was written for, and a run against a working copy rather than a clone | `plan.md` Phase 0 item 1 |
+| ~~3~~ | ~~**The declared Python floor is real**~~ — **CLOSED 2026-09-03.** Installed CPython **3.9.25** and ran it: `pytest tests/ -q` 49 passed, process exit 0; `check .`, `retrofit .`, `sync-agents .` and `init` all run and return the same exit codes as on 3.12.13. `README.md` now states the measurement, the version and the date | closed |
+| 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer. **Now the only open gate**, and it matters more than it did: the templates changed materially today and none of that has been used from empty | `plan.md` Phase 1 item 1 |
+| ~~1~~ | ~~**One real existing repository audited**~~ — **CLOSED 2026-09-03.** Three real repositories, working copies not clones. Two false positives and four misses, all six now fixed with a test apiece. See the entry below | closed |
 
 A gate is closed by striking its row through and writing what was observed — never by
 deleting the row.
+
+---
+
+### 2026-09-03 — Gate 1 closed: three real repositories audited, report only
+
+**Nothing was written to any of them.** `retrofit` writes nothing by hard invariant, and
+the writes-nothing test pins it.
+
+| Repo | Shape | Exit | Result |
+|---|---|---|---|
+| the source project, **working copy** (not a clone) | full control set, mature | 1 | 22 checks, **3 gaps** |
+| a second real repo | partial control set: `CLAUDE.md`/`plan.md`/`CHANGELOG.md` present, no `docs/`, no `.claude/` | 1 | 22 checks, **14 gaps** |
+| a third-party checkout | **no control set at all** | 1 | 22 checks, **22 gaps** |
+
+(Counts as they were before today's fixes. Re-run afterwards the same three read 3 gaps,
+15 gaps + 2 advisories, and 22 gaps.)
+
+**The three gaps on the working copy were all real**, and all three are principle 1 in
+its natural habitat — the rule is written down, it is correct, and nothing enforced it:
+`CURRENT_CHECKPOINT.md` 4,587 lines against its own 1,500 limit; `CHANGELOG.md`'s "Recent
+changes" 1,549 against 800; `CLAUDE.md` 418 against 400. **The clone run's one false
+positive did not recur** — the allow-list is on that machine; its absence from a clone
+was an artifact of the clone, exactly as recorded.
+
+#### The two false positives
+
+1. **`active state block: MISSING`** on the second repo, which keeps that block under
+   `## Active item` — complete with a measured gate stamp. The finding was literally true
+   and practically wrong: it reads as "this repo has no idea where it is", and that was
+   not the case.
+2. **`command allow-list: MISSING`**, reproduced against **this repository itself**.
+   `.claude/settings.json` is machine-local by design; `.gitignore` keeps it out.
+
+Both are now `ADVISORY`: named in the report, not counted as gaps, not changing the exit
+code. A check that fires on correct work gets ignored, and takes the real findings with
+it.
+
+#### The four misses — the part that matters
+
+1. **Seven root-level handoff, review and prompt files, 1,505 lines, on the second
+   repo** — forbidden in terms by *that repo's own* `CLAUDE.md` ("do not create extra
+   roadmap, status, or handoff files"), and the audit said nothing about any of them.
+   That is the most visible symptom of the disease this tool exists to treat, and it was
+   invisible. Now an advisory naming each file with its line count.
+2. **`plan.md` was never measured.** 1,835 lines on the source project, 2,960 on the
+   second, both in the mandatory read. `PLAN_MAX_LINES = 1200` — approved by the owner
+   today, because a limit constant lands in every downstream repo.
+3. **`CHANGELOG.md` was never measured when it had no "Recent changes" heading.** The
+   second repo's is 2,047 lines and purely chronological: the audit reported the missing
+   heading and then let the file through the size checks entirely.
+4. **The empty-repo report was 22 undifferentiated `MISSING` lines**, three of which only
+   repeated that the file was absent. It now opens with one sentence saying to run `init`.
+
+#### One defect in the tool, found by looking at its own output
+
+Every advice string carrying an em-dash printed as a replacement character on a Windows
+console — on all three runs. Printed strings are ASCII now and `main()` sets
+`errors="replace"` on the streams. A report that looks broken gets trusted less.
+
+#### What is still owed
+
+Gate 2. And the audit still cannot check the things it has no way to see: whether
+`plan.md` actually has invariants/validation/promotion sections where `CLAUDE.md` sends
+agents; whether `docs/INTERNALS.md` has an entry per rule (a hard invariant of this
+repo's own `plan.md`, enforced by nobody); and whether an allow-list's *contents* are
+narrow — a `settings.json` containing `Bash(git *)` passes as `OK: present` today. Named
+here so they are not rediscovered as surprises.
+
+---
+
+### 2026-09-03 — What the four unreadable sources actually contained
+
+The first build worked from a description of the source project. This session read four
+things it could not:
+
+- **The real packets.** `PACKET_TEMPLATE.md` was reconstructed from a *description* of a
+  packet. Eight things a real packet does that it did not ask for, and two it asked for
+  that no real packet has. Reshaped; `playbooks/packet-writing.md` rewritten with it.
+- **The real `.claude/settings.json`.** 80 entries, **no deny list**, and one command
+  spelled six ways (two shells x two slash directions x relative/absolute). The deny list
+  JumpStarter invented is kept — it is the one place the template beats its source — and
+  `git stash` moves into it.
+- **The session memory notes**, never read before. The richest of the four: four lessons
+  that appear in no document, now `PRINCIPLES.md` 13-16.
+- **`.claude/worktrees/`.** Worktrees live *inside* the repo at
+  `.claude/worktrees/agent-<hash>`, covered by the `/.claude/*` ignore line. The template
+  said only "their own worktrees" and never said where.
+
+The source project has also gained a **fourth agent** since: `tester`, which writes the
+packet's tests, proves each fails, and commits them red without ever writing the fix. It
+exists because one review round found four tests that could not fail, every one written
+by the agent that had written the fix. That, the handoff-vs-diff check, and the
+delegation policy are now in the templates.
 
 ---
 
