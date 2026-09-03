@@ -59,7 +59,7 @@ Writes the control set: `CLAUDE.md`, `AGENTS.md`, `plan.md`,
 `CURRENT_CHECKPOINT.md`, `CHANGELOG.md`, `WISHLIST.md`, `docs/README.md`,
 `docs/INTERNALS.md`, `docs/AGENT_TEAM.md`, `docs/CODEX_NOTES.md`,
 `docs/decisions/{0000-template,0001-owner-goals-and-priorities}.md`,
-`.claude/agents/{builder,reviewer,recon}.md`, `.claude/settings.json`,
+`.claude/agents/{tester,builder,reviewer,recon}.md`, `.claude/settings.json`,
 `.claude/packets/PACKET_TEMPLATE.md`, and the `.gitignore` lines that track
 `.claude/agents/` while ignoring the rest of `.claude/`.
 
@@ -96,7 +96,7 @@ Edit `CLAUDE.md`; never hand-edit `AGENTS.md`. Run `sync-agents` after any edit,
 ## Using it with Claude Code
 
 - `CLAUDE.md` is loaded into every session — it stays short on purpose.
-- `.claude/agents/{builder,reviewer,recon}.md` define the sub-agents. `.gitignore`
+- `.claude/agents/{tester,builder,reviewer,recon}.md` define the sub-agents. `.gitignore`
   tracks that folder and ignores the rest of `.claude/`.
 - `.claude/settings.json` allow-lists the commands the agents run without a prompt:
   tests, lint, `git worktree`, branch commits and pushes to the agent branch prefix.

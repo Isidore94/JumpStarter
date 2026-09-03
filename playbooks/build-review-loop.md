@@ -3,12 +3,13 @@
 The loop the lead session runs, with the exact prompts it gives each agent.
 
 ```
-recon → packet → build → review-by-reproduction → fix → integrate → owner restarts
+recon → packet → tests-first → build → review-by-reproduction → fix → integrate → owner restarts
 ```
 
-Three passes over the same work: recon verifies the premises, the builder proves the fix
-fails first, the reviewer proves it again by running it. Each pass exists because the
-previous one has been observed to be wrong.
+Four passes over the same work: recon verifies the premises, the tester writes tests that
+demonstrably fail on today's code, the builder makes them pass, the reviewer proves it
+again by running it. Each pass exists because the previous one has been observed to be
+wrong.
 
 ---
 
@@ -56,7 +57,34 @@ See [`packet-writing.md`](packet-writing.md). Shape:
 The lead writes it; it is never dictated by the builder. If recon refuted a premise, the
 packet changes before it is handed over, not after.
 
-## 3. Build — one packet, one builder, one branch
+## 3. Tests first — for any packet that matters
+
+For a packet with more than one item, or any item touching the critical area or a surface
+the owner sees, the tests are written **before** the fix exists, by an agent that will not
+write the fix.
+
+> **Prompt to `tester`:**
+> Write the failing tests for packet `<ID>` at `.claude/packets/<ID>.md`, on branch
+> `<prefix><slug>` off `<main>`, in your own worktree.
+>
+> One test per item, named for the behaviour, not the item number. Drive the real path —
+> the handler, the slot, the build function — never a helper with a hand-written dict.
+> Model the real data: old records have the key present and empty, not absent. Assert the
+> number the packet names, not the shape.
+>
+> Run each test against the current code, record that it FAILS with its failure line, and
+> commit them red. Do not write the fix. Put them in files named for the packet.
+>
+> Finish with the handoff block from your role file, nothing else.
+
+**Why a separate agent.** One review round found four tests that could not fail, all
+written by the agent that had written the fix. A test written after a fix documents its
+author's belief about the bug, not the bug.
+
+The builder that follows may **add** tests. It may not weaken, skip, delete or rewrite a
+tester's assertion; if one is wrong, it says so in the handoff and leaves it red.
+
+## 4. Build — one packet, one builder, one branch
 
 > **Prompt to `builder`:**
 > Build packet `<ID>` at `.claude/packets/<ID>.md`, on branch
@@ -83,7 +111,13 @@ packet changes before it is handed over, not after.
 after the other — parallel branches over shared files cost more in conflict resolution
 than they save. Two packets in genuinely disjoint areas may run at once.
 
-## 4. Review by reproduction
+**Check the handoff against the diff before you believe it.** `git diff --stat
+<base>..<branch>` and the item list must agree. An item marked "done" with no file behind
+it, or a file changed that no item names, is a question for the builder — asked before a
+reviewer is spawned, not after. Two handoffs in one evening said "built" for items that
+had no code.
+
+## 5. Review by reproduction
 
 Never skipped for a packet that touches evidence, numbers, or a user-facing surface.
 Skipped only for a docs-only branch.
@@ -114,7 +148,7 @@ Skipped only for a docs-only branch.
 > **Builder's handoff:**
 > <paste it verbatim>
 
-## 5. Fix round
+## 6. Fix round
 
 Blockers go back as a **small fix packet on the same branch**. Continue the same builder
 where you can — its context is the cheapest thing you own. A fresh builder gets the
@@ -126,7 +160,7 @@ branch: a branch that keeps widening never gets merged.
 Re-review after a fix round that touched behaviour. Two rounds is normal; a third means
 the packet's premises were wrong, and the answer is a new recon, not a third fix.
 
-## 6. Integrate
+## 7. Integrate
 
 The lead merges, **in a scratch worktree**, never in the checkout the application runs
 from. Merge order is packet order.
@@ -143,7 +177,7 @@ A suite run under a condition that stands tests down is not a baseline. If the p
 has such a condition, probe for it before the run and say in the checkpoint that it was
 clear.
 
-## 7. The owner restarts
+## 8. The owner restarts
 
 A merged commit reaches the owner only at the next restart, and **the restart is their
 call**. The lead says, in one line, that it is owed and why.

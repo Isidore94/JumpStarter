@@ -20,7 +20,12 @@ then `CLAUDE.md`'s "Core rules" and "Hard invariants".
   `git checkout <base> -- <file>` to prove a test fails) must be restored before you
   finish, and `git status` must be clean when you hand back.
 - Toolchain: `{{TOOLCHAIN}}`.
-- Live stores are READ-ONLY: copy any file you need to a temp path first.
+- Live stores are READ-ONLY: copy any file you need to a temp path first. **A probe that
+  RUNS the system — a CLI, a build job, a batch — writes wherever that system is
+  configured to write.** Point it at a copy of the store and say in your report which
+  copy. "Read-only" is a property of the path you hand a process, not of your intention:
+  one reviewer's probe of a build command put thirteen unprovenanced rows into a live
+  store that a human then had to decide what to do with.
 
 ## What a review is
 

@@ -35,7 +35,7 @@ This writes nothing. It prints a gap report over these checks:
 | Rules carry evidence | An internals file holds the incident behind each rule |
 | Docs classified | Every Markdown file is active runbook / reference / historical evidence |
 | Owner goals record | The owner's priorities exist in their own words |
-| Agent definitions | `.claude/agents/{builder,reviewer,recon}.md` |
+| Agent definitions | `.claude/agents/{tester,builder,reviewer,recon}.md` |
 | Command allow-list | `.claude/settings.json` |
 | `.gitignore` rules | `.claude/*` ignored, `.claude/agents/` tracked |
 | Size limits | Checkpoint ≤ 1,500 lines; changelog recent section bounded; `CLAUDE.md` bounded |
@@ -124,7 +124,7 @@ record says `Date: backfilled <today>` and states what was true when the choice 
 
 ## Step 8 — Add the agent team
 
-Copy `.claude/agents/{builder,reviewer,recon}.md` and `.claude/settings.json`, fill the
+Copy `.claude/agents/{tester,builder,reviewer,recon}.md` and `.claude/settings.json`, fill the
 placeholders with this repo's real toolchain, live stores and ask-first files, add
 `docs/AGENT_TEAM.md`, and add the `.gitignore` lines from `templates/.gitignore.snippet`.
 

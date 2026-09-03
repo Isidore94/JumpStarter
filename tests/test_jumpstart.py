@@ -66,6 +66,7 @@ def test_init_produces_the_whole_control_set(repo: Path) -> None:
         "docs/CODEX_NOTES.md",
         "docs/decisions/0000-template.md",
         "docs/decisions/0001-owner-goals-and-priorities.md",
+        ".claude/agents/tester.md",
         ".claude/agents/builder.md",
         ".claude/agents/reviewer.md",
         ".claude/agents/recon.md",
@@ -410,3 +411,38 @@ def test_no_template_uses_a_dotted_placeholder_name() -> None:
     for path in sorted((REPO_ROOT / "templates").rglob("*")):
         if path.is_file():
             assert not dotted.search(path.read_text(encoding="utf-8")), path
+
+
+def test_the_team_has_a_tester_that_is_not_the_builder() -> None:
+    """The tests are written by an agent that will not write the fix.
+
+    One review round found four tests that could not fail, all written by the agent
+    that had written the fix. `tester` is the cure, so it must be installed and it
+    must be forbidden to write the fix.
+    """
+    assert ".claude/agents/tester.md" in jumpstart.AGENT_FILES
+    tester = (jumpstart.TEMPLATES_DIR / ".claude/agents/tester.md").read_text(
+        encoding="utf-8"
+    )
+    assert "You never write the fix" in tester
+    builder = " ".join(
+        (jumpstart.TEMPLATES_DIR / ".claude/agents/builder.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+    assert "may not weaken, skip, delete or rewrite a tester's assertion" in builder
+
+
+def test_no_agent_template_tells_an_agent_to_stash() -> None:
+    """A stash on a shared checkout takes the other session's in-flight work with it.
+
+    Three collisions in one afternoon produced this rule; the builder template used to
+    say "stash or restore", which is the wrong half of the choice.
+    """
+    for rel in jumpstart.AGENT_FILES:
+        text = (jumpstart.TEMPLATES_DIR / rel).read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "git stash" in line or "stash the" in line:
+                assert "Never" in line or "never" in line, (
+                    f"{rel} tells an agent to stash: {line!r}"
+                )

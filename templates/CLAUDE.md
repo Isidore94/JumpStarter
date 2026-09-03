@@ -32,7 +32,12 @@ Before proposing, planning, or changing anything:
    relevant to the selected item. Historical documents are evidence, not authority.
 5. Inspect the source, tests, git status/history and runtime artifacts needed to verify
    that the documentation still matches reality. **When the docs and the code disagree,
-   the code is the fact and the doc is the defect** — fix the doc, and say so.
+   the code is the fact and the doc is the defect** — fix the doc, and say so. **This
+   file is one of those docs.** A line in `CLAUDE.md` that the code contradicts is not
+   authority; when you cannot fix it in the same change, leave a dated note saying which
+   line is wrong and what the code does instead, and say so to {{OWNER}}. A stale rule
+   here is read by every session and becomes the premise of the next proposal.
+   *(INTERNALS: "The control file itself goes stale")*
 
 Archived history is deliberately outside this read and must never be pulled into it
 wholesale. It is evidence for one specific question, not context to load.
@@ -103,17 +108,23 @@ pointer to its evidence entry. A rule with no evidence entry is a draft.
 - Test (before every commit): `{{TEST_CMD}}` — must be fully green; the current
   baseline lives in `CURRENT_CHECKPOINT.md`. **Check the process exit code, not a
   piped tail's.**
+- **When the suite is NOT a baseline:** {{WHEN_THE_SUITE_IS_NOT_A_BASELINE}}. Probe that
+  condition before quoting a number; a run made under it is not the baseline, whatever
+  it printed. *(INTERNALS: "A suite run under a known condition is not a baseline")*
 - Lint (before every commit): `{{LINT_CMD}}` — must be clean. **Fix the code, not the
-  config**; a suppression needs its reason beside it.
+  config**; a suppression needs its reason beside it. **Pin the linter's version and
+  configuration in the repo**, or "clean" means whatever is installed today.
+- Self-check (before every commit): `{{SELFCHECK_CMD}}` — this project's own control set
+  checked by its own rules. A red self-check means the project does not believe its rules.
 - Run: `{{RUN_CMD}}`.
 - {{EXTRA_COMMANDS}}
 
 ## Working agreement for agents
 - **The agent team.** A session builds and reviews through the sub-agents in
-  `.claude/agents/` (`builder`, `reviewer`, `recon`); the contract, the loop and the
-  rules are in [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). Read it before spawning one.
-  Builders and reviewers work in their own worktrees and never touch the main
-  checkout; the lead session merges.
+  `.claude/agents/` (`tester`, `builder`, `reviewer`, `recon`); the contract, the loop
+  and the delegation policy are in [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). Read it
+  before spawning one. They work in their own worktrees under `.claude/worktrees/` and
+  never touch the main checkout; the lead session merges.
 - Follow the mandatory documentation workflow above. `plan.md` owns build order;
   `CURRENT_CHECKPOINT.md` owns the active item. Do not re-implement anything in
   `CHANGELOG.md` or implement anything directly from `WISHLIST.md`.
@@ -126,6 +137,11 @@ pointer to its evidence entry. A rule with no evidence entry is a draft.
   to ask, not a license to judge. The files: {{ASK_FIRST_FILES}}.
 - Never switch the main checkout's branch while {{PROJECT}} is running from it, and
   never restart it without {{OWNER}}'s word.
+- **Assume another session is in this repository.** Verify the branch immediately before
+  staging and immediately before pushing; stage explicitly by path, never `git add -A`;
+  **never `git stash`** — it takes the other session's in-flight work with it; restore
+  one file with `git checkout <base> -- <path>` instead. After committing, confirm your
+  work landed. *(INTERNALS: "Another session is in this repository")*
 
 ## Where to read more
 - `CHANGELOG.md` — **`Current implemented inventory` is the contract: search it before

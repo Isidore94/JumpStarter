@@ -45,6 +45,7 @@ INSTALL_MAP: dict[str, str] = {
         "docs/decisions/0001-owner-goals-and-priorities.md"
     ),
     "codex/CODEX_NOTES.md": "docs/CODEX_NOTES.md",
+    ".claude/agents/tester.md": ".claude/agents/tester.md",
     ".claude/agents/builder.md": ".claude/agents/builder.md",
     ".claude/agents/reviewer.md": ".claude/agents/reviewer.md",
     ".claude/agents/recon.md": ".claude/agents/recon.md",
@@ -73,6 +74,7 @@ CONTROL_FILES: tuple[str, ...] = (
 )
 
 AGENT_FILES: tuple[str, ...] = (
+    ".claude/agents/tester.md",
     ".claude/agents/builder.md",
     ".claude/agents/reviewer.md",
     ".claude/agents/recon.md",
