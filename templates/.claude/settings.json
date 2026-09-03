@@ -6,7 +6,19 @@
     "Replace the {{TEST_CMD}} / {{LINT_CMD}} / {{RUN_CMD}} / {{BRANCH_PREFIX}} tokens",
     "with this project's real commands and branch prefix, then delete this comment.",
     "Narrow the run entry to the sub-commands agents actually need: allowing the",
-    "whole run command allows every flag it takes."
+    "whole run command allows every flag it takes.",
+    "",
+    "SPELL EACH COMMAND EVERY WAY YOUR SHELL AND PATHS WRITE IT, or it prompts.",
+    "The project this was distilled from needed six entries for one test command:",
+    "Bash and PowerShell, forward and back slashes, relative and absolute. An entry",
+    "matches the text of the command, not the program it resolves to.",
+    "",
+    "'git stash' is deliberately NOT here. On a checkout more than one session",
+    "touches, a stash takes the other session's in-flight work with it. Restore the",
+    "file you changed instead: 'git checkout <base> -- <path>'.",
+    "",
+    "This file is machine-local (.gitignore keeps it out), so it is never in a fresh",
+    "checkout. Its absence from a clone is not evidence the project has no allow-list."
   ],
   "permissions": {
     "allow": [
@@ -24,7 +36,6 @@
       "Bash(git log *)",
       "Bash(git status *)",
       "Bash(git show *)",
-      "Bash(git stash *)",
       "Bash(git merge-base *)"
     ],
     "deny": [
@@ -32,6 +43,7 @@
       "Bash(git push -f *)",
       "Bash(git reset --hard*)",
       "Bash(git branch -D *)",
+      "Bash(git stash*)",
       "Bash(git worktree remove --force*)"
     ]
   }

@@ -61,6 +61,22 @@ run in this repo. Verify each by running it:
 Then reconcile the allow-list in `.claude/settings.json` with those commands. Keep it
 narrow: an entry covering `git *` covers `git reset --hard`.
 
+Two things that only show up once agents are actually running:
+
+- **Spell each command every way your shell and paths write it.** An allow-list entry
+  matches the text of the command, not the program it resolves to. The project these
+  templates came from ended up with six entries for one test command — Bash and
+  PowerShell, forward and back slashes, relative and absolute — because each spelling
+  prompted separately. Cheaper to write them all now than to answer prompts for a week.
+- **`git stash` belongs in the deny list, not the allow list.** On a checkout that more
+  than one session touches, a stash takes the other session's in-flight work with it.
+  Builders restore the one file instead: `git checkout <base> -- <path>`.
+
+The real allow-list in that project had no deny list at all. The one in
+`templates/.claude/settings.json` is the improvement over it, not a copy of it: an
+allow-list carrying `git add *` and `git commit *` with nothing denied is one flag away
+from a force-push over someone else's branch.
+
 ## Step 4 — Fill the placeholders
 
 Walk each file and replace the `{{TOKENS}}`:
