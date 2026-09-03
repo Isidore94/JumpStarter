@@ -11,5 +11,5 @@ __pycache__/
 !/.claude/agents/
 # Uncomment the next line if this project tracks its build packets (recommended:
 # a packet is the record of what was authorized, and reviews cite it).
-#!/.claude/packets/
+!/.claude/packets/
 # --- end JumpStarter ---------------------------------------------------------
