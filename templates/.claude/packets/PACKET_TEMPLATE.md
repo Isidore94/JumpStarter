@@ -1,78 +1,77 @@
 # Packet {{ID}} — {{TITLE}}
 
-Date written: {{DATE}} · Branch: `{{BRANCH_PREFIX}}{{SLUG}}` off `{{MAIN_BRANCH}}` ·
-Builder: one · Reviewer: required / not required (docs-only)
+Authorized by {{OWNER}} on {{DATE}} ("{{VERBATIM_QUOTE}}"). Base: `{{MAIN_BRANCH}}` at
+`{{BASE_SHA}}`. Branch: `{{BRANCH_PREFIX}}{{SLUG}}`. Governing: {{GOVERNING_DOCS}}.
+Line numbers below were read by the lead on {{DATE}} against `{{BASE_SHA}}`; verify each
+before editing — **if the code disagrees with this packet, the code is the fact**: report
+the difference, do not force the change.
 
-**A packet is written only from premises verified in the code.** Every `file:line` below
-was read on the date above. **If the code disagrees with this packet, the code is the
-fact** — the builder reports the difference and does not force the change.
+The ask-first rule **does / does not** apply: {{WHY}}.
 
----
+{{STANDING_PROHIBITION_FOR_THIS_RUN}} — e.g. never restart the application; a named
+process is running an older tip; a store that must not be touched.
 
-## {{OWNER}}'s decision, quoted
+## What the lead measured
 
-> "{{VERBATIM_QUOTE}}"
-> — {{OWNER}}, {{DATE}}
+The evidence this packet is built on, with the instrument and the window, not a summary
+of it. A claim with no measurement beside it is a draft.
 
-Source: `docs/decisions/{{NNNN}}.md` / the conversation of {{DATE}}. If a packet cannot
-quote a decision for a change to an ask-first file, that item stops and becomes a
-question in the handoff.
-
-## Premises, verified
-
-Facts this packet is built on, each with evidence. Verified by `recon` on {{DATE}}.
-
-| # | Premise | Evidence |
-|---|---|---|
-| 1 | {{WHAT_IS_TRUE_TODAY}} | `{{path}}:{{line}}` |
-| 2 | {{WHAT_DOES_NOT_EXIST}} | not found: searched {{WHERE}} |
-| 3 | {{WHAT_THE_REAL_DATA_SHOWS}} | {{COUNT}} rows in {{STORE}}, read {{DATE}} |
-
-## Inventory check
-
-Searched `CHANGELOG.md`'s "Current implemented inventory" for: {{TERMS}}. Result:
-{{WHAT_ALREADY_EXISTS_AND_MUST_NOT_BE_REBUILT}}.
-
----
+- {{WHAT_WAS_MEASURED}} — {{HOW}}, {{WHEN}}: {{THE_NUMBERS}}.
+- {{WHAT_EXISTS_TODAY}} — `{{path}}:{{line}}`.
+- {{WHAT_DOES_NOT_EXIST}} — not found; searched {{WHERE}}.
 
 ## Items
 
-### 1. {{ITEM_TITLE}}
+### 1. {{ITEM_TITLE}} (`{{path}}`)
 
-**Change.** Exactly what to do, in one or two sentences. Name the file and the function.
+Today `{{symbol}}` at `{{path}}:{{line}}` {{WHAT_IT_DOES_NOW}}. Change it to
+{{WHAT_IT_MUST_DO}}, because {{WHY_IN_ONE_CLAUSE}}. {{WHAT_NOT_TO_TOUCH}} is out of
+scope — a wider change is a separate packet.
 
-**Where.** `{{path}}:{{line}}` — {{WHAT_IS_THERE_NOW}}.
+Binding invariants: {{WHICH_INVARIANTS}}.
 
-**Test that must fail first.** `{{test_path}}::{{test_name}}` — asserts
-{{THE_BEHAVIOUR}}. On the un-fixed code it must fail with {{THE_EXPECTED_FAILURE}}.
-Restore the pre-change file, run it, watch it fail, restore.
-
-**Invariants that bind.** {{WHICH_INVARIANTS}}.
-
-**Out of scope for this item.** {{WHAT_NOT_TO_TOUCH}} — a wider change is a separate
-packet.
+Tests (new `{{test_path}}`): (a) {{ASSERTION}}; (b) {{ASSERTION}}; (c) {{ASSERTION}}.
+**(b) is the fail-before-fix proof** — on the un-fixed code it fails with
+{{THE_EXPECTED_FAILURE}}, because {{WHY_THE_OLD_CODE_CANNOT_PASS_IT}}. The existing
+{{WHICH}} tests must stay green untouched.
 
 ### 2. {{ITEM_TITLE}}
 
 ...
 
----
+## Parts (delete if this packet is one branch)
+
+- **PART A** — on `{{BRANCH_PREFIX}}{{SLUG}}` off `{{MAIN_BRANCH}}`: items 1–{{N}}.
+- **PART B** — on `{{OTHER_BRANCH}}`: merge `{{MAIN_BRANCH}}` (with Part A) in first,
+  then items {{N}}–{{M}}.
+- **PART C** — integrate and prove: merge order, the full gate list, the checkpoint
+  refresh, and the one line {{OWNER}} is told at the end.
 
 ## Docs to reconcile (same branch)
 
-- `CURRENT_CHECKPOINT.md` — refresh the "Active state at a glance" block; add the gate.
-- `CHANGELOG.md` — inventory entry for {{WHAT_LANDED}}.
+- `CURRENT_CHECKPOINT.md` — a dated entry carrying the measurements above (short); the
+  gate below as a row in the gates table; refresh the "Active state at a glance" block.
+- `CHANGELOG.md` — inventory line(s) for {{WHAT_LANDED}}; one `Recent changes` entry.
 - `plan.md` — advance or narrow {{ITEM}}; keep any gate still owed.
-- `docs/INTERNALS.md` — an entry for any new rule, with the incident behind it.
+- `docs/INTERNALS.md` — the entry behind any new rule, with the numbers.
 - `docs/README.md` — only if a Markdown file was added or reclassified.
-- `CLAUDE.md` / `AGENTS.md` — byte-identical (`jumpstart.py sync-agents .`).
+- `CLAUDE.md` + `AGENTS.md` (byte-identical, `jumpstart.py sync-agents .`) — **exactly
+  this rule line, no more**:
+  > {{THE_RULE_TEXT_TO_ADD_VERBATIM}}
 
-## Gate
+## Gates before handoff
+
+{{PRECONDITION_TO_PROBE}}; `{{TEST_CMD}}` exit 0 with nothing deselected; `{{LINT_CMD}}`
+clean; {{EXTRA_GATES}}. Report the **process** exit codes, not a piped tail's. Say
+whether a build or packaging trigger was hit; a rebuild is the lead's call.
+
+## The real-world gate
 
 **{{WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD}}** — not a test. Who observes it, on what
-run, and what exactly they must see. Record it as a row in the checkpoint's gates table.
+run, and what exactly they must see. It goes in the checkpoint's gates table and stays
+open until someone has seen it.
 
-## Not in this packet
+## Still owed after {{ID}}, as its own packet {{NEXT_ID}}
 
-State plainly what was considered and deliberately left out, so it is not rediscovered
-as a gap.
+{{WHAT_WAS_CONSIDERED_AND_DELIBERATELY_LEFT_OUT}} — named here so it is queued, not
+rediscovered later as a gap.

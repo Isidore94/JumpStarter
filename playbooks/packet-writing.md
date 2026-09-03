@@ -21,56 +21,83 @@ about data, and the date the lines were read. Then write.
 
 ## What goes in
 
-### 1. The owner's decision, quoted
+The order below is the order a real packet reads in. It was checked against packets
+written by a lead session that had already run this loop for months: the ceremony an
+earlier draft of this playbook asked for — a whole section for the owner's quote, another
+for the inventory search — is not what those packets do. The quote is one clause of the
+opening paragraph, and the inventory search moved into the builder's house rules, where
+it happens every time instead of being restated every packet.
 
-Verbatim, with the date and the source. Not "the owner wants better X" — their words.
+### 1. The opening paragraph carries the authorization
 
-A packet that cannot quote a decision for a change to an ask-first file **stops at that
-item**, and the item becomes a question in the handoff rather than a change.
+One paragraph, before anything else, holding all of:
 
-### 2. The premises, with evidence
+- **who authorized it, on what date, in their own words** — a clause, not a section. A
+  packet that cannot quote a decision for a change to an ask-first file **stops at that
+  item**, and the item becomes a question in the handoff rather than a change;
+- **the base sha** the line numbers were read against, and the branch to build on;
+- **the governing documents** — the specs and decision records this packet must not
+  contradict;
+- **the line-number stamp**: read on this date, against this sha, verify each before
+  editing, and **if the code disagrees with the packet, the code is the fact**;
+- **an explicit ruling on the ask-first rule** — does it apply to this packet, and why.
+  The lead makes that call once, in writing. Left unsaid, the builder re-derives it, and
+  a builder that guesses wrong either stops for nothing or edits something it should have
+  asked about;
+- **any standing prohibition for this run** — do not restart the application, this store
+  is not to be touched, a named process is on an older tip.
 
-A table. Each row is a fact the packet is built on and the evidence for it:
+### 2. What the lead measured
+
+The evidence, with the instrument and the window, not a summary of it. "The build is
+slow" is not a premise. "That thread held the interpreter lock in 82.7% of samples over a
+ten-minute window, measured with `<tool>` against pid 11612" is.
 
 - code: `path:line`, read on a stated date;
 - absence: "not found — searched `<paths>` and the inventory". Absence is a premise too,
   and it is the one most often assumed;
 - data: the count, the store, the date it was read.
 
-### 3. The inventory check
+Verify all of it in the code before you write, per the rule above.
 
-State which terms you searched in `CHANGELOG.md`'s "Current implemented inventory" and
-what already exists. This is how landed work stops being rebuilt, and it takes a minute.
+### 3. One block per item, in prose
 
-### 4. One block per item
+Prose, not a form. Each item names the file and the symbol, says what is there now and
+what it must do instead, gives the reason in one clause, and says what is out of scope.
+Then the tests, lettered, and — the part that matters — **which letter is the
+fail-before-fix proof and why the old code cannot pass it**. Naming a test path before
+the test exists is guesswork; naming the assertion is not.
 
-Each numbered item carries:
+Say which existing tests must stay green untouched.
 
-- **Change** — exactly what to do, in one or two sentences, naming the file and function.
-- **Where** — `path:line` and what is there now.
-- **Test that must fail first** — the test path and name, what it asserts, and the
-  failure it must produce on the un-fixed code. Without this the item is a suggestion.
-- **Invariants that bind** — which of the plan's section 5 invariants this item is near.
-- **Out of scope for this item** — what not to touch. A packet that does not say this
-  gets a wider diff than it asked for.
+### 4. Parts, if it is more than one branch
+
+A packet may span branches: Part A on a fresh branch, Part B on an existing one that
+merges Part A in first, Part C to integrate and prove. Say the merge order.
 
 ### 5. Docs to reconcile
 
-Name them. The builder does this on the same branch, not in a follow-up.
+Name them, and for any new rule **quote the exact line to add to `CLAUDE.md`**. "Add a
+rule about X" produces a paragraph; the quoted line produces the line. The builder does
+this on the same branch, not in a follow-up.
 
-### 6. The gate
+### 6. Two gate blocks, not one
 
-**What must be observed in the real world** for this to count as validated — not a test.
-Who observes it, on what run, and exactly what they must see. It becomes a row in the
-checkpoint's gates table.
+- **Gates before handoff** — the commands, with the expected result and any precondition
+  to probe first, reported by **process** exit code.
+- **The real-world gate** — what must be observed in the real world for this to count as
+  validated. Who observes it, on what run, and exactly what they must see. It becomes a
+  row in the checkpoint's gates table.
 
-If an item has no meaningful gate, say "no gate" and why. An invented gate nobody can
-perform is worse than none: it sits open forever and drains the table of meaning.
+If an item has no meaningful real-world gate, say "no gate" and why. An invented gate
+nobody can perform is worse than none: it sits open forever and drains the table of
+meaning.
 
-### 7. What is not in this packet
+### 7. Still owed after this packet, as its own packet
 
-State plainly what was considered and deliberately left out, so it is not rediscovered
-later as a gap and rebuilt as a surprise.
+Not just "what was left out" — **what is now queued, with its packet name**. Left as a
+bare exclusion it is rediscovered later as a gap and rebuilt as a surprise; named as the
+next packet it is work with an address.
 
 ---
 
