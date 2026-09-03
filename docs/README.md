@@ -17,8 +17,8 @@ listed once at the bottom, not classified individually.
 
 | File | Purpose |
 |---|---|
-| [`README.md`](../README.md) | What JumpStarter is, the two workflows, the "apply JumpStarter here" instruction, the twelve lessons in plain words |
-| [`PRINCIPLES.md`](../PRINCIPLES.md) | The twelve lessons with the incident behind each. The source of everything in `templates/` |
+| [`README.md`](../README.md) | What JumpStarter is, the two workflows, the "apply JumpStarter here" instruction, the sixteen lessons in plain words |
+| [`PRINCIPLES.md`](../PRINCIPLES.md) | The sixteen lessons with the incident behind each. The source of everything in `templates/` |
 | [`CHANGELOG.md`](../CHANGELOG.md) | Authoritative implemented inventory and revision history |
 | [`plan.md`](../plan.md) | Authoritative remaining work, invariants, gates and order |
 | [`CURRENT_CHECKPOINT.md`](../CURRENT_CHECKPOINT.md) | Active item, branch, working state and verification stamp |

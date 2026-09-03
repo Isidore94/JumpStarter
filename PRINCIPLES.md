@@ -1,4 +1,4 @@
-# The twelve principles, and the incident behind each
+# The sixteen principles, and the incident behind each
 
 Every rule in JumpStarter was learned by something breaking. A rule without its
 incident gets "fixed" by the next agent who finds it inconvenient, so the incident
@@ -7,6 +7,11 @@ is written down beside the rule and travels with it.
 The incidents below are generalised from one long-running project built almost
 entirely by AI agents. The domain specifics are deliberately stripped; the shape of
 each failure is what repeats.
+
+Twelve were distilled on 2026-09-03 from that project's documentation. Four more
+(13-16) were added the same day from its **session memory notes** - written at the
+moment something broke, and not readable by the session that wrote the first twelve.
+Each of the four sharpens one of the twelve rather than standing alone.
 
 ---
 
@@ -226,3 +231,87 @@ unit tests cannot prove a refactor preserved exact output.
 **In practice.** Declare the evidence window before you look at a single cell, and
 treat reading one early as a refusal, not a check. Promotion is a separate decision
 from implementation and from validation, and it is the owner's.
+
+---
+
+# Four more, learned since
+
+These come from the source project's session memory — notes written at the moment
+something broke, which the first distillation of these principles never read. They
+are not a thirteenth through sixteenth principle; each sharpens one above.
+
+---
+
+## 13. Capped instrumentation goes blind, and its silence reads as calm (sharpens 2)
+
+**Rule.** Any log, counter or watchdog with a cap on how much it will record needs a
+cap that **rolls**. A per-session or per-day cap is spent by the quietest hours and
+gone by the time something happens.
+
+**Incident.** A stall watchdog wrote at most 2,000 records per session. An idle
+machine left on overnight burned about 500 an hour on sub-second stalls that mattered
+to nobody, and the budget ran out at 06:03. The worst freeze on record happened that
+morning — 30 to 60 minutes of an unusable application, four times a day — and the log
+for it is empty. Nobody noticed, because an empty log looks exactly like a quiet one.
+A per-**day** cap would have gone blind at the same minute.
+
+**In practice.** Roll the cap on an hour, not a session or a day. And when a
+diagnostic file is the evidence for a question, check that it was still writing at
+the time you are asking about, before concluding anything from its silence.
+
+---
+
+## 14. A probe that RUNS the system writes to it (sharpens 7 and 12)
+
+**Rule.** "Read-only" is a property of the path you hand a process, not of your
+intention. A reviewer reproducing a claim by *running* a build, a CLI or a batch job
+points it at a **copy** of the store, and says in the report which copy.
+
+**Incident.** A reviewer probing a build command ran it against the live store. It did
+what it was built to do: thirteen unprovenanced rows landed in the real data, and a
+human then had to decide whether to keep or unpick them. Everything about that review
+was correct except where it pointed.
+
+**In practice.** Every packet touching a store says, in the packet, that the reviewer's
+probe uses a copy. Principle 7 already said reproduce against copies; this is the
+sentence that stops a "probe" being read as an exception to it.
+
+---
+
+## 15. Assume another session is in the repository (sharpens 9)
+
+**Rule.** Verify the branch immediately before staging **and** immediately before
+pushing. Stage explicitly by path; never `git add -A`. Never `git stash` — restore the
+one file instead. After committing, confirm your work is in the commit you think it is.
+
+**Incident.** Several agent sessions ran against one working tree. In one afternoon:
+one commit carried two unrelated packets; a second session's commit swallowed a third's
+uncommitted code; and a pushed branch was deleted underneath the session that created
+it, while its work reached the trunk by another route. Staging explicit paths was not
+enough — another session can switch `HEAD`, commit, or delete a branch between your
+edits and your push.
+
+**In practice.** Expect `git status` to list files you did not touch. A full-suite test
+count is not isolated: report the number you measured and say which part is yours. Say
+the collision plainly in the commit message and the checkpoint — the next agent trusts
+that block.
+
+---
+
+## 16. The control file itself goes stale (sharpens 4 and 5)
+
+**Rule.** The rule that "the code is the fact, the doc is the defect" applies to
+`CLAUDE.md` too. A line there that the code contradicts is not authority. Correct it,
+or leave a **dated tombstone** saying which line is wrong and what the code does
+instead — and tell the owner. Never fix it silently.
+
+**Incident.** A control-file bullet described a layout that had been changed the same
+day it was written, on the owner's own instruction. The line survived because nothing
+reads a control file looking for defects — it is read for authority. A week later a
+design proposal built one of its three decisions on that line: a refuted premise, out
+of the one file every session trusts most. The tombstone that caught it was a session
+memory note, not the file itself.
+
+**In practice.** A silent correction leaves nobody able to tell whether the old line
+was wrong or the new behaviour was unauthorised. Date the note, name the source that
+disagrees, and say when the note can be deleted.

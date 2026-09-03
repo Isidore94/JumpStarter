@@ -24,7 +24,7 @@ Hand this repo to a fresh Claude Code or Codex session in any project and say:
 
 That triggers these steps, in order:
 
-1. **Read** `PRINCIPLES.md` (the twelve lessons) and this README's two workflows.
+1. **Read** `PRINCIPLES.md` (the sixteen lessons) and this README's two workflows.
 2. **Decide which workflow applies.** No `CLAUDE.md`/`AGENTS.md` at the repo root →
    *new project*. Anything already there → *retrofit*.
 3. **New project** → follow [`playbooks/new-project.md`](playbooks/new-project.md):
@@ -115,7 +115,7 @@ Edit `CLAUDE.md`; never hand-edit `AGENTS.md`. Run `sync-agents` after any edit,
 
 ---
 
-## The twelve lessons, in plain words
+## The sixteen lessons, in plain words
 
 Each was learned by something breaking. The incidents are in
 [`PRINCIPLES.md`](PRINCIPLES.md).
@@ -151,13 +151,30 @@ Each was learned by something breaking. The incidents are in
 12. **Shadow first, fixtures before behaviour, floors on every statistic.**
     Uncertainty never deletes.
 
+Four more came later, from the source project's session memory — notes written at the
+moment something broke. Each sharpens one above.
+
+13. **Capped instrumentation goes blind, and its silence reads as calm.** A stall log
+    with a per-session cap of 2,000 records spent it overnight on an idle machine and
+    stopped at 06:03; the worst freeze on record happened that morning and has no
+    evidence. Roll the cap on an hour.
+14. **A probe that RUNS the system writes to it.** A reviewer reproducing a claim by
+    running a build put thirteen unprovenanced rows into the live store. "Read-only" is
+    a property of the path you hand a process, not of your intention.
+15. **Assume another session is in the repository.** Verify the branch before staging
+    and before pushing; stage by path; never `git stash`; confirm your work landed.
+    Three collisions in one afternoon.
+16. **The control file itself goes stale.** A wrong line in `CLAUDE.md` survived a week
+    and became the premise of a design proposal. Correct it or tombstone it with a date
+    — never silently.
+
 ---
 
 ## What is in here
 
 ```
 README.md                 this file
-PRINCIPLES.md             the twelve lessons with the incident behind each
+PRINCIPLES.md             the sixteen lessons with the incident behind each
 templates/                the control set, with {{PLACEHOLDER}} tokens
 playbooks/                new-project, retrofit, build-review loop, review, packets
 tools/jumpstart.py        init / retrofit / sync-agents / check  (Python 3.9+, no deps)
@@ -169,4 +186,15 @@ JumpStarter runs its own control set on itself: see `CURRENT_CHECKPOINT.md`,
 
 ## Requirements
 
-Python 3.9 or newer. No third-party dependencies. `pytest` only to run the tests.
+Python 3.9 or newer. No third-party dependencies. `pytest` only to run the tests, `ruff`
+only to lint them; both are pinned in `ruff.toml` / the commands below, not vendored.
+
+**Measured, not claimed.** On 2026-09-03 the floor was tested on a real CPython
+**3.9.25**: `python -m pytest tests/ -q` → 49 passed, process exit 0, and all four
+subcommands (`init`, `retrofit`, `sync-agents`, `check`) run and return the same exit
+codes they do on 3.12.13. Before that, everything had been measured on a newer
+interpreter and "3.9+" was a claim.
+
+If you change that floor, change `ruff.toml`'s `target-version` with it and re-measure —
+`from __future__ import annotations` is what keeps the modern annotation syntax legal on
+3.9, and a linter told to assume a newer Python will happily suggest code that is not.

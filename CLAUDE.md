@@ -133,7 +133,7 @@ changing the behaviour a rule governs.**
   disagree leave the next agent no way to tell which is authoritative.
 
 ## Where to read more
-- `PRINCIPLES.md` — the twelve lessons with the incident behind each. The source of
+- `PRINCIPLES.md` — the sixteen lessons with the incident behind each. The source of
   everything in `templates/`.
 - `CHANGELOG.md` — **`Current implemented inventory` is the contract: search it before
   building.**

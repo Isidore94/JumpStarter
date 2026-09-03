@@ -8,7 +8,7 @@ Document role: **active reference.** Verbatim source text for the `Core rules` i
 
 If you change a rule, change it in both places, in the same commit.
 
-The twelve principles these rules serve, with the incidents behind them, are in
+The sixteen principles these rules serve, with the incidents behind them, are in
 [`PRINCIPLES.md`](../PRINCIPLES.md). This file holds the incidents specific to
 JumpStarter's own code.
 
