@@ -37,8 +37,25 @@ This writes nothing. It prints a gap report over these checks:
 | Owner goals record | The owner's priorities exist in their own words |
 | Agent definitions | `.claude/agents/{tester,builder,reviewer,recon}.md` |
 | Command allow-list | `.claude/settings.json` |
+| Stray ledgers | Root-level files that read like a second roadmap, handoff or status log |
 | `.gitignore` rules | `.claude/*` ignored, `.claude/agents/` tracked |
-| Size limits | Checkpoint ≤ 1,500 lines; changelog recent section bounded; `CLAUDE.md` bounded |
+| Size limits | Checkpoint ≤ 1,500 lines; `plan.md` ≤ 1,200; changelog recent section bounded (or, with no such section, the whole file); `CLAUDE.md` ≤ 400 |
+
+**`ADVISORY` is not `MISSING`.** Two results are advisories, and neither fails the run:
+
+- **the allow-list, when `.gitignore` keeps `.claude/` out.** That file is machine-local
+  by design; it cannot be in a checkout. Confirm it on the machine that runs the agents
+  instead. This was the one false positive of the first real dry run, against a clone.
+- **an active-state block under a different heading** — `## Active item` and the like.
+  The block exists; it is simply not findable by the name `CLAUDE.md` sends agents to.
+  Either rename it or point the mandatory read at the name it has.
+- **stray root ledgers.** A repo is allowed its own file names; this matches on words in
+  a filename. It names each file with its line count so a human can judge. One real
+  repository had seven of them, 1,505 lines — forbidden by that repo's own `CLAUDE.md`,
+  and invisible to the audit until this check existed.
+
+A check that fires on correct work is a check that gets ignored, and it takes the real
+findings with it. That is why these are advisories rather than gaps.
 
 Show the report to the owner before you write anything. A retrofit that starts by
 editing is a retrofit that gets reverted.

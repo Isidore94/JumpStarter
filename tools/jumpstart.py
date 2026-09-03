@@ -88,8 +88,42 @@ CHECKPOINT_MAX_LINES = 1500
 CHANGELOG_RECENT_MAX_LINES = 800
 CLAUDE_MAX_LINES = 400
 
+#: ``plan.md`` is in the mandatory read and nothing used to bound it. Measured
+#: 2026-09-03: 1,835 lines in the project these templates came from, 2,960 in another
+#: real repository. Both are past the point where the phase you need can be found.
+PLAN_MAX_LINES = 1200
+
 #: The markers that carry meaning, and the check that reports each as missing.
 ACTIVE_STATE_MARKER = "Active state at a glance"
+
+#: Headings a repo may already use for the same block. Finding one is not a pass — the
+#: block has to be findable by name from CLAUDE.md — but it is an advisory, not a gap:
+#: reporting "no active state block" at a repo that has one under its own heading is a
+#: false positive, and a check that fires on correct work takes the real findings with it.
+ACTIVE_STATE_ALIASES: tuple[str, ...] = (
+    "Active item",
+    "Active state",
+    "Current state",
+    "Where we are",
+)
+
+#: Root-level Markdown that is not part of the control set and reads like a second
+#: ledger. Matched on the stem, upper-cased. The rule these violate is in every
+#: CLAUDE.md this tool ships: do not create another roadmap, progress ledger, handoff
+#: or status file.
+STRAY_LEDGER_WORDS: tuple[str, ...] = (
+    "HANDOFF",
+    "REVIEW",
+    "PROMPT",
+    "STATUS",
+    "ROADMAP",
+    "PROGRESS",
+    "BRIEF",
+    "NEXT",
+    "TODO",
+    "NOTES",
+    "SUMMARY",
+)
 INVENTORY_MARKER = "Current implemented inventory"
 RECENT_CHANGES_MARKER = "Recent changes"
 
@@ -169,6 +203,7 @@ def _today() -> str:
 # --------------------------------------------------------------------------- #
 
 OK = "OK"
+ADVISORY = "ADVISORY"
 MISSING = "MISSING"
 DRIFT = "DRIFT"
 OVERSIZE = "OVERSIZE"
@@ -187,10 +222,15 @@ class Finding:
 
     @property
     def ok(self) -> bool:
-        return self.status == OK
+        """An advisory is not a gap. It is something a human should look at, not
+        something that fails a build: a repo whose active-state block sits under its own
+        heading, or whose allow-list is correctly machine-local, has not failed."""
+        return self.status in (OK, ADVISORY)
 
     def render(self) -> str:
         line = f"  [{self.status:<8}] {self.check}: {self.detail}"
+        if self.remedy and self.status == ADVISORY:
+            return line + f"\n             -> {self.remedy}"
         if self.remedy and not self.ok:
             line += f"\n             -> {self.remedy}"
         return line
@@ -198,8 +238,17 @@ class Finding:
 
 def _print_report(title: str, findings: Sequence[Finding], repo: Path) -> int:
     gaps = [f for f in findings if not f.ok]
+    advisories = [f for f in findings if f.status == ADVISORY]
     print(f"{title}: {repo}")
     print("=" * 78)
+
+    # A repo with nothing needs one sentence, not twenty-two identical lines.
+    if len(gaps) == len(findings) and not (repo / "CLAUDE.md").is_file():
+        print("  No control set at all: every check is missing.")
+        print("  Start with `jumpstart.py init` and fill the placeholders by hand;")
+        print("  the full list below is the standard, not a to-do list for today.")
+        print("-" * 78)
+
     for finding in findings:
         print(finding.render())
     print("-" * 78)
@@ -207,6 +256,8 @@ def _print_report(title: str, findings: Sequence[Finding], repo: Path) -> int:
         print(f"{len(gaps)} gap(s) of {len(findings)} checks.")
     else:
         print(f"No gaps: {len(findings)} checks passed.")
+    if advisories:
+        print(f"{len(advisories)} advisory(ies) - worth a look, not a failure.")
     return 1 if gaps else 0
 
 
@@ -250,16 +301,51 @@ def audit_sizes(repo: Path) -> list[Finding]:
             )
         )
 
+    plan = repo / "plan.md"
+    if plan.is_file():
+        lines = _line_count(_read(plan))
+        if lines > PLAN_MAX_LINES:
+            findings.append(
+                Finding(
+                    "plan size",
+                    OVERSIZE,
+                    f"plan.md is {lines} lines (limit {PLAN_MAX_LINES})",
+                    "plan.md is in the mandatory read. Move finished phases into "
+                    "CHANGELOG.md's inventory and completed detail into a dated archive "
+                    "under docs/. Only unfinished work belongs in plan.md.",
+                )
+            )
+        else:
+            findings.append(
+                Finding("plan size", OK, f"{lines} lines (limit {PLAN_MAX_LINES})")
+            )
+    else:
+        findings.append(
+            Finding(
+                "plan size",
+                MISSING,
+                "plan.md not found",
+                "Add it from templates/plan.md.",
+            )
+        )
+
     changelog = repo / "CHANGELOG.md"
     if changelog.is_file():
         text = _read(changelog)
         recent = section_line_count(text, RECENT_CHANGES_MARKER)
         if recent is None:
+            # No bounded section means the whole file is the recent section. Measure it,
+            # or a 2,000-line chronological changelog passes the size checks entirely.
+            whole = _line_count(text)
+            over = "" if whole <= CHANGELOG_RECENT_MAX_LINES else (
+                f" and the whole file is {whole} lines "
+                f"(limit {CHANGELOG_RECENT_MAX_LINES})"
+            )
             findings.append(
                 Finding(
                     "changelog recent section",
                     MISSING,
-                    f"no '{RECENT_CHANGES_MARKER}' heading in CHANGELOG.md",
+                    f"no '{RECENT_CHANGES_MARKER}' heading in CHANGELOG.md{over}",
                     "Split the file: a searchable inventory at the top, a bounded "
                     "'Recent changes' section, and a dated archive under docs/.",
                 )
@@ -347,7 +433,7 @@ def audit_agents_identical(repo: Path) -> Finding:
             "CLAUDE == AGENTS",
             MISSING,
             "CLAUDE.md exists but AGENTS.md does not",
-            "Run `jumpstart.py sync-agents <path>` — Codex reads AGENTS.md.",
+            "Run `jumpstart.py sync-agents <path>`; Codex reads AGENTS.md.",
         )
     if sha256_of(claude) != sha256_of(agents):
         return Finding(
@@ -388,6 +474,143 @@ def audit_placeholders(repo: Path) -> list[Finding]:
     return findings
 
 
+def audit_active_state(repo: Path) -> Finding:
+    """One block answers "where are we?".
+
+    Reported MISSING only when no such block can be found at all. A repo that keeps the
+    same block under its own heading gets an ADVISORY naming the heading: it has an
+    answer to "where are we?", it just is not findable by the name CLAUDE.md sends
+    agents to. Measured 2026-09-03 against a real repository whose block is
+    `## Active item`, complete with a measured gate stamp - calling that "missing"
+    reads as "this repo has no idea where it is", which was not true.
+    """
+    checkpoint = repo / "CURRENT_CHECKPOINT.md"
+    if not checkpoint.is_file():
+        return Finding(
+            "active state block",
+            MISSING,
+            "no CURRENT_CHECKPOINT.md",
+            "Add it at the top of the file the repo already uses for current state, "
+            "with numbers you measure now.",
+        )
+
+    text = _read(checkpoint)
+    if _has_marker(text, ACTIVE_STATE_MARKER):
+        return Finding("active state block", OK, "present in CURRENT_CHECKPOINT.md")
+
+    for alias in ACTIVE_STATE_ALIASES:
+        if _has_marker(text, alias):
+            return Finding(
+                "active state block",
+                ADVISORY,
+                f"found '{alias}' in CURRENT_CHECKPOINT.md, not '{ACTIVE_STATE_MARKER}'",
+                f"The block exists. Either rename it to '{ACTIVE_STATE_MARKER}' or point "
+                "CLAUDE.md's mandatory read at the name it actually has - an agent "
+                "cannot read a block it was sent to under the wrong name. Check it "
+                "carries the branch, the active item, the last measured baseline with "
+                "its exit code, and the open gates.",
+            )
+
+    return Finding(
+        "active state block",
+        MISSING,
+        f"no '{ACTIVE_STATE_MARKER}' block",
+        "Add it at the top of the file the repo already uses for current state, with "
+        "numbers you measure now - including a red suite if the suite is red.",
+    )
+
+
+def _claude_dir_is_gitignored(repo: Path) -> bool:
+    """True when .gitignore keeps .claude/ out of the repository.
+
+    Text match, deliberately: running `git check-ignore` would need git on the PATH and
+    a real work tree, and this tool takes no dependency it does not need.
+    """
+    gitignore = repo / ".gitignore"
+    if not gitignore.is_file():
+        return False
+    for raw in _read(gitignore).splitlines():
+        line = raw.strip()
+        if line.startswith("#") or line.startswith("!"):
+            continue
+        if line.rstrip("/") in (".claude", "/.claude", ".claude/*", "/.claude/*"):
+            return True
+    return False
+
+
+def audit_allow_list(repo: Path) -> Finding:
+    """The command allow-list.
+
+    A project with no allow-list at all is a real finding. A project that keeps its
+    allow-list machine-local is not: the file cannot be in a checkout, by design. The
+    audit cannot tell those apart by looking at files, so it reads .gitignore. This
+    produced the one false positive of the 2026-09-03 dry run, against a clone of a
+    project whose own runbook says the file is machine-local - and it fires against
+    JumpStarter itself for the same reason.
+    """
+    if (repo / ".claude/settings.json").is_file():
+        return Finding("command allow-list", OK, ".claude/settings.json present")
+    if _claude_dir_is_gitignored(repo):
+        return Finding(
+            "command allow-list",
+            ADVISORY,
+            ".claude/settings.json not in the checkout, and .gitignore keeps .claude/ out",
+            "Machine-local by design, so this cannot be checked from a checkout. "
+            "Confirm on the machine that runs the agents that the file exists, that it "
+            "is narrow, and that it denies force-push, hard reset and stash.",
+        )
+    return Finding(
+        "command allow-list",
+        MISSING,
+        ".claude/settings.json not found",
+        "Copy templates/.claude/settings.json. Keep it narrow: an entry covering "
+        "'git *' covers 'git reset --hard'.",
+    )
+
+
+def audit_stray_ledgers(repo: Path) -> list[Finding]:
+    """Root-level Markdown that reads like a second ledger.
+
+    Every CLAUDE.md this tool ships says: do not create another roadmap, progress
+    ledger, handoff or status file. Nothing enforced it. Measured 2026-09-03 against a
+    real repository: seven such files at the root, 1,465 lines, forbidden in that same
+    repo's own CLAUDE.md - and the audit was silent about all of them. That is the most
+    visible symptom of the disease this tool exists to treat.
+
+    An ADVISORY, not a gap: a repo is allowed its own file names, and this matches on
+    words in a filename, which is a heuristic. It names each file so a human can judge.
+    """
+    known = {Path(rel).name.upper() for rel in CONTROL_FILES}
+    known.update({"README.MD", "AGENTS.MD", "LICENSE.MD", "CONTRIBUTING.MD",
+                  "CODE_OF_CONDUCT.MD", "SECURITY.MD", "PRINCIPLES.MD"})
+
+    stray = []
+    for path in sorted(repo.glob("*.md")):
+        if path.name.upper() in known:
+            continue
+        stem = path.stem.upper()
+        if any(word in stem for word in STRAY_LEDGER_WORDS):
+            stray.append((path.name, _line_count(_read(path))))
+
+    if not stray:
+        return [Finding("stray ledgers", OK, "no second ledger at the repo root")]
+
+    total = sum(lines for _, lines in stray)
+    listed = ", ".join(f"{name} ({lines} lines)" for name, lines in stray)
+    return [
+        Finding(
+            "stray ledgers",
+            ADVISORY,
+            f"{len(stray)} root file(s), {total} lines, reading like a second ledger: "
+            f"{listed}",
+            "The control set is CLAUDE.md/AGENTS.md, CHANGELOG.md, plan.md, "
+            "CURRENT_CHECKPOINT.md, WISHLIST.md and docs/README.md. Fold what is still "
+            "true into those, move the rest under docs/ as dated evidence, and delete "
+            "nothing until it has been read. A handoff file is a ledger nobody updates.",
+        )
+    ]
+
+
 def audit_structure(repo: Path) -> list[Finding]:
     """The full standard. Used by ``retrofit``."""
     findings: list[Finding] = []
@@ -403,7 +626,7 @@ def audit_structure(repo: Path) -> list[Finding]:
                     MISSING,
                     "not found",
                     "Add it from templates/{}. Do not delete whatever the repo uses "
-                    "today — point it at the new file.".format(
+                    "today - point it at the new file.".format(
                         "CLAUDE.md" if rel == "AGENTS.md" else rel
                     ),
                 )
@@ -433,20 +656,7 @@ def audit_structure(repo: Path) -> list[Finding]:
             Finding("bounded read", MISSING, "no CLAUDE.md", "Add it from templates/CLAUDE.md.")
         )
 
-    checkpoint = repo / "CURRENT_CHECKPOINT.md"
-    if checkpoint.is_file() and _has_marker(_read(checkpoint), ACTIVE_STATE_MARKER):
-        findings.append(Finding("active state block", OK, "present in CURRENT_CHECKPOINT.md"))
-    else:
-        findings.append(
-            Finding(
-                "active state block",
-                MISSING,
-                f"no '{ACTIVE_STATE_MARKER}' block",
-                "Add it at the top of the file the repo already uses for current "
-                "state, with numbers you measure now — including a red suite if the "
-                "suite is red.",
-            )
-        )
+    findings.append(audit_active_state(repo))
 
     changelog = repo / "CHANGELOG.md"
     if changelog.is_file() and _has_marker(_read(changelog), INVENTORY_MARKER):
@@ -479,7 +689,7 @@ def audit_structure(repo: Path) -> list[Finding]:
                     "no docs/INTERNALS.md",
                     "A rule without the incident behind it gets 'fixed' by the next "
                     "agent. Where the incident cannot be recovered, write 'Evidence "
-                    "not recovered' — never invent one.",
+                    "not recovered' - never invent one.",
                 )
             )
 
@@ -527,18 +737,8 @@ def audit_structure(repo: Path) -> list[Finding]:
                 )
             )
 
-    if (repo / ".claude/settings.json").is_file():
-        findings.append(Finding("command allow-list", OK, ".claude/settings.json present"))
-    else:
-        findings.append(
-            Finding(
-                "command allow-list",
-                MISSING,
-                ".claude/settings.json not found",
-                "Copy templates/.claude/settings.json. Keep it narrow: an entry "
-                "covering 'git *' covers 'git reset --hard'.",
-            )
-        )
+    findings.append(audit_allow_list(repo))
+    findings.extend(audit_stray_ledgers(repo))
 
     gitignore = repo / ".gitignore"
     if gitignore.is_file():
@@ -670,7 +870,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         print(f"Unfilled placeholders, to complete by hand ({len(remaining)}):")
         print("  " + ", ".join(remaining))
         print()
-    print("Next: playbooks/new-project.md — the owner questionnaire comes first,")
+    print("Next: playbooks/new-project.md - the owner questionnaire comes first,")
     print(f"then fill the placeholders, then `jumpstart.py check {repo}`.")
     return 0
 
@@ -777,6 +977,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    # A report is read by a human, and a report that prints as mojibake gets trusted
+    # less than one that prints plainly. The printed strings are ASCII on purpose; this
+    # is the belt to that pair of braces, so a stray character degrades rather than
+    # raising UnicodeEncodeError on a console in a legacy code page.
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:  # pragma: no cover - depends on the console
+            try:
+                reconfigure(errors="replace")
+            except (ValueError, OSError):
+                pass
+
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):

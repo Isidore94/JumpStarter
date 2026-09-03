@@ -20,9 +20,9 @@ is the team contract; read it first, then `CLAUDE.md` in full.
 - First command: `git checkout -b claude/<packet-slug>` (the lead names the
   slug). Commit small and green; `git push -u origin claude/<packet-slug>`
   after each commit.
-- Interpreter/toolchain: `python3 (3.9+, standard library only)` (absolute path; the worktree has no environment
+- Interpreter/toolchain: `any Python 3.9+ on PATH (standard library only; no venv, no install)` (absolute path; the worktree has no environment
   of its own).
-- Live stores (none — this repo reads and writes no production data; the reviewer's real-data step becomes running the CLI against a copy of a real repository in a temp directory) are READ-ONLY to you unless the packet names a write.
+- Live stores (none - JumpStarter has no data store; the repositories it audits are the live thing, and retrofit writes nothing to them by invariant) are READ-ONLY to you unless the packet names a write.
   Copy a file to a temp path before any reproduction that writes.
 
 ## House rules (every packet, no exceptions)
@@ -37,16 +37,18 @@ is the team contract; read it first, then `CLAUDE.md` in full.
    editing. If the code disagrees with the packet, the code is the fact**: report the
    difference in the handoff and do not force the change.
 3. Every behaviour change ships with a test **proven to fail on the un-fixed code**:
-   stash or restore the pre-change file, run the test, see it fail, restore, run again.
-   Say so in the commit message.
+   restore the pre-change file (`git checkout <base> -- <path>`), run the test, see it
+   fail, restore the fix, run again. Say so in the commit message. **Never `git stash`
+   to do this** — on a checkout another session may be touching, a stash takes their
+   in-flight work with it.
 4. The hard invariants in `plan.md` section 5 bind you. Nothing you build may reach
-   the templates, the playbooks and the limit constants that land in other people's repos unless the packet names exactly that change. Golden fixtures come
+   templates/ or the limit constants in tools/jumpstart.py unless the packet names exactly that change. Golden fixtures come
    BEFORE any change to behaviour that has consumers.
-5. **File-scoped ask-first**: `templates/CLAUDE.md`, `templates/plan.md`, `templates/.claude/agents/*.md`, and the limit constants in `tools/jumpstart.py`. If the packet quotes the owner's
+5. **File-scoped ask-first**: templates/CLAUDE.md, templates/plan.md, templates/.claude/agents/*.md, and the limit constants in tools/jumpstart.py. If the packet quotes the owner's
    decision for the exact functions you will touch, that is your answer; otherwise STOP
    and put the question in your handoff instead of editing.
 6. Before handoff run the gates and report the **process** exit codes, not a piped
-   tail's: `python -m pytest tests/ -q`, `ruff check .` clean, `python tools/jumpstart.py check .` (the dogfood self-check). Say whether a build or
+   tail's: `python -m pytest tests/ -q`, `ruff check .` clean, `python tools/jumpstart.py check .` with no gaps. Say whether a build or
    packaging trigger was hit; a rebuild is the lead's call, never yours.
 7. Reconcile the docs in the same branch: refresh the "Active state at a glance" block,
    add the packet's gate to the gates table, update the `CHANGELOG.md` inventory,
@@ -54,6 +56,16 @@ is the team contract; read it first, then `CLAUDE.md` in full.
    if a Markdown file was added, and keep `CLAUDE.md` and `AGENTS.md` byte-identical
    (`python tools/jumpstart.py sync-agents .`).
 8. **Never merge to `main`.** The lead merges. Never delete a branch.
+9. If the branch already carries **red tests from `tester`**, your job is to make them
+   pass. You may ADD tests. You may not weaken, skip, delete or rewrite a tester's
+   assertion; if one is wrong, say so in the handoff and leave it red. A test that
+   started red and is now green is the proof your handoff cites.
+10. **Assume another session is in this repository.** Run `git branch --show-current`
+    immediately before staging AND immediately before pushing — do not assume HEAD is
+    where you left it. Stage explicitly by path; never `git add -A`. Expect
+    `git status` to list files you did not touch. After committing, confirm your work
+    landed with `git log --oneline -S "<a string only you wrote>"`. A test count from a
+    full run is not isolated: report the number you measured and say which part is yours.
 
 ## Handoff format (your final message, nothing else)
 

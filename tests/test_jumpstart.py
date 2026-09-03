@@ -446,3 +446,132 @@ def test_no_agent_template_tells_an_agent_to_stash() -> None:
                 assert "never" in sentence.lower(), (
                     f"{rel} mentions stashing without forbidding it: {sentence!r}"
                 )
+
+
+# --------------------------------------------------------------------------- #
+# What the audit got wrong on a real repository, 2026-09-03.
+#
+# Each test below is built from the shape that produced a false positive or a miss in
+# the three real audits recorded in CURRENT_CHECKPOINT.md. plan.md Phase 0 item 2.
+# --------------------------------------------------------------------------- #
+
+
+def test_a_gitignored_allow_list_is_an_advisory_not_a_gap(bare_repo: Path) -> None:
+    """A machine-local allow-list cannot be in a checkout, by design.
+
+    The 2026-09-03 dry run reported ".claude/settings.json not found" against a clone of
+    a project whose own runbook says the file is machine-local. Reproduced here with
+    that shape: .gitignore ignores .claude/*, so the absence is expected, not a gap.
+    """
+    (bare_repo / ".gitignore").write_text(
+        "__pycache__/\n/.claude/*\n!/.claude/agents/\n", encoding="utf-8"
+    )
+    finding = jumpstart.audit_allow_list(bare_repo)
+
+    assert finding.status == jumpstart.ADVISORY
+    assert finding.ok, "an advisory must not fail the build"
+    assert "machine-local" in finding.remedy.lower()
+
+
+def test_an_untracked_allow_list_with_no_gitignore_rule_is_still_a_gap(
+    bare_repo: Path,
+) -> None:
+    """A project with no allow-list at all is a real finding; do not drop the check."""
+    finding = jumpstart.audit_allow_list(bare_repo)
+
+    assert finding.status == jumpstart.MISSING
+    assert not finding.ok
+
+
+def test_an_active_state_block_under_another_heading_is_an_advisory(repo: Path) -> None:
+    """A real repository keeps the same block under `## Active item`, gate stamp and all.
+
+    Calling that MISSING reads as "this repo has no idea where it is", which was not
+    true; a check that fires on correct work takes the real findings with it.
+    """
+    (repo / "CURRENT_CHECKPOINT.md").write_text(
+        "# Current checkpoint\n\n## Active item\n\nPhase 3, gate stamp 1084 passed.\n",
+        encoding="utf-8",
+    )
+    finding = jumpstart.audit_active_state(repo)
+
+    assert finding.status == jumpstart.ADVISORY
+    assert finding.ok
+    assert "Active item" in finding.detail
+
+
+def test_a_checkpoint_with_no_state_block_at_all_is_still_a_gap(repo: Path) -> None:
+    (repo / "CURRENT_CHECKPOINT.md").write_text(
+        "# Current checkpoint\n\n## Some notes\n\nthings happened\n", encoding="utf-8"
+    )
+    finding = jumpstart.audit_active_state(repo)
+
+    assert finding.status == jumpstart.MISSING
+    assert not finding.ok
+
+
+def test_stray_root_ledgers_are_reported_by_name(repo: Path) -> None:
+    """Seven handoff and review files, 1,505 lines, at one real repo's root - forbidden
+    by that repo's own CLAUDE.md, and the audit was silent about every one."""
+    for name in (
+        "FABLE_REVIEW_BRIEF.md",
+        "OPUS_NEXT_TRACK_PROMPT.md",
+        "SOL_REVIEW_PROMPT_S22.md",
+    ):
+        (repo / name).write_text("# a second ledger\n" * 40, encoding="utf-8")
+
+    findings = jumpstart.audit_stray_ledgers(repo)
+
+    assert len(findings) == 1
+    assert findings[0].status == jumpstart.ADVISORY
+    assert findings[0].ok, "a repo is allowed its own file names; this is a heuristic"
+    for name in ("FABLE_REVIEW_BRIEF.md", "OPUS_NEXT_TRACK_PROMPT.md"):
+        assert name in findings[0].detail
+
+
+def test_the_control_set_and_a_readme_are_not_stray_ledgers(repo: Path) -> None:
+    init_repo(repo, test_cmd="pytest -q")
+    (repo / "README.md").write_text("# widget\n", encoding="utf-8")
+
+    findings = jumpstart.audit_stray_ledgers(repo)
+
+    assert findings[0].status == jumpstart.OK
+
+
+def test_an_oversized_plan_is_a_gap(filled_repo: Path) -> None:
+    """plan.md is in the mandatory read and nothing used to bound it: 1,835 lines in the
+    project the templates came from, 2,960 in another real repo."""
+    plan = filled_repo / "plan.md"
+    plan.write_text(
+        plan.read_text(encoding="utf-8")
+        + "\n".join(f"filler {n}" for n in range(jumpstart.PLAN_MAX_LINES + 50)),
+        encoding="utf-8",
+    )
+
+    assert run("check", str(filled_repo)) == 1
+
+
+def test_a_changelog_with_no_recent_section_is_measured_whole(repo: Path) -> None:
+    """Otherwise a 2,047-line chronological changelog passes the size checks entirely."""
+    (repo / "CHANGELOG.md").write_text(
+        "# History\n\n"
+        + "\n".join(f"entry {n}" for n in range(jumpstart.CHANGELOG_RECENT_MAX_LINES + 50)),
+        encoding="utf-8",
+    )
+
+    findings = jumpstart.audit_sizes(repo)
+    changelog = next(f for f in findings if f.check == "changelog recent section")
+
+    assert not changelog.ok
+    assert "whole file" in changelog.detail
+
+
+def test_the_report_is_ascii_so_a_console_can_print_it(repo: Path, capsys) -> None:
+    """A report that prints as mojibake gets trusted less than one that prints plainly.
+    Every advice string in three real audits carried an em-dash that a Windows console
+    rendered as a replacement character."""
+    init_repo(repo)
+    run("retrofit", str(repo))
+    out = capsys.readouterr().out
+
+    out.encode("ascii")  # raises UnicodeEncodeError if any advice string is not ASCII

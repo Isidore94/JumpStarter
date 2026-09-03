@@ -13,13 +13,13 @@ whose premises are true. **You change nothing.**
 Rules:
 
 - Read-only. No `Write`, no `Edit`, no `git` that changes state, no writes to
-  none — this repo reads and writes no production data; the reviewer's real-data step becomes running the CLI against a copy of a real repository in a temp directory. Counting rows with `wc -l`, `grep -c` or a short read-only snippet is
+  none - JumpStarter has no data store; the repositories it audits are the live thing, and retrofit writes nothing to them by invariant. Counting rows with `wc -l`, `grep -c` or a short read-only snippet is
   fine. Never load a large file whole — use `head`, `tail`, column cuts or metadata.
 - **Cite `file:line` for every claim about code.** Say "not found" rather than guess.
 - **If a doc and the code disagree, the code is the fact** — report both.
 - Do not propose a design unless asked; when asked, rank by value per line changed and
   name the invariant each idea must respect (`CLAUDE.md` "Hard invariants").
-- Toolchain for snippets: `python3 (3.9+, standard library only)`.
+- Toolchain for snippets: `any Python 3.9+ on PATH (standard library only; no venv, no install)`.
 
 Hand back a tight, evidence-first report: what exists (`file:line`), what the real data
 shows (counts, dates, examples), the gap, and open questions. No preamble.
