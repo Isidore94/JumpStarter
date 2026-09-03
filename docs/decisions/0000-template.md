@@ -1,0 +1,34 @@
+# {{NNNN}} — {{SHORT_TITLE_IN_THE_IMPERATIVE}}
+
+Date: 2026-09-03
+
+Status: `ACCEPTED` | `SUPERSEDED by {{NNNN}}` | `AMENDED by {{NNNN}}`
+
+Amends nothing in decisions {{RANGE}}; every constraint there still binds.
+<!-- Or: name exactly what this changes. A record that silently contradicts an earlier
+     one leaves two live rules and no way to tell which. -->
+
+## Context
+
+What was true when this was decided, and what forced the decision. Include the thing
+that was believed and turned out not to be — the reason a record is read later is
+almost always to find out what the author knew.
+
+## Decision
+
+The decision itself, in the imperative, short enough to quote in a packet.
+
+## Rationale
+
+Why this and not the alternatives. Name the alternatives; a rejected option that is not
+written down comes back as a proposal.
+
+## Consequences
+
+What this makes true, what it makes harder, and what work it creates or retires. Include
+the consequences you dislike — those are the ones that get argued about later.
+
+## Reopen trigger
+
+The condition under which this decision should be revisited. "Never" is a valid answer
+and is worth writing down.
