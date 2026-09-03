@@ -58,8 +58,21 @@ do not rebuild landed work.**
   `AGENTS.md` from `CLAUDE.md`, and appends the `.gitignore` block idempotently. It
   skips files that exist unless `--force`.
 - **`retrofit`** audits **25 checks** and **writes nothing**.
-- **`check`** enforces `CLAUDE == AGENTS` (sha256), the four size limits, and unfilled
-  placeholders.
+- **`check`** enforces `CLAUDE == AGENTS` (sha256), the four size limits, unfilled
+  placeholders, and — since 2026-09-03 — that every cited rule carries its evidence.
+  **7 checks** on this repo.
+- **`audit_rule_evidence`** — every rule that cites `(INTERNALS: "<name>")` in
+  `CLAUDE.md` must have a matching `## ` heading in `docs/INTERNALS.md`, or the finding
+  is a gap and the exit code is 1. Check name `rules carry evidence` in both commands:
+  `check` runs it as its seventh check, and `audit_structure` uses it **in place of**
+  retrofit's old presence-only finding, so `retrofit` still audits 25. Matching ignores
+  case, joins a name wrapped across a line break, strips one trailing parenthetical from
+  the heading, skips citations inside `<!-- ... -->`, and does not treat `###` as a rule
+  heading — all four shapes occur in the real files. Three traps: it is **silent** (no
+  finding at all) when the repo has no `CLAUDE.md` or no `docs/INTERNALS.md`, because
+  `retrofit` already reports a missing rulebook and `check` must not fail a
+  pre-retrofit repo twice for the same thing; a rule cited twice counts once; and the
+  remedy says to write "Evidence not recovered" rather than invent an incident.
 - **`ADVISORY` findings** — reported, named, and **not** a gap: `Finding.ok` is true for
   them and they do not change the exit code. Three exist: a machine-local (gitignored)
   allow-list, an active-state block under a heading other than the standard one, and
@@ -88,6 +101,12 @@ do not rebuild landed work.**
 - A block at the end pins **what the audit got wrong on a real repository**: each of the
   two false positives and four misses of 2026-09-03 has a test built from the shape that
   produced it. Delete one of those and the false positive comes back.
+- **`tests/test_i1_rules_carry_evidence.py`** — packet I1's five tests for
+  `audit_rule_evidence`: the gap, the three shapes (wrapped, mixed case, commented out),
+  the two silences, retrofit's unchanged 25-check shape, and the duplicate citation.
+  Written by the `tester` role and committed red before the fix existed. Fixtures are
+  copied from `test_jumpstart.py`, not imported: a packet's tests live in one readable
+  file.
 
 ### Root
 
@@ -104,6 +123,20 @@ do not rebuild landed work.**
 
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
+
+### 2026-09-03 — Packet I1: a cited rule must carry its evidence
+
+- **`audit_rule_evidence` added** and wired into both `check` (seventh check) and
+  `audit_structure` (replacing retrofit's presence-only finding, so retrofit stays at
+  25). `plan.md` section 5 had required this since the first build and nothing checked
+  it; on this repo all nine citations resolve, so the finding is `OK` today.
+- **First run of the `tester` role in this repo.** The four packet tests were committed
+  red at `e404283` before any implementation existed; the builder made them pass without
+  weakening one and added a fifth for the case the packet left open. Fail-before-fix
+  re-proved by restoring `tools/jumpstart.py` from the base: 4 failed, 1 passed.
+  `plan.md` Phase 1 item 3 narrows to what a run cannot prove by itself.
+- Measured after: `pytest tests/ -q` **54 passed**, exit 0; `ruff check .` clean;
+  `check .` **7 checks, no gaps**, exit 0; `retrofit .` **25 checks, 1 advisory**, exit 0.
 
 ### 2026-09-03 — Second pass: the four unreadable sources, and gates 1 and 3
 

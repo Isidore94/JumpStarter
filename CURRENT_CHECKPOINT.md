@@ -17,16 +17,17 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`claude/jumpstarter-repo-setup-dn3rof`**. Nothing has been merged to `main`; `main` does not exist yet |
-| Also in flight | **NOTHING unmerged.** No other branch, no worktree |
-| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates. Not started. Phase 0 is done, and the questionnaire is now answered (record 0002) |
-| Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**: `python -m pytest tests/ -q` **49 passed, process exit 0, 2.0 s**; `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **6 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory**. The same four re-run identically on 3.12.13 |
+| Working branch | **`claude/i1-rules-carry-evidence`** (packet I1), branched from `claude/jumpstarter-repo-setup-dn3rof` at `85b8474`. Nothing has been merged to `main`; `main` does not exist yet |
+| Also in flight | **`claude/i1-rules-carry-evidence` is unmerged and awaiting review.** Its base branch `claude/jumpstarter-repo-setup-dn3rof` is the trunk in practice. No other branch |
+| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates. Not started; it is what gate 2 is owed by. **Phase 1 item 3** (exercise the `tester` role) was met on this branch and now reads as narrowed |
+| Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**, on `claude/i1-rules-carry-evidence`: `pytest tests/ -q` **54 passed, process exit 0, 2.4 s**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0 — the seventh is `rules carry evidence`; `retrofit .` **exit 0, 25 checks, 1 advisory**. The base branch's own last measurement was 49 passed / 6 checks on both 3.9.25 and 3.12.13; I1 has not been re-run on 3.12.13 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
-**Correction to the previous block.** It recorded `check .` as "9 checks" (it is 5, now 6
-with `plan size`) and the interpreter as "Python 3.11.15" (no 3.11 exists on this
-machine; the working interpreters are 3.9.25 and 3.12.13). The code is the fact.
+**Correction to the previous block.** It recorded `check .` as "9 checks" (it was 5, then
+6 with `plan size`, and is **7** since packet I1 added `rules carry evidence`) and the
+interpreter as "Python 3.11.15" (no 3.11 exists on this machine; the working interpreters
+are 3.9.25 and 3.12.13). The code is the fact.
 
 Rules for this block:
 
@@ -42,12 +43,57 @@ dated entry named beside it.
 
 | # | Gate | Owed by |
 |---|---|---|
+| 5 | **`retrofit` against a real repository whose `CLAUDE.md` cites a rule its `docs/INTERNALS.md` lacks reports that name and exits 1** — read-only, against a temp copy of a real pair with one heading removed. The suite proves the audit parses what the tests give it; it proves nothing about a rulebook that grew on its own. **OPEN**: the builder ran the audit only against this repo (9 of 9 citations resolve) and against `init` fixtures | the lead, on branch `claude/i1-rules-carry-evidence` |
 | ~~3~~ | ~~**The declared Python floor is real**~~ — **CLOSED 2026-09-03.** Installed CPython **3.9.25** and ran it: `pytest tests/ -q` 49 passed, process exit 0; `check .`, `retrofit .`, `sync-agents .` and `init` all run and return the same exit codes as on 3.12.13. `README.md` now states the measurement, the version and the date | closed |
 | 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer. **Now the only open gate**, and it matters more than it did: the templates changed materially today and none of that has been used from empty | `plan.md` Phase 1 item 1 |
 | ~~1~~ | ~~**One real existing repository audited**~~ — **CLOSED 2026-09-03.** Three real repositories, working copies not clones. Two false positives and four misses, all six now fixed with a test apiece. See the entry below | closed |
 
 A gate is closed by striking its row through and writing what was observed — never by
 deleting the row.
+
+---
+
+### 2026-09-03 — Packet I1: a cited rule must carry its evidence, and `check` says so
+
+Branch `claude/i1-rules-carry-evidence`, base `85b8474`. Built by the `builder` role in
+its own worktree from the packet at `.claude/packets/I1.md`; **not merged**.
+
+**What was measured before the change** (all re-verified against the code, not taken from
+the packet): `cmd_check` ran three audits and never read `docs/INTERNALS.md` — 6 checks,
+exit 0. `retrofit`'s `rules carry evidence` finding, inside `audit_structure`, tested only
+that the file existed — 25 checks, 1 advisory, exit 0. This repo's `CLAUDE.md` carries
+**9** `(INTERNALS: "...")` citations against **9** `## ` headings in `docs/INTERNALS.md`;
+all nine match, so the new check is `OK` here on the day it landed. Every line number in
+the packet held.
+
+**What landed.** `audit_rule_evidence(repo)` in `tools/jumpstart.py`, wired into
+`cmd_check` as a seventh check and into `audit_structure` **in place of** the presence-only
+finding, so `retrofit` keeps the same check name and stays at 25. It strips
+`<!-- ... -->` before reading citations, joins a name wrapped across a line break, ignores
+case, strips one trailing parenthetical from each heading, and does not read `###` as a
+rule heading. Each of those four is a shape the real files contain — `CLAUDE.md:122-123`
+wraps, `CLAUDE.md:88` differs in case from `INTERNALS:59`, and `templates/CLAUDE.md:90`
+puts a citation inside the example comment. It returns **nothing at all** when the repo
+has no `CLAUDE.md` or no `docs/INTERNALS.md`: `retrofit` already reports a missing
+rulebook, and a `check` that failed every pre-retrofit repo for a reason it has already
+been told would stop being the green-means-go gate.
+
+**The `tester` role ran for real here** — `plan.md` Phase 1 item 3. Four tests were
+committed red at `e404283` against a function that did not exist; the builder made them
+pass at `677a5d2` without weakening one and added a fifth for the case the packet left
+open (a rule cited twice counts once). Fail-before-fix re-proved by restoring
+`tools/jumpstart.py` from the base by path — never a stash — and re-running: **4 failed,
+1 passed**. The one that passed is the retrofit-shape test, which is a
+does-not-change test by design. What the run does **not** prove is the crossing between
+tools: tester, builder and reviewer were all Claude Code. That is gate 4's job.
+
+**Measured after, on CPython 3.9.25**: `pytest tests/ -q` **54 passed, process exit 0**;
+`ruff check .` (0.16.6) clean, exit 0; `check .` **7 checks, no gaps**, exit 0;
+`retrofit .` **25 checks, 1 advisory**, exit 0. No build or packaging trigger exists.
+
+**Known and deliberately not fixed here.** A bolded rule in `CLAUDE.md` that cites nothing
+is invisible to this check; on this date *"Templates stay short enough to read in one
+sitting"* is exactly that. Owed as packet I2 with `section_line_count`'s `#19.` bug.
 
 ---
 
