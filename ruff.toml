@@ -1,0 +1,14 @@
+# JumpStarter's lint gate, pinned so it means the same thing on every machine.
+#
+# An unpinned `ruff check .` is whatever ruff version happens to be installed:
+# on 2026-09-03 the same tree was "All checks passed" under one ruff and 75
+# findings under 0.16.6. A gate that is not pinned is not a gate.
+#
+# target-version must match the floor README.md declares (3.9, measured on
+# CPython 3.9.25). `from __future__ import annotations` is what makes the
+# UP006/UP045 rewrites safe there.
+target-version = "py39"
+line-length = 100
+
+[lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "RUF", "DTZ", "FURB", "B"]

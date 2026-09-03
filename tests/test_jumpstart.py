@@ -18,7 +18,6 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 import jumpstart  # noqa: E402  (path set above)
 
-
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
@@ -74,7 +73,7 @@ def test_init_produces_the_whole_control_set(repo: Path) -> None:
         ".claude/packets/PACKET_TEMPLATE.md",
         ".gitignore",
     ):
-        assert (repo / rel).is_file(), "init did not write {}".format(rel)
+        assert (repo / rel).is_file(), f"init did not write {rel}"
 
 
 def test_init_fills_the_placeholders_it_was_given(repo: Path) -> None:
@@ -185,7 +184,7 @@ def test_retrofit_reports_the_gaps_on_a_bare_repo(bare_repo: Path, capsys) -> No
         "command allow-list",
         "gitignore rules",
     ):
-        assert expected in out, "retrofit did not report {}".format(expected)
+        assert expected in out, f"retrofit did not report {expected}"
     assert "MISSING" in out
 
 
@@ -277,7 +276,7 @@ def test_check_fails_on_an_oversized_checkpoint(filled_repo: Path) -> None:
     checkpoint = filled_repo / "CURRENT_CHECKPOINT.md"
     checkpoint.write_text(
         checkpoint.read_text(encoding="utf-8")
-        + "\n".join("- entry {}".format(i) for i in range(jumpstart.CHECKPOINT_MAX_LINES + 50)),
+        + "\n".join(f"- entry {i}" for i in range(jumpstart.CHECKPOINT_MAX_LINES + 50)),
         encoding="utf-8",
     )
 
@@ -291,14 +290,14 @@ def test_check_names_the_oversized_file_and_the_remedy(filled_repo: Path, capsys
     out = capsys.readouterr().out
 
     assert "OVERSIZE" in out
-    assert "CURRENT_CHECKPOINT.md is {} lines".format(jumpstart.CHECKPOINT_MAX_LINES + 1) in out
+    assert f"CURRENT_CHECKPOINT.md is {jumpstart.CHECKPOINT_MAX_LINES + 1} lines" in out
     assert "Archive, do not delete" in out
 
 
 def test_check_fails_on_an_oversized_changelog_recent_section(filled_repo: Path) -> None:
     changelog = filled_repo / "CHANGELOG.md"
     text = changelog.read_text(encoding="utf-8")
-    padding = "\n".join("- change {}".format(i) for i in range(jumpstart.CHANGELOG_RECENT_MAX_LINES + 20))
+    padding = "\n".join(f"- change {i}" for i in range(jumpstart.CHANGELOG_RECENT_MAX_LINES + 20))
     text = text.replace(
         "## Recent changes",
         "## Recent changes\n\n" + padding,
@@ -314,7 +313,7 @@ def test_check_measures_the_recent_section_not_the_whole_changelog(filled_repo: 
     section must not fail the bounded recent-changes rule."""
     changelog = filled_repo / "CHANGELOG.md"
     text = changelog.read_text(encoding="utf-8")
-    text += "\n" + "\n".join("- old entry {}".format(i) for i in range(2000))
+    text += "\n" + "\n".join(f"- old entry {i}" for i in range(2000))
     changelog.write_text(text, encoding="utf-8")
 
     assert run("check", str(filled_repo)) == 0

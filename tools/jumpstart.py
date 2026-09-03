@@ -21,8 +21,8 @@ import datetime as _dt
 import hashlib
 import re
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
 
 # --------------------------------------------------------------------------- #
 # Layout
@@ -31,7 +31,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 #: template path (relative to templates/) -> destination path (relative to the repo).
-INSTALL_MAP: Dict[str, str] = {
+INSTALL_MAP: dict[str, str] = {
     "CLAUDE.md": "CLAUDE.md",
     "plan.md": "plan.md",
     "CURRENT_CHECKPOINT.md": "CURRENT_CHECKPOINT.md",
@@ -54,7 +54,7 @@ INSTALL_MAP: Dict[str, str] = {
 
 #: Files whose whole purpose is to be copied and filled in later. Their
 #: ``{{TOKEN}}``s are the product, not an omission, so the placeholder check skips them.
-TEMPLATES_BY_NATURE: Tuple[str, ...] = (
+TEMPLATES_BY_NATURE: tuple[str, ...] = (
     "docs/decisions/0000-template.md",
     ".claude/packets/PACKET_TEMPLATE.md",
 )
@@ -62,7 +62,7 @@ TEMPLATES_BY_NATURE: Tuple[str, ...] = (
 GITIGNORE_SNIPPET = "templates/.gitignore.snippet"
 GITIGNORE_MARKER = "--- JumpStarter: agent control files ---"
 
-CONTROL_FILES: Tuple[str, ...] = (
+CONTROL_FILES: tuple[str, ...] = (
     "CLAUDE.md",
     "AGENTS.md",
     "plan.md",
@@ -72,7 +72,7 @@ CONTROL_FILES: Tuple[str, ...] = (
     "docs/README.md",
 )
 
-AGENT_FILES: Tuple[str, ...] = (
+AGENT_FILES: tuple[str, ...] = (
     ".claude/agents/builder.md",
     ".claude/agents/reviewer.md",
     ".claude/agents/recon.md",
@@ -118,7 +118,7 @@ def _has_marker(text: str, marker: str) -> bool:
     return marker.lower() in text.lower()
 
 
-def section_line_count(text: str, heading_marker: str) -> Optional[int]:
+def section_line_count(text: str, heading_marker: str) -> int | None:
     """Lines from the heading containing ``heading_marker`` to the next same-or-higher
     heading. ``None`` when no such heading exists."""
     lines = text.splitlines()
@@ -145,9 +145,9 @@ def section_line_count(text: str, heading_marker: str) -> Optional[int]:
     return len(lines) - start
 
 
-def find_placeholders(text: str) -> List[str]:
+def find_placeholders(text: str) -> list[str]:
     """Unfilled ``{{TOKEN}}`` names, in first-seen order, without duplicates."""
-    seen: List[str] = []
+    seen: list[str] = []
     for match in PLACEHOLDER_RE.finditer(text):
         name = match.group(1)
         if name not in seen:
@@ -156,7 +156,10 @@ def find_placeholders(text: str) -> List[str]:
 
 
 def _today() -> str:
-    return _dt.date.today().isoformat()
+    # DTZ011 suppressed deliberately: this stamps a template with the date the human
+    # filling it in reads off their own wall clock. A UTC date would be wrong for
+    # anyone west of Greenwich after 16:00 local.
+    return _dt.date.today().isoformat()  # noqa: DTZ011
 
 
 # --------------------------------------------------------------------------- #
@@ -185,25 +188,23 @@ class Finding:
         return self.status == OK
 
     def render(self) -> str:
-        line = "  [{status:<8}] {check}: {detail}".format(
-            status=self.status, check=self.check, detail=self.detail
-        )
+        line = f"  [{self.status:<8}] {self.check}: {self.detail}"
         if self.remedy and not self.ok:
-            line += "\n             -> {}".format(self.remedy)
+            line += f"\n             -> {self.remedy}"
         return line
 
 
 def _print_report(title: str, findings: Sequence[Finding], repo: Path) -> int:
     gaps = [f for f in findings if not f.ok]
-    print("{}: {}".format(title, repo))
+    print(f"{title}: {repo}")
     print("=" * 78)
     for finding in findings:
         print(finding.render())
     print("-" * 78)
     if gaps:
-        print("{} gap(s) of {} checks.".format(len(gaps), len(findings)))
+        print(f"{len(gaps)} gap(s) of {len(findings)} checks.")
     else:
-        print("No gaps: {} checks passed.".format(len(findings)))
+        print(f"No gaps: {len(findings)} checks passed.")
     return 1 if gaps else 0
 
 
@@ -212,8 +213,8 @@ def _print_report(title: str, findings: Sequence[Finding], repo: Path) -> int:
 # --------------------------------------------------------------------------- #
 
 
-def audit_sizes(repo: Path) -> List[Finding]:
-    findings: List[Finding] = []
+def audit_sizes(repo: Path) -> list[Finding]:
+    findings: list[Finding] = []
 
     checkpoint = repo / "CURRENT_CHECKPOINT.md"
     if checkpoint.is_file():
@@ -223,9 +224,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
                 Finding(
                     "checkpoint size",
                     OVERSIZE,
-                    "CURRENT_CHECKPOINT.md is {} lines (limit {})".format(
-                        lines, CHECKPOINT_MAX_LINES
-                    ),
+                    f"CURRENT_CHECKPOINT.md is {lines} lines (limit {CHECKPOINT_MAX_LINES})",
                     "Move the entries older than the oldest open gate into "
                     "docs/CHECKPOINT_ARCHIVE_<period>.md and leave a pointer. "
                     "Archive, do not delete.",
@@ -236,7 +235,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
                 Finding(
                     "checkpoint size",
                     OK,
-                    "{} lines (limit {})".format(lines, CHECKPOINT_MAX_LINES),
+                    f"{lines} lines (limit {CHECKPOINT_MAX_LINES})",
                 )
             )
     else:
@@ -258,7 +257,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
                 Finding(
                     "changelog recent section",
                     MISSING,
-                    "no '{}' heading in CHANGELOG.md".format(RECENT_CHANGES_MARKER),
+                    f"no '{RECENT_CHANGES_MARKER}' heading in CHANGELOG.md",
                     "Split the file: a searchable inventory at the top, a bounded "
                     "'Recent changes' section, and a dated archive under docs/.",
                 )
@@ -268,9 +267,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
                 Finding(
                     "changelog recent section",
                     OVERSIZE,
-                    "'{}' is {} lines (limit {})".format(
-                        RECENT_CHANGES_MARKER, recent, CHANGELOG_RECENT_MAX_LINES
-                    ),
+                    f"'{RECENT_CHANGES_MARKER}' is {recent} lines (limit {CHANGELOG_RECENT_MAX_LINES})",
                     "Move the older entries into docs/CHANGELOG_ARCHIVE_<period>.md "
                     "and leave a pointer.",
                 )
@@ -280,7 +277,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
                 Finding(
                     "changelog recent section",
                     OK,
-                    "{} lines (limit {})".format(recent, CHANGELOG_RECENT_MAX_LINES),
+                    f"{recent} lines (limit {CHANGELOG_RECENT_MAX_LINES})",
                 )
             )
     else:
@@ -301,7 +298,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
                 Finding(
                     "CLAUDE.md size",
                     OVERSIZE,
-                    "{} lines (limit {})".format(lines, CLAUDE_MAX_LINES),
+                    f"{lines} lines (limit {CLAUDE_MAX_LINES})",
                     "CLAUDE.md loads into every session. Keep the rules here and move "
                     "the incident behind each into docs/INTERNALS.md.",
                 )
@@ -309,7 +306,7 @@ def audit_sizes(repo: Path) -> List[Finding]:
         else:
             findings.append(
                 Finding(
-                    "CLAUDE.md size", OK, "{} lines (limit {})".format(lines, CLAUDE_MAX_LINES)
+                    "CLAUDE.md size", OK, f"{lines} lines (limit {CLAUDE_MAX_LINES})"
                 )
             )
     else:
@@ -354,19 +351,17 @@ def audit_agents_identical(repo: Path) -> Finding:
         return Finding(
             "CLAUDE == AGENTS",
             DRIFT,
-            "sha256 differs: {}... vs {}...".format(
-                sha256_of(claude)[:12], sha256_of(agents)[:12]
-            ),
+            f"sha256 differs: {sha256_of(claude)[:12]}... vs {sha256_of(agents)[:12]}...",
             "The two tools are running on different rules. Merge by hand into "
             "CLAUDE.md (the divergence usually holds real rules), then "
             "`jumpstart.py sync-agents <path>`.",
         )
-    return Finding("CLAUDE == AGENTS", OK, "byte-identical ({}...)".format(sha256_of(claude)[:12]))
+    return Finding("CLAUDE == AGENTS", OK, f"byte-identical ({sha256_of(claude)[:12]}...)")
 
 
-def audit_placeholders(repo: Path) -> List[Finding]:
-    findings: List[Finding] = []
-    for rel in list(INSTALL_MAP.values()) + ["AGENTS.md"]:
+def audit_placeholders(repo: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for rel in [*list(INSTALL_MAP.values()), "AGENTS.md"]:
         if rel in TEMPLATES_BY_NATURE:
             continue
         path = repo / rel
@@ -376,12 +371,12 @@ def audit_placeholders(repo: Path) -> List[Finding]:
         if names:
             shown = ", ".join(names[:6])
             if len(names) > 6:
-                shown += ", +{} more".format(len(names) - 6)
+                shown += f", +{len(names) - 6} more"
             findings.append(
                 Finding(
-                    "placeholders in {}".format(rel),
+                    f"placeholders in {rel}",
                     UNFILLED,
-                    "{} unfilled: {}".format(len(names), shown),
+                    f"{len(names)} unfilled: {shown}",
                     "Fill them, or delete the block they are in. A half-written "
                     "control file is one an agent will act on.",
                 )
@@ -391,18 +386,18 @@ def audit_placeholders(repo: Path) -> List[Finding]:
     return findings
 
 
-def audit_structure(repo: Path) -> List[Finding]:
+def audit_structure(repo: Path) -> list[Finding]:
     """The full standard. Used by ``retrofit``."""
-    findings: List[Finding] = []
+    findings: list[Finding] = []
 
     for rel in CONTROL_FILES:
         path = repo / rel
         if path.is_file():
-            findings.append(Finding("control file {}".format(rel), OK, "present"))
+            findings.append(Finding(f"control file {rel}", OK, "present"))
         else:
             findings.append(
                 Finding(
-                    "control file {}".format(rel),
+                    f"control file {rel}",
                     MISSING,
                     "not found",
                     "Add it from templates/{}. Do not delete whatever the repo uses "
@@ -444,7 +439,7 @@ def audit_structure(repo: Path) -> List[Finding]:
             Finding(
                 "active state block",
                 MISSING,
-                "no '{}' block".format(ACTIVE_STATE_MARKER),
+                f"no '{ACTIVE_STATE_MARKER}' block",
                 "Add it at the top of the file the repo already uses for current "
                 "state, with numbers you measure now — including a red suite if the "
                 "suite is red.",
@@ -459,7 +454,7 @@ def audit_structure(repo: Path) -> List[Finding]:
             Finding(
                 "implemented inventory",
                 MISSING,
-                "no '{}' section".format(INVENTORY_MARKER),
+                f"no '{INVENTORY_MARKER}' section",
                 "Extract one entry per capability that exists today, by area, from "
                 "the existing docs. It is the contract to search before building.",
             )
@@ -472,7 +467,7 @@ def audit_structure(repo: Path) -> List[Finding]:
         alt = [p for p in (repo / "docs").glob("*INTERNALS*.md")] if (repo / "docs").is_dir() else []
         if alt:
             findings.append(
-                Finding("rules carry evidence", OK, "found {}".format(alt[0].name))
+                Finding("rules carry evidence", OK, f"found {alt[0].name}")
             )
         else:
             findings.append(
@@ -504,7 +499,7 @@ def audit_structure(repo: Path) -> List[Finding]:
     goals = list(decisions.glob("*owner-goals*.md")) + list(decisions.glob("*priorities*.md")) \
         if decisions.is_dir() else []
     if goals:
-        findings.append(Finding("owner goals record", OK, "found {}".format(goals[0].name)))
+        findings.append(Finding("owner goals record", OK, f"found {goals[0].name}"))
     else:
         findings.append(
             Finding(
@@ -519,14 +514,14 @@ def audit_structure(repo: Path) -> List[Finding]:
 
     for rel in AGENT_FILES:
         if (repo / rel).is_file():
-            findings.append(Finding("agent {}".format(Path(rel).stem), OK, "present"))
+            findings.append(Finding(f"agent {Path(rel).stem}", OK, "present"))
         else:
             findings.append(
                 Finding(
-                    "agent {}".format(Path(rel).stem),
+                    f"agent {Path(rel).stem}",
                     MISSING,
-                    "{} not found".format(rel),
-                    "Copy templates/{} and fill its placeholders.".format(rel),
+                    f"{rel} not found",
+                    f"Copy templates/{rel} and fill its placeholders.",
                 )
             )
 
@@ -584,7 +579,7 @@ def audit_structure(repo: Path) -> List[Finding]:
 # --------------------------------------------------------------------------- #
 
 
-def _substitutions(args: argparse.Namespace) -> Dict[str, str]:
+def _substitutions(args: argparse.Namespace) -> dict[str, str]:
     subs = {
         "PROJECT": args.name,
         "OWNER": args.owner,
@@ -602,11 +597,11 @@ def _substitutions(args: argparse.Namespace) -> Dict[str, str]:
     return subs
 
 
-def fill(text: str, subs: Dict[str, str]) -> str:
+def fill(text: str, subs: dict[str, str]) -> str:
     """Replace known ``{{TOKEN}}``s. Unknown ones are left in place on purpose: `check`
     reports them, so a half-written control set cannot quietly ship."""
 
-    def _sub(match: "re.Match[str]") -> str:
+    def _sub(match: re.Match[str]) -> str:
         return subs.get(match.group(1), match.group(0))
 
     return PLACEHOLDER_RE.sub(_sub, text)
@@ -615,20 +610,20 @@ def fill(text: str, subs: Dict[str, str]) -> str:
 def cmd_init(args: argparse.Namespace) -> int:
     repo = Path(args.path).resolve()
     if not repo.is_dir():
-        print("error: {} is not a directory".format(repo), file=sys.stderr)
+        print(f"error: {repo} is not a directory", file=sys.stderr)
         return 2
     if not TEMPLATES_DIR.is_dir():
-        print("error: templates not found at {}".format(TEMPLATES_DIR), file=sys.stderr)
+        print(f"error: templates not found at {TEMPLATES_DIR}", file=sys.stderr)
         return 2
 
     subs = _substitutions(args)
-    written: List[str] = []
-    skipped: List[str] = []
+    written: list[str] = []
+    skipped: list[str] = []
 
     for template_rel, dest_rel in sorted(INSTALL_MAP.items()):
         source = TEMPLATES_DIR / template_rel
         if not source.is_file():
-            print("error: missing template {}".format(source), file=sys.stderr)
+            print(f"error: missing template {source}", file=sys.stderr)
             return 2
         dest = repo / dest_rel
         if dest.exists() and not args.force:
@@ -653,12 +648,12 @@ def cmd_init(args: argparse.Namespace) -> int:
     else:
         skipped.append(".gitignore (JumpStarter block already present)")
 
-    print("Initialised {} in {}".format(args.name, repo))
+    print(f"Initialised {args.name} in {repo}")
     print("-" * 78)
     for rel in written:
-        print("  wrote    {}".format(rel))
+        print(f"  wrote    {rel}")
     for rel in skipped:
-        print("  skipped  {} (exists; --force to overwrite)".format(rel))
+        print(f"  skipped  {rel} (exists; --force to overwrite)")
     print("-" * 78)
 
     remaining = sorted(
@@ -670,11 +665,11 @@ def cmd_init(args: argparse.Namespace) -> int:
         }
     )
     if remaining:
-        print("Unfilled placeholders, to complete by hand ({}):".format(len(remaining)))
+        print(f"Unfilled placeholders, to complete by hand ({len(remaining)}):")
         print("  " + ", ".join(remaining))
-        print("")
+        print()
     print("Next: playbooks/new-project.md — the owner questionnaire comes first,")
-    print("then fill the placeholders, then `jumpstart.py check {}`.".format(repo))
+    print(f"then fill the placeholders, then `jumpstart.py check {repo}`.")
     return 0
 
 
@@ -698,11 +693,11 @@ def _append_gitignore(repo: Path) -> bool:
 def cmd_retrofit(args: argparse.Namespace) -> int:
     repo = Path(args.path).resolve()
     if not repo.is_dir():
-        print("error: {} is not a directory".format(repo), file=sys.stderr)
+        print(f"error: {repo} is not a directory", file=sys.stderr)
         return 2
     findings = audit_structure(repo)
     status = _print_report("JumpStarter retrofit audit", findings, repo)
-    print("")
+    print()
     print("This audit changed nothing. Next: playbooks/retrofit.md.")
     print("Archive, do not delete. Never rewrite history.")
     return status
@@ -713,28 +708,28 @@ def cmd_sync_agents(args: argparse.Namespace) -> int:
     claude = repo / "CLAUDE.md"
     agents = repo / "AGENTS.md"
     if not claude.is_file():
-        print("error: {} not found".format(claude), file=sys.stderr)
+        print(f"error: {claude} not found", file=sys.stderr)
         return 1
     agents.write_bytes(claude.read_bytes())
     claude_hash = sha256_of(claude)
     agents_hash = sha256_of(agents)
     if claude_hash != agents_hash:  # pragma: no cover - a filesystem that lied to us
         print(
-            "error: copy did not verify: {} != {}".format(claude_hash, agents_hash),
+            f"error: copy did not verify: {claude_hash} != {agents_hash}",
             file=sys.stderr,
         )
         return 1
     print("CLAUDE.md -> AGENTS.md")
-    print("sha256 {} (identical)".format(claude_hash))
+    print(f"sha256 {claude_hash} (identical)")
     return 0
 
 
 def cmd_check(args: argparse.Namespace) -> int:
     repo = Path(args.path).resolve()
     if not repo.is_dir():
-        print("error: {} is not a directory".format(repo), file=sys.stderr)
+        print(f"error: {repo} is not a directory", file=sys.stderr)
         return 2
-    findings: List[Finding] = [audit_agents_identical(repo)]
+    findings: list[Finding] = [audit_agents_identical(repo)]
     findings.extend(audit_sizes(repo))
     findings.extend(audit_placeholders(repo))
     return _print_report("JumpStarter check", findings, repo)
@@ -779,7 +774,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):
