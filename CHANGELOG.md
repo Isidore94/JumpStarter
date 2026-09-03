@@ -82,6 +82,9 @@ entries under `docs/` and leave a pointer.
 - Ran `init` on this repo to produce its own control set, then filled it by hand.
 - `TEMPLATES_BY_NATURE` added to the placeholder check: two files exist to be copied, so
   their placeholders are the product, not an omission.
+- `docs/prompts/REFRESH_FROM_SOURCE_PROMPT.md` — paste-ready brief for a session on the
+  owner's machine to re-harvest from the source project and close gates 1 and 3. It is a
+  prompt, not work done: no gate closes on it.
 - First retrofit dry run against a clone of a mature repo: 22 checks, 3 gaps — two
   real size violations and one false positive (a correctly-gitignored allow-list read
   as absent). Recorded in `CURRENT_CHECKPOINT.md`; the fix is `plan.md` Phase 0 item 2.

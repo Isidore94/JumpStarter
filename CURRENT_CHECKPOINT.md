@@ -47,6 +47,24 @@ deleting the row.
 
 ---
 
+### 2026-09-03 — A paste-ready prompt to refresh from the source project
+
+The owner now has a local clone with access to `c:\Users\Aaron\TradingBotV3`, so the
+four sources the remote build could not read are reachable:
+`.claude/packets/*.md` (the real packets — `templates/.claude/packets/PACKET_TEMPLATE.md`
+was reconstructed from a *description* of one), `.claude/settings.json` (the real
+allow-list), `.claude/worktrees/` (the real layout), and the session memory notes under
+`C:\Users\Aaron\.claude\projects\...\memory\`, which were never read at all.
+
+`docs/prompts/REFRESH_FROM_SOURCE_PROMPT.md` is the brief for that session: recon and a
+diff report before any template edit (templates are ask-first), gate 1 against the
+working copy **and** against a repo with no control set, gate 3's Python floor, the four
+OPEN questionnaire answers, then doc reconciliation.
+
+**No gate is closed by this entry.** Writing the prompt is not doing the work.
+
+---
+
 ### 2026-09-03 — First retrofit dry run, on a clone of the source project
 
 **Report only. Nothing was changed in that repository, and nothing could be:** it was a
