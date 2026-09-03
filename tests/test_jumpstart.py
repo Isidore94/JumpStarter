@@ -440,9 +440,9 @@ def test_no_agent_template_tells_an_agent_to_stash() -> None:
     say "stash or restore", which is the wrong half of the choice.
     """
     for rel in jumpstart.AGENT_FILES:
-        text = (jumpstart.TEMPLATES_DIR / rel).read_text(encoding="utf-8")
-        for line in text.splitlines():
-            if "git stash" in line or "stash the" in line:
-                assert "Never" in line or "never" in line, (
-                    f"{rel} tells an agent to stash: {line!r}"
+        text = " ".join((jumpstart.TEMPLATES_DIR / rel).read_text(encoding="utf-8").split())
+        for sentence in text.split(". "):
+            if "stash" in sentence.lower():
+                assert "never" in sentence.lower(), (
+                    f"{rel} mentions stashing without forbidding it: {sentence!r}"
                 )
