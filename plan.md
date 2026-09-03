@@ -20,11 +20,23 @@ It never does: generate project content, edit a repo it was asked only to audit,
 third-party dependency in `tools/`, or carry domain specifics from the project it was
 distilled from. Those are boundaries, not backlog items.
 
+**Labelled honestly:** that boundary is the *design's* assumption, not the owner's stated
+one. Asked "what does it never do?" on 2026-09-03 the owner said *"i havent ran into this
+yet"* (record 0002, answer 9). It stays in force and it is re-asked once they have hit a
+case.
+
 **What the program is for, in the owner's words.** The record is
-[`docs/decisions/0001-owner-goals-and-priorities.md`](docs/decisions/0001-owner-goals-and-priorities.md).
-Short form: a fresh session in any repo can be told "apply JumpStarter here" and knows
-what to do; the templates are short enough to read in one sitting; the two tools never
-drift; and nothing in the templates is specific to the project they came from.
+[`docs/decisions/0002-owner-goals-asked-properly.md`](docs/decisions/0002-owner-goals-asked-properly.md)
+(2026-09-03, twelve questions asked one at a time; `0001` is superseded by it).
+
+Short form, in their terms: *"the foundation for future projects to know how to setup
+their .md files to optimize claude and codex"* — and for existing projects to be directed
+here for the same. The foundation is the product; the CLI is how it gets into a repo.
+**The agent is the reader, not the owner**, so bounded reads and size limits are the
+product rather than housekeeping. **The orchestrating model is not fixed** — Fable 5.1
+with subagents today, possibly a Codex frontier model later — so nothing in `templates/`
+names a model or assumes which tool leads. **Cost is the trust signal**: the delegation
+policy is load-bearing, and a design that is correct and expensive is a failure.
 
 ## 2. Status vocabulary
 

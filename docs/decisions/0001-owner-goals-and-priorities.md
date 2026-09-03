@@ -2,13 +2,22 @@
 
 Date: 2026-09-03
 
-Status: `ACCEPTED` — partially answered. The unanswered questions are marked **OPEN**.
+Status: `SUPERSEDED` by
+[`0002-owner-goals-asked-properly.md`](0002-owner-goals-asked-properly.md), 2026-09-03.
 
-**This record is the tie-breaker for every prioritisation call**, until the owner says
-otherwise. `CLAUDE.md`'s mandatory read points here; `plan.md` section 1 summarises it.
+**Read 0002 first.** This record was written from a detailed brief, not from answers;
+its own reopen trigger was to put the twelve questions properly. That was done the same
+day, and 0002 carries the owner's words. This one is kept as evidence of what was
+*assumed* beforehand — which is worth having, because two of the assumptions were wrong:
+answer 4 guessed the owner reads the CLI output and the playbooks (they read neither; the
+agent is the reader), and answer 7 recorded restarts and promotion as never automated
+(the owner's rule is scope discipline, not a list of forbidden verbs).
 
-An **OPEN** answer below is information, not a gap to be filled in by an agent. Do not
-guess one. Ask.
+Originally: `ACCEPTED` — partially answered, with the unanswered questions marked
+**OPEN**.
+
+It *was* the tie-breaker for every prioritisation call. Record 0002 is now, and
+`CLAUDE.md`'s mandatory read and `plan.md` section 1 point there.
 
 ## Context
 
@@ -128,6 +137,11 @@ That is the specification. JumpStarter's templates are that set, generalised.
 
 ## Reopen trigger
 
-Put the twelve questions to the owner properly, one at a time, before phase 1 — the
-**OPEN** answers above are the immediate reason. Amend with a new dated record rather
-than editing these answers: they are evidence of what was true on 2026-09-03.
+**Fired and satisfied, 2026-09-03.** The twelve questions were put to the owner one at a
+time; the answers are in
+[`0002-owner-goals-asked-properly.md`](0002-owner-goals-asked-properly.md). No **OPEN**
+answer remains: all twelve have the owner's own words, two of which (9 and 12) are
+explicit non-answers and are recorded as such rather than filled in.
+
+The answers above are left unedited: they are evidence of what was true on 2026-09-03,
+before anyone asked.

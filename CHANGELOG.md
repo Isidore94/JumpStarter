@@ -140,3 +140,13 @@ entries under `docs/` and leave a pointer.
 ## Retired or superseded implementations
 
 Nothing yet.
+
+### 2026-09-03 — The questionnaire, asked one question at a time
+
+- `docs/decisions/0002-owner-goals-asked-properly.md` — all twelve answers verbatim.
+  `0001` is `SUPERSEDED` and kept as evidence of what was assumed before anyone asked.
+  No **OPEN** answer remains; two answers are explicit non-answers and stay that way.
+- Two of 0001's guesses were wrong: **the agent is the reader, not the owner** (so the
+  size limits are the product), and **cost is the trust signal** (so the delegation
+  policy is load-bearing). Both are now the tie-breakers `plan.md` section 1 cites.
+- The orchestrating model is explicitly not fixed, so nothing in `templates/` names one.

@@ -152,8 +152,11 @@ changing the behaviour a rule governs.**
 - `CURRENT_CHECKPOINT.md` — **read the `Active state at a glance` block.**
 - `WISHLIST.md` — candidate ideas; never an implementation queue.
 - `docs/README.md` — classifies every Markdown file.
-- **`docs/decisions/0001-owner-goals-and-priorities.md` — the owner's goals in their own
-  words: the tie-breaker for every prioritisation call.**
+- **`docs/decisions/0002-owner-goals-asked-properly.md` — the owner's goals in their own
+  words, asked one question at a time: the tie-breaker for every prioritisation call.**
+  `0001` is superseded by it and kept as evidence of what was assumed beforehand.
+  Two answers matter more than the rest: **the agent is the reader, not the owner**, and
+  **cost is the trust signal** — the wrong agent on a cheap job is the failure mode.
 - `docs/CODEX_NOTES.md` — what a Codex session reads here and what it cannot do.
 
 `AGENTS.md` is a generated copy of this file (symlinks do not survive every checkout) —

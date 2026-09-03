@@ -56,7 +56,8 @@ Retain detailed contracts. They do **not** own roadmap order or status.
 | File | Decision |
 |---|---|
 | [`decisions/0000-template.md`](decisions/0000-template.md) | The template for a new record. Keeps its placeholders on purpose |
-| [`decisions/0001-owner-goals-and-priorities.md`](decisions/0001-owner-goals-and-priorities.md) | **The owner's goals in their own words — the tie-breaker for every prioritisation call** |
+| [`decisions/0001-owner-goals-and-priorities.md`](decisions/0001-owner-goals-and-priorities.md) | `SUPERSEDED` by 0002. Kept as evidence of what was *assumed* before anyone asked — two of the assumptions were wrong |
+| [`decisions/0002-owner-goals-asked-properly.md`](decisions/0002-owner-goals-asked-properly.md) | **The owner's goals in their own words, asked one question at a time — the tie-breaker for every prioritisation call** |
 
 ## Agent definitions
 

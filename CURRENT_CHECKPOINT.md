@@ -19,7 +19,7 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 |---|---|
 | Working branch | **`claude/jumpstarter-repo-setup-dn3rof`**. Nothing has been merged to `main`; `main` does not exist yet |
 | Also in flight | **NOTHING unmerged.** No other branch, no worktree |
-| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates, questionnaire first. Not started. Phase 0 is done |
+| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates. Not started. Phase 0 is done, and the questionnaire is now answered (record 0002) |
 | Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**: `python -m pytest tests/ -q` **49 passed, process exit 0, 2.0 s**; `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **6 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory**. The same four re-run identically on 3.12.13 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
@@ -48,6 +48,48 @@ dated entry named beside it.
 
 A gate is closed by striking its row through and writing what was observed — never by
 deleting the row.
+
+---
+
+### 2026-09-03 — The questionnaire, asked properly this time
+
+All twelve questions put to the owner **one at a time**, answers recorded verbatim in
+[`docs/decisions/0002-owner-goals-asked-properly.md`](docs/decisions/0002-owner-goals-asked-properly.md).
+Record `0001` is `SUPERSEDED` and kept as evidence of what was assumed before anyone
+asked. **No OPEN answer remains.** Two answers (9 and 12) are explicit non-answers —
+*"i havent ran into this yet"*, *"not sure yet this concept is new to me"* — recorded as
+such and not filled in.
+
+**Two of 0001's assumptions were wrong, and both change how this project is judged.**
+
+1. **The agent is the reader, not the owner.** 0001 guessed the owner reads the CLI
+   output and the playbooks. Asked, they said: *"i dont use any of them but fable 5.1
+   currently uses everything there."* So the size limits, the bounded read and the
+   active-state block are **the product**, not housekeeping — they exist because a model
+   has a context budget. The only surface the owner reads is the chat message.
+2. **Cost is the trust signal.** 0001 recorded this answer as OPEN and guessed at "a tool
+   that rearranged an existing repo's docs". The real answer: *"if it used all my usage
+   really fast indicating to me that subagents arent being used appropriatly."* That makes
+   the delegation policy in `docs/AGENT_TEAM.md` load-bearing rather than advisory, and it
+   sets the failure mode to watch: **a design that is correct and expensive is a design
+   this owner stops trusting.**
+
+Three more that change something:
+
+- **The orchestrator is not fixed.** Fable 5.1 with subagents today; possibly a Codex
+  frontier model later. Nothing in `templates/` may name a model or assume which tool
+  leads. Already true of `docs/AGENT_TEAM.md`; now a requirement rather than a style.
+- **The slow part is the shuttle** — *"having to copy and paste fable prompts to opus"* —
+  which is exactly what the packet-path handoff removes.
+- **Scope discipline is the boundary**, not a list of forbidden verbs: *"as long as we are
+  following my instructions and limiting scope to what i say, everything can be
+  automted."* This loosens 0001's "restarts and promotion are always the owner's call".
+  Recorded, flagged, and **not acted on**: the ask-first and wishlist rules survive as
+  scope-limiting devices until the owner says otherwise.
+
+**What this did NOT do.** It did not reorder the roadmap. Gate 2 was already the only open
+gate and answer 3 — *"take tradingbotv3 folder and learn what i did there"* — is the same
+instruction the build has been following. Nothing here authorises new work.
 
 ---
 
