@@ -41,7 +41,7 @@ Describe actions someone may perform **now**.
 | [`../playbooks/packet-writing.md`](../playbooks/packet-writing.md) | How to write a packet from verified premises |
 | [`AGENT_TEAM.md`](AGENT_TEAM.md) | How a session in *this* repo plans, builds, reviews and integrates |
 | [`CODEX_NOTES.md`](CODEX_NOTES.md) | What a Codex session reads here, what it cannot do, how packets reach it |
-| [`prompts/REFRESH_FROM_SOURCE_PROMPT.md`](prompts/REFRESH_FROM_SOURCE_PROMPT.md) | Paste-ready brief for a session on the owner's PC: re-harvest from the source project (including the four sources the remote build could not read) and close gates 1, 3 and the OPEN questionnaire answers |
+| [`prompts/REFRESH_FROM_SOURCE_PROMPT.md`](prompts/REFRESH_FROM_SOURCE_PROMPT.md) | Paste-ready brief for a session with access to the source project: re-harvest from it and reconcile the templates. **Executed once, 2026-09-03** — the four sources it names were read, and gates 1 and 3 and the OPEN questionnaire answers closed with it. Reusable as-is for the next refresh; the gate list inside it is spent |
 
 ## Active references
 
