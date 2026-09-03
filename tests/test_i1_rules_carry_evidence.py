@@ -262,3 +262,31 @@ def test_retrofit_carries_one_rules_carry_evidence_finding_and_stays_at_25_check
     assert "No gaps: 25 checks passed." in out
 
     assert _tracked_tree() == before
+
+
+# --------------------------------------------------------------------------- #
+# (e) added by the builder: the case the packet left open
+# --------------------------------------------------------------------------- #
+
+
+def test_the_same_rule_cited_twice_counts_once(filled_repo: Path) -> None:
+    """The detail says "N cited rule(s)", so N counts rules and not citations.
+
+    The packet fixed the wording and not this case. Pinning it means the next change
+    to the audit decides on purpose rather than by accident: a rule referred to twice
+    in CLAUDE.md is one rule with one incident behind it, and a gap report that named
+    it twice would read like two rules were undocumented.
+    """
+    append(
+        filled_repo / "CLAUDE.md",
+        '\n- **Said twice.** *(INTERNALS: "Said twice")*\n'
+        '- **Said twice, elsewhere.** *(INTERNALS: "said\n  TWICE")*\n',
+    )
+    assert run("sync-agents", str(filled_repo)) == 0
+
+    findings = jumpstart.audit_rule_evidence(filled_repo)
+    assert len(findings) == 1
+    assert findings[0].status == jumpstart.MISSING
+    assert findings[0].detail == (
+        '1 cited rule(s) with no docs/INTERNALS.md entry: "Said twice"'
+    )
