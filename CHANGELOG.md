@@ -105,6 +105,31 @@ do not rebuild landed work.**
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
 
+### 2026-09-03 — The second pass verified, and the team exercised on packet I1
+
+- Every 2026-09-03 claim re-derived by a lead session; the report is
+  `docs/prompts/VERIFICATION_REPORT_2026-09-03.md`. Numbers held. One hard invariant did
+  not: the Core rule *Templates stay short enough to read in one sitting* had no
+  `docs/INTERNALS.md` entry — entry and citation added, `AGENTS.md` re-synced.
+- This dated entry ("The questionnaire…") had been filed under "Retired or superseded";
+  moved here. `.claude/packets/` is now tracked so worktree agents can read a packet.
+- Packet I1 (`.claude/packets/I1.md`) built by the four-agent loop on
+  `claude/i1-rules-carry-evidence` (`6972b9f`, reviewer GO, **not merged**): `check`
+  gains `rules carry evidence`. The inventory line lands with the merge.
+- Found and not fixed: `section_line_count` reads prose beginning `#19.` as a heading and
+  ends the "Recent changes" measurement early on a real repo; uncited bolded rules are
+  invisible to the new check. Both owed as packet I2, not authorised.
+
+### 2026-09-03 — The questionnaire, asked one question at a time
+
+- `docs/decisions/0002-owner-goals-asked-properly.md` — all twelve answers verbatim.
+  `0001` is `SUPERSEDED` and kept as evidence of what was assumed before anyone asked.
+  No **OPEN** answer remains; two answers are explicit non-answers and stay that way.
+- Two of 0001's guesses were wrong: **the agent is the reader, not the owner** (so the
+  size limits are the product), and **cost is the trust signal** (so the delegation
+  policy is load-bearing). Both are now the tie-breakers `plan.md` section 1 cites.
+- The orchestrating model is explicitly not fixed, so nothing in `templates/` names one.
+
 ### 2026-09-03 — Second pass: the four unreadable sources, and gates 1 and 3
 
 - **Read the four sources the first build could not**: the source project's real packets,
@@ -140,13 +165,3 @@ entries under `docs/` and leave a pointer.
 ## Retired or superseded implementations
 
 Nothing yet.
-
-### 2026-09-03 — The questionnaire, asked one question at a time
-
-- `docs/decisions/0002-owner-goals-asked-properly.md` — all twelve answers verbatim.
-  `0001` is `SUPERSEDED` and kept as evidence of what was assumed before anyone asked.
-  No **OPEN** answer remains; two answers are explicit non-answers and stay that way.
-- Two of 0001's guesses were wrong: **the agent is the reader, not the owner** (so the
-  size limits are the product), and **cost is the trust signal** (so the delegation
-  policy is load-bearing). Both are now the tie-breakers `plan.md` section 1 cites.
-- The orchestrating model is explicitly not fixed, so nothing in `templates/` names one.

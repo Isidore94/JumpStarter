@@ -239,3 +239,32 @@ suppression, it is a statement of what the gate *is*.
 
 **Reopen trigger.** A ruff release that changes the meaning of a selected rule set, or a
 change to the Python floor.
+
+## Templates stay short enough to read in one sitting (2026-09-03, verification pass)
+
+**The rule, as it appears in `CLAUDE.md`:** *Templates stay short enough to read in one
+sitting. The whole point is bounded reads; a template nobody finishes is a template that
+gets skimmed and appended to.*
+
+**What happened.** The rule was in `CLAUDE.md` from the first build, and it was the only
+Core rule with no `INTERNALS` citation and no entry here. The verification pass of
+2026-09-03 found it by listing the bolded Core rules (nine) against the `## ` headings in
+this file (nine, but one of them - "An unpinned linter is not a gate" - belongs to the
+Commands section, not the Core rules). Eight matched; this one had nothing behind it. The
+invariant "every rule in `CLAUDE.md` has an entry in `docs/INTERNALS.md`" in `plan.md`
+section 5 was violated by the file that states it, and nothing noticed, because nothing
+checked - which is what packet I1 is for.
+
+**What was measured.** The templates on 2026-09-03: `templates/CLAUDE.md` 165 lines,
+`templates/plan.md` 144, every `templates/.claude/agents/*.md`
+under 90 lines. The evidence for the rule itself is `PRINCIPLES.md` principle 1 and the
+three real repositories audited the same day: 4,608-, 1,835- and 2,960-line files that
+nobody reads end to end.
+
+**What is deliberately NOT done, and why.** No numeric limit is attached to the templates
+themselves; the limits that exist (`CLAUDE_MAX_LINES`, `PLAN_MAX_LINES`, the checkpoint and
+changelog bounds) apply to the files a template becomes. A limit on the template would be
+a limit on an empty file.
+
+**Reopen trigger.** A template that passes 200 lines, or an agent that reports it did not
+finish reading one.

@@ -18,7 +18,7 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 | | |
 |---|---|
 | Working branch | **`claude/jumpstarter-repo-setup-dn3rof`**. Nothing has been merged to `main`; `main` does not exist yet |
-| Also in flight | **NOTHING unmerged.** No other branch, no worktree |
+| Also in flight | **`claude/i1-rules-carry-evidence` at `6972b9f`, pushed, reviewer GO, NOT merged** — packet I1 (`.claude/packets/I1.md`): `check` gains `rules carry evidence`, 54 tests, 7 checks. Merging is the owner's call. No worktree left open |
 | Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates. Not started. Phase 0 is done, and the questionnaire is now answered (record 0002) |
 | Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**: `python -m pytest tests/ -q` **49 passed, process exit 0, 2.0 s**; `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **6 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory**. The same four re-run identically on 3.12.13 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
@@ -48,6 +48,42 @@ dated entry named beside it.
 
 A gate is closed by striking its row through and writing what was observed — never by
 deleting the row.
+
+---
+
+### 2026-09-03 — The second pass verified by reproduction, and the team run once for real
+
+Full detail, every command and its output:
+[`docs/prompts/VERIFICATION_REPORT_2026-09-03.md`](docs/prompts/VERIFICATION_REPORT_2026-09-03.md).
+
+**Part A — the numbers held.** 49 / clean / 6 checks / 25 checks + 1 advisory, all exit 0
+on CPython 3.9.25, re-measured. All eleven fail-before-fix claims reproduce (no test
+passes on the un-fixed code), but seven of the nine from `2c716c7` fail on an
+`AttributeError` for a not-yet-existing function, which proves absence, not behaviour.
+**One hard invariant was violated**: *Templates stay short enough to read in one sitting*
+was a Core rule with no `INTERNALS` entry. Fixed here — entry added, citation added,
+`AGENTS.md` re-synced. Also fixed here: a dated `CHANGELOG.md` entry that had been filed
+under "Retired", and `.claude/packets/` was gitignored so no worktree agent could read a
+packet (now tracked). **Doc defects**: the source project audit is 4 gaps, not 3
+(`plan.md` 1,835 > 1,200 was added after the count was written); `section_line_count`
+stops at prose beginning `#19.`, so that repo's "Recent changes" is 3,782 lines, not the
+1,583 the tool prints. Not fixed — owed as packet I2 with the uncited-rule case.
+
+**Part B — the loop worked.** recon (sonnet, ~42k tokens) → packet I1 → tester committed
+four tests red at `e404283` (lead reproduced: 3 failed, 50 passed; the proof fails on the
+`check` exit code, not on a missing name) → builder green at `677a5d2` + docs at
+`6972b9f`, **0 deletions in the test file** → reviewer **GO**, every number re-derived,
+one tautology found at test line 191 that both earlier agents missed. Gate 5 observed by
+the lead and by the reviewer with the branch's code against copies: the missing name is
+printed and both commands exit 1. Total ~268k agent tokens, 145 tool calls, four runs.
+**Not merged.**
+
+**What the run showed about the role files** (all ask-first, so recorded, not changed):
+`main` is assumed and does not exist; "any Python 3.9+ on PATH" is false on this machine
+(the lead had to hand every agent the `uv run` line); the tester prototyped the fix in a
+scratch directory, which the role file neither allows nor forbids; the builder discarded
+its own uncommitted fix with `git checkout --` during revert-and-rerun — commit before
+proving. The proposed allow-list is in the report.
 
 ---
 

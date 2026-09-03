@@ -41,7 +41,7 @@ Describe actions someone may perform **now**.
 | [`../playbooks/packet-writing.md`](../playbooks/packet-writing.md) | How to write a packet from verified premises |
 | [`AGENT_TEAM.md`](AGENT_TEAM.md) | How a session in *this* repo plans, builds, reviews and integrates |
 | [`CODEX_NOTES.md`](CODEX_NOTES.md) | What a Codex session reads here, what it cannot do, how packets reach it |
-| [`prompts/VERIFY_AND_EXERCISE_THE_TEAM_PROMPT.md`](prompts/VERIFY_AND_EXERCISE_THE_TEAM_PROMPT.md) | Paste-ready brief for a lead session: adversarially verify the 2026-09-03 second pass by reproduction, then run the four-agent loop on one real packet so the owner can see whether the subagent system works. **Not yet run** |
+| [`prompts/VERIFY_AND_EXERCISE_THE_TEAM_PROMPT.md`](prompts/VERIFY_AND_EXERCISE_THE_TEAM_PROMPT.md) | Paste-ready brief for a lead session: adversarially verify the 2026-09-03 second pass by reproduction, then run the four-agent loop on one real packet so the owner can see whether the subagent system works. **Executed once, 2026-09-03** — the result is the verification report under Historical evidence |
 | [`prompts/REFRESH_FROM_SOURCE_PROMPT.md`](prompts/REFRESH_FROM_SOURCE_PROMPT.md) | Paste-ready brief for a session with access to the source project: re-harvest from it and reconcile the templates. **Executed once, 2026-09-03** — the four sources it names were read, and gates 1 and 3 and the OPEN questionnaire answers closed with it. Reusable as-is for the next refresh; the gate list inside it is spent |
 
 ## Active references
@@ -77,8 +77,15 @@ set, so a template change that does not reach them is stale dogfood.
 
 ## Historical evidence
 
-**Evidence, not authority.** Nothing yet — this repo is three days old at most. When
-`CURRENT_CHECKPOINT.md` or `CHANGELOG.md` is archived, the archive is listed here.
+**Evidence, not authority.** When `CURRENT_CHECKPOINT.md` or `CHANGELOG.md` is archived,
+the archive is listed here.
+
+| File | What it records |
+|---|---|
+| [`prompts/VERIFICATION_REPORT_2026-09-03.md`](prompts/VERIFICATION_REPORT_2026-09-03.md) | The 2026-09-03 second pass re-derived by reproduction (every command and its output), and the four-agent loop run once on packet I1: what each agent did, what it cost, the proposed allow-list, and what was not done |
+
+`.claude/packets/*.md` are tracked from 2026-09-03: a packet is the record of what was
+authorised, and reviews cite it. They are not classified here individually.
 
 ## Payload, not documentation
 

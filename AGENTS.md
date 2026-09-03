@@ -99,6 +99,7 @@ changing the behaviour a rule governs.**
   is a check that gets ignored. *(INTERNALS: "A placeholder name is an identifier")*
 - **Templates stay short enough to read in one sitting.** The whole point is bounded
   reads; a template nobody finishes is a template that gets skimmed and appended to.
+  *(INTERNALS: "Templates stay short enough to read in one sitting")*
 
 ## Hard invariants (plan.md sec 5 — never violate)
 - No third-party dependency in `tools/`. It must run on a bare Python 3.9+.
