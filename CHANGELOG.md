@@ -136,7 +136,9 @@ entries under `docs/` and leave a pointer.
   role sets. Claude finding names and the 25-finding retrofit report shape are retained.
 - Replaced manual pasted-role guidance with native spawning from `.codex/agents/`, the
   same packet path under `.claude/packets/`, and the same handoff/verdict interface.
-  Gate 4 remains open until a real Codex role crossing is observed.
+  Reviewer returned GO with no blockers or advisories at `aa7f901`; that tip was
+  fast-forwarded to `main`. Gate 4 remains open until a real Codex role crossing is
+  observed.
 
 ### 2026-09-03 — The second pass verified, and the team exercised on packet I1
 

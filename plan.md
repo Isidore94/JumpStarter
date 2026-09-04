@@ -140,8 +140,8 @@ Until then it ships as the default but is described in the playbook as unproven.
 
 1. **Bootstrap one real new project from the templates.** — `PLANNED`. Every placeholder
    filled by a human answering the questionnaire; note which questions were hard to
-   answer and which placeholders had no good answer. **Gate 2 — the only gate still
-   open.** The templates changed materially on 2026-09-03 (a fourth agent, a reshaped
+   answer and which placeholders had no good answer. **Gate 2 — one of two open gates
+   with gate 4.** The templates changed materially on 2026-09-03 (a fourth agent, a reshaped
    packet, four new limits and advisories); none of that has been used from empty.
 2. **Hand one packet to a Codex session and one to Claude Code from the same packet
    file.** — `GREEN machinery; GATE 4 OPEN`, 2026-09-04. Both harness-native role sets

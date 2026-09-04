@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`claude/native-codex-subagents`** — packet C1, branched from `main`; native Codex support is additive and pending lead review. `main` remains the trunk; both harnesses keep `claude/<slug>` packet branches |
-| Also in flight | **Packet C1 only.** Tester tip `e037777`; builder changes are on the same branch |
+| Working branch | **`main`** at `aa7f901` — packet C1 fast-forwarded after reviewer GO; both harnesses keep `claude/<slug>` packet branches |
+| Also in flight | **NOTHING unmerged.** Packet C1 is integrated; its branch remains as review evidence |
 | Active items | `plan.md` **Phase 1 item 2** — native Codex role machinery is green; gate 4 remains open until a real Codex lead spawns a tracked role with the shared packet. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
-| Last verified baseline | Measured 2026-09-04 on **CPython 3.9.25**, on the C1 working tree: `pytest tests/ -q` **57 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory** |
+| Last verified baseline | Measured 2026-09-04 on **CPython 3.9.25**, on `main` after C1 integration and checkpoint reconciliation: `pytest tests/ -q` **57 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory** |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
@@ -70,7 +70,8 @@ incident is recorded in `docs/INTERNALS.md`: blind substitution had produced
 
 Automated state is green: **57 passed**, lint clean, self-check **7 checks**, retrofit
 **25 checks + 1 advisory**, all process exit 0 on CPython 3.9.25. Gate 4 is deliberately
-open: no real Codex crossing has been observed yet.
+open: no real Codex crossing has been observed yet. Reviewer verdict: **GO**, no blockers
+or advisories, at `aa7f901`; the lead fast-forwarded that tip to `main` and pushed it.
 
 ### 2026-09-03 — The second pass verified by reproduction, and the team run once for real
 
