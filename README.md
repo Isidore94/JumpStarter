@@ -16,6 +16,36 @@ Both Claude Code (`CLAUDE.md`, `.claude/agents/`, `.claude/settings.json`) and C
 
 ---
 
+## Using it from another repo
+
+Nothing is installed into the other repo and nothing is vendored. Clone JumpStarter
+once, then point the CLI at the other repo's path:
+
+```
+git clone https://github.com/Isidore94/JumpStarter.git
+cd JumpStarter
+
+python tools/jumpstart.py retrofit C:\path\to\OtherRepo               # audit only; writes nothing; exit 1 = gaps
+python tools/jumpstart.py init C:\path\to\OtherRepo --name OtherRepo   # add what is missing; never overwrites
+python tools/jumpstart.py sync-agents C:\path\to\OtherRepo             # regenerate AGENTS.md from CLAUDE.md
+python tools/jumpstart.py check C:\path\to\OtherRepo                   # the gate to leave green
+```
+
+Any Python 3.9+ works; there are no dependencies. On a machine with no `python` on
+`PATH`, name the interpreter (for example `uv run --python 3.9 python tools/jumpstart.py ...`).
+
+Or hand the job to an agent working in the other repo:
+
+> apply JumpStarter from `C:\Users\Aaron\JumpStarter` — follow `playbooks/retrofit.md`
+> for an existing repo, `playbooks/new-project.md` for an empty one.
+
+What carries over: the control files, the four agent role files, the packet template,
+the playbooks and the checks. What does not: `.claude/settings.json`, the machine-local
+command allow-list, which each machine writes for itself from
+`templates/.claude/settings.json`.
+
+---
+
 ## The one instruction
 
 Hand this repo to a fresh Claude Code or Codex session in any project and say:
