@@ -120,11 +120,12 @@ pointer to its evidence entry. A rule with no evidence entry is a draft.
 - {{EXTRA_COMMANDS}}
 
 ## Working agreement for agents
-- **The agent team.** A session builds and reviews through the sub-agents in
-  `.claude/agents/` (`tester`, `builder`, `reviewer`, `recon`); the contract, the loop
-  and the delegation policy are in [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). Read it
-  before spawning one. They work in their own worktrees under `.claude/worktrees/` and
-  never touch the main checkout; the lead session merges.
+- **The agent team.** Claude Code loads `.claude/agents/`; Codex loads
+  `.codex/agents/`. Both expose `tester`, `builder`, `reviewer` and `recon`, use the same
+  packets under `.claude/packets/`, and follow the contract in
+  [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). Read it before spawning one. Builders and
+  reviewers work in their own worktrees and never touch the main checkout; the lead
+  session merges.
 - Follow the mandatory documentation workflow above. `plan.md` owns build order;
   `CURRENT_CHECKPOINT.md` owns the active item. Do not re-implement anything in
   `CHANGELOG.md` or implement anything directly from `WISHLIST.md`.

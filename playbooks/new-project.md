@@ -36,10 +36,13 @@ python tools/jumpstart.py init /path/to/repo \
     --lint-cmd "ruff check ." \
     --run-cmd "python -m myproject" \
     --main-branch main \
-    --branch-prefix "claude/"
+    --branch-prefix "claude/" \
+    --codex-strong-model "gpt-5.6-terra" \
+    --codex-cheap-model "gpt-5.6-luna"
 ```
 
-This writes the control set and appends the `.claude` lines to `.gitignore`. It refuses
+This writes both native role sets (`.claude/agents/` and `.codex/agents/`) and the rest
+of the control set, then appends the agent lines to `.gitignore`. It refuses
 to overwrite an existing file unless you pass `--force`, and it prints exactly what it
 wrote.
 
@@ -89,7 +92,7 @@ Walk each file and replace the `{{TOKENS}}`:
 | `CHANGELOG.md` | the inventory areas; it is allowed to be nearly empty on day one |
 | `docs/README.md` | every Markdown file in the repo, classified |
 | `docs/decisions/0001-...` | the verbatim answers from step 1 |
-| `.claude/agents/*.md` | project name, toolchain path, live stores, ask-first files |
+| `.claude/agents/*.md` and `.codex/agents/*.toml` | project name, toolchain path, live stores, ask-first files; current Codex strong/cheap model choices |
 
 `python tools/jumpstart.py check /path/to/repo` lists any token you missed.
 
@@ -124,11 +127,12 @@ One commit, its own commit, before any feature work:
 
 ```
 git add CLAUDE.md AGENTS.md plan.md CURRENT_CHECKPOINT.md CHANGELOG.md \
-        WISHLIST.md docs/ .claude/agents/ .claude/settings.json .gitignore
+        WISHLIST.md docs/ .claude/agents/ .codex/agents/ .claude/settings.json .gitignore
 git commit -m "Add the control set: bounded read, active state, inventory, agent team"
 ```
 
-Verify `.gitignore` before committing: `.claude/agents/` tracked, the rest of `.claude/`
+Verify `.gitignore` before committing: `.claude/agents/` and `.codex/agents/` tracked,
+the rest of `.claude/`
 ignored, and `.claude/settings.json` only tracked if this project wants it shared.
 
 ## Step 8 — Leave `check` green

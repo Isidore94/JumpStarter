@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`main`** — created 2026-09-03 from the merge of `claude/jumpstarter-repo-setup-dn3rof` and `claude/i1-rules-carry-evidence`; every earlier branch deleted. `main` is the trunk; packets branch from it as `claude/<slug>` |
-| Also in flight | **NOTHING unmerged.** No other branch, no worktree |
-| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates (gate 2). Not started. Phase 1 item 2 (a Codex run on a packet, gate 4) is the other unproven half. Packet I2 (uncited rules; the `#19.` heading bug) is recorded, not authorised |
-| Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**, on `main` after the merge: `pytest tests/ -q` **54 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory**. Not re-run on 3.12.13 since I1 |
+| Working branch | **`claude/native-codex-subagents`** — packet C1, branched from `main`; native Codex support is additive and pending lead review. `main` remains the trunk; both harnesses keep `claude/<slug>` packet branches |
+| Also in flight | **Packet C1 only.** Tester tip `e037777`; builder changes are on the same branch |
+| Active items | `plan.md` **Phase 1 item 2** — native Codex role machinery is green; gate 4 remains open until a real Codex lead spawns a tracked role with the shared packet. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
+| Last verified baseline | Measured 2026-09-04 on **CPython 3.9.25**, on the C1 working tree: `pytest tests/ -q` **57 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory** |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
@@ -43,15 +43,34 @@ dated entry named beside it.
 
 | # | Gate | Owed by |
 |---|---|---|
+| 4 | **A Codex lead spawns at least one native role from the tracked `.codex/agents/` TOML, gives it the same packet path under `.claude/packets/` used by Claude Code, and records that the handoff or verdict survives the crossing.** Machinery and automated tests are green; the crossing is not yet observed | `plan.md` Phase 1 item 2 |
 | ~~5~~ | ~~**`retrofit` against a real repository whose `CLAUDE.md` cites a rule its `docs/INTERNALS.md` lacks reports that name and exits 1**~~ — **CLOSED 2026-09-03.** Observed twice with the branch's code against temp copies of this repo's own pair: the lead removed `## Templates by nature`, the reviewer removed `## An unpinned linter is not a gate` (the citation wrapped across two lines); both times `check` and `retrofit` printed the missing name and exited 1 | closed |
 | ~~3~~ | ~~**The declared Python floor is real**~~ — **CLOSED 2026-09-03.** Installed CPython **3.9.25** and ran it: `pytest tests/ -q` 49 passed, process exit 0; `check .`, `retrofit .`, `sync-agents .` and `init` all run and return the same exit codes as on 3.12.13. `README.md` now states the measurement, the version and the date | closed |
-| 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer. **Now the only open gate**, and it matters more than it did: the templates changed materially today and none of that has been used from empty | `plan.md` Phase 1 item 1 |
+| 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer. The templates changed materially and none of that has been used from empty | `plan.md` Phase 1 item 1 |
 | ~~1~~ | ~~**One real existing repository audited**~~ — **CLOSED 2026-09-03.** Three real repositories, working copies not clones. Two false positives and four misses, all six now fixed with a test apiece. See the entry below | closed |
 
 A gate is closed by striking its row through and writing what was observed — never by
 deleting the row.
 
 ---
+
+### 2026-09-04 — Packet C1: native Codex roles added without changing Claude
+
+The tester committed three packet tests red at `e037777`: all three failed on the base
+because no native Codex templates, CLI flags or native guidance existed. The builder
+added tracked `.codex/agents/*.toml` dogfood definitions and generic templates, routed
+tester/builder/reviewer to Terra/high and recon to Luna/medium, and extended init,
+placeholder checking, retrofit and gitignore handling. All eight Claude role files match
+their pre-packet sha256 values.
+
+Manual prompt-pasting guidance is retired. Codex now loads its native definitions and
+receives the same `.claude/packets/` path and shared handoff format. The conversion
+incident is recorded in `docs/INTERNALS.md`: blind substitution had produced
+`AGENTS.md == AGENTS.md`, `Codex/<slug>` and nonexistent ask-first paths.
+
+Automated state is green: **57 passed**, lint clean, self-check **7 checks**, retrofit
+**25 checks + 1 advisory**, all process exit 0 on CPython 3.9.25. Gate 4 is deliberately
+open: no real Codex crossing has been observed yet.
 
 ### 2026-09-03 — The second pass verified by reproduction, and the team run once for real
 

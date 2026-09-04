@@ -2,18 +2,23 @@
 
 Document role: **active runbook.** How a session in this repo plans, builds, reviews and
 integrates work using project-defined sub-agents instead of pasting prompts between
-windows. The agent definitions live in `.claude/agents/` (tracked); this file is the
-contract they share with the lead session and with {{OWNER}}.
+windows. Claude Code definitions live in `.claude/agents/`; Codex definitions live in
+`.codex/agents/` (both tracked). This file is the contract they share with the lead
+session and with {{OWNER}}.
 
 ## The roles
+
+The two native role sets implement the same four roles, packet shape and handoff
+interface. The harness chooses its own definition; both receive the same packet path
+under `.claude/packets/`.
 
 | Agent | Model | Where it runs | What it may do | What it must never do |
 |---|---|---|---|---|
 | **lead** (the session {{OWNER}} talks to) | session model | the main checkout | ask {{OWNER}}, write packets, spawn the others, merge, run the full suite, reconcile the ledgers | build a packet itself when a builder could; restart {{PROJECT}} without {{OWNER}}'s word |
-| **tester** (`.claude/agents/tester.md`) | strong, high effort | its own worktree, on the packet's branch | write the packet's tests, prove each FAILS on the current code, commit them red | write the fix; weaken or skip a test |
-| **builder** (`.claude/agents/builder.md`) | strong, high effort | its own worktree, branch `{{BRANCH_PREFIX}}<slug>` | edit, test, commit, push its branch, reconcile docs on its branch | touch the main checkout, merge, delete branches, edit an ask-first file without a recorded yes |
-| **reviewer** (`.claude/agents/reviewer.md`) | strong, high effort | its own worktree, on the branch under review | run tests, revert-and-rerun to prove fail-before-fix, reproduce claims on COPIES of real data | write, edit, commit, push, touch live stores |
-| **recon** (`.claude/agents/recon.md`) | cheap, medium effort | the main checkout, read-only | map code with `file:line`, count real rows, find gaps | write anything, propose designs unasked |
+| **tester** (`tester.md` / `tester.toml`) | strong, high effort | its own worktree, on the packet's branch | write the packet's tests, prove each FAILS on the current code, commit them red | write the fix; weaken or skip a test |
+| **builder** (`builder.md` / `builder.toml`) | strong, high effort | its own worktree, branch `{{BRANCH_PREFIX}}<slug>` | edit, test, commit, push its branch, reconcile docs on its branch | touch the main checkout, merge, delete branches, edit an ask-first file without a recorded yes |
+| **reviewer** (`reviewer.md` / `reviewer.toml`) | strong, high effort | its own worktree, on the branch under review | run tests, revert-and-rerun to prove fail-before-fix, reproduce claims on COPIES of real data | write, edit, commit, push, touch live stores |
+| **recon** (`recon.md` / `recon.toml`) | cheap, medium effort | the main checkout, read-only | map code with `file:line`, count real rows, find gaps | write anything, propose designs unasked |
 
 Built-in exploration agents remain available for one-off lookups; `recon` is the same
 job with this repo's rules baked in.
@@ -126,8 +131,8 @@ two builders on the same files.
 
 ## Setup on a machine
 
-1. The agent files are tracked under `.claude/agents/` — `.gitignore` un-ignores that
-   folder while the rest of `.claude/` stays machine-local. A fresh checkout has them.
+1. The agent files are tracked under `.claude/agents/` and `.codex/agents/`; the
+   `.gitignore` rules keep both native role directories available in a fresh checkout.
 2. `.claude/settings.json` (machine-local, not tracked) allow-lists the commands the
    agents run without a prompt: tests, lint, `git worktree`,
    `git checkout -b {{BRANCH_PREFIX}}*`, `git commit`, `git push` to
@@ -136,11 +141,12 @@ two builders on the same files.
    command commonly needs six entries — and keep `git stash` in the deny list. Because
    the file is machine-local it is never in a fresh checkout: its absence from a clone is
    not evidence a project has no allow-list.
-3. No flag or restart is needed: a new or changed file in `.claude/agents/` is picked up
-   by the running session.
+3. No flag or restart is needed: each harness picks up changes in its native role
+   directory.
 
 ## For Codex
 
-Codex reads `AGENTS.md` (the generated copy of `CLAUDE.md`) and does **not** read
-`.claude/`. The roles above still apply — see `docs/CODEX_NOTES.md` for how the same
-packet and role brief are handed to a Codex session.
+Codex reads `AGENTS.md` and loads its native roles from `.codex/agents/`. Tester,
+builder and reviewer route to `{{CODEX_STRONG_MODEL}}` at high effort; recon routes to
+`{{CODEX_CHEAP_MODEL}}` at medium effort. Both harnesses receive the same packet path
+under `.claude/packets/`; see `docs/CODEX_NOTES.md`.

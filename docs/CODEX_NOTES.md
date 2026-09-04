@@ -19,31 +19,31 @@ The generic version that ships to other projects is `templates/codex/CODEX_NOTES
 `python tools/jumpstart.py sync-agents .`. `check .` fails on the sha256 mismatch, which
 is how a hand-edit gets caught.
 
-## What Codex cannot do here
+## Native roles and model routing
 
-- **It does not read `.claude/agents/`.** No automatic `builder`, `reviewer` or `recon`
-  sub-agents. The roles still apply; they are enacted by hand (below).
-- **It does not read `.claude/settings.json`.** The command allow-list does not apply;
-  approvals work through Codex's own sandbox settings. What the allow-list treats as
-  destructive is still destructive.
-- **It does not read `.claude/packets/`** unless you point it at a packet path
-  explicitly. Do that — the packet is the specification.
+Codex loads `tester`, `builder`, `reviewer` and `recon` from `.codex/agents/`.
+Tester, builder and reviewer use `gpt-5.6-terra` at high reasoning effort; recon uses
+`gpt-5.6-luna` at medium effort. The lead keeps the session model. This preserves the same
+strong/cheap cost split as Claude without changing `.claude/agents/` or its model
+routing.
+
+Codex does not read `.claude/settings.json`; its own sandbox and approval settings
+apply. Anything the Claude allow-list treats as destructive is still destructive.
 
 ## Handing a packet to Codex
 
-The packet format is tool-neutral (`templates/.claude/packets/PACKET_TEMPLATE.md`). To
-run one role in a Codex session:
+The packet format is tool-neutral (`templates/.claude/packets/PACKET_TEMPLATE.md`). To run a native role in a
+Codex session:
 
-1. Start at the repo root, on the packet's branch (`claude/<slug>`), in its own worktree
-   if another session is running.
-2. Give it, in this order: the role brief (paste the body of `.claude/agents/builder.md`,
-   `reviewer.md` or `recon.md` — skip the YAML front matter, which is Claude Code
-   metadata), then the packet file, then the branch name.
-3. Require the same output format the role file specifies: the builder's handoff block,
-   the reviewer's GO / NO-GO block, or recon's evidence-first report. **The formats are
-   the interface between tools** — a Codex builder's handoff must be readable by a Claude
-   Code lead, and the reverse. `plan.md` phase 1 item 2 is the gate that proves this
-   actually works; until it passes, treat the crossing as unproven.
+1. Start at the repo root, on the packet's branch (`claude/<slug>`), in its own
+   worktree if another session is running.
+2. Spawn the matching native role from `.codex/agents/` and give it the packet path
+   under `.claude/packets/`, plus the branch name. Claude and Codex consume the same
+   packet; never maintain a second Codex packet copy.
+3. Require the same handoff or verdict format the role definition specifies. **The
+   formats are the interface between tools**: a Codex builder's handoff must be readable
+   by a Claude Code lead, and the reverse. The crossing remains unproven until its real
+   project gate is recorded.
 
 One packet, one session, one role. A session that builds and then reviews its own work is
 not a review.

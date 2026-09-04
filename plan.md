@@ -144,8 +144,12 @@ Until then it ships as the default but is described in the playbook as unproven.
    open.** The templates changed materially on 2026-09-03 (a fourth agent, a reshaped
    packet, four new limits and advisories); none of that has been used from empty.
 2. **Hand one packet to a Codex session and one to Claude Code from the same packet
-   file.** — `PLANNED`. Prove the handoff and verdict formats survive the crossing.
-   Gate 4.
+   file.** — `GREEN machinery; GATE 4 OPEN`, 2026-09-04. Both harness-native role sets
+   are installed and audited; Codex uses native TOML with Terra/high for substantive
+   roles and Luna/medium for recon, while Claude's Opus/Sonnet role files are unchanged.
+   **Still owed:** a Codex lead must spawn a tracked native role with a packet under
+   `.claude/packets/` and record that the shared handoff or verdict survives the
+   crossing. Gate 4.
 3. **Exercise the `tester` role once, for real.** — `GREEN in one repo`, 2026-09-03,
    packet I1. A tester wrote four tests against a function that did not exist and
    committed them red at `e404283`; a builder made them pass at `677a5d2` without

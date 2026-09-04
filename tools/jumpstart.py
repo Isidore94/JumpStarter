@@ -49,6 +49,10 @@ INSTALL_MAP: dict[str, str] = {
     ".claude/agents/builder.md": ".claude/agents/builder.md",
     ".claude/agents/reviewer.md": ".claude/agents/reviewer.md",
     ".claude/agents/recon.md": ".claude/agents/recon.md",
+    ".codex/agents/tester.toml": ".codex/agents/tester.toml",
+    ".codex/agents/builder.toml": ".codex/agents/builder.toml",
+    ".codex/agents/reviewer.toml": ".codex/agents/reviewer.toml",
+    ".codex/agents/recon.toml": ".codex/agents/recon.toml",
     ".claude/settings.json": ".claude/settings.json",
     ".claude/packets/PACKET_TEMPLATE.md": ".claude/packets/PACKET_TEMPLATE.md",
 }
@@ -78,6 +82,13 @@ AGENT_FILES: tuple[str, ...] = (
     ".claude/agents/builder.md",
     ".claude/agents/reviewer.md",
     ".claude/agents/recon.md",
+)
+
+CODEX_AGENT_FILES: tuple[str, ...] = (
+    ".codex/agents/tester.toml",
+    ".codex/agents/builder.toml",
+    ".codex/agents/reviewer.toml",
+    ".codex/agents/recon.toml",
 )
 
 # --------------------------------------------------------------------------- #
@@ -809,16 +820,19 @@ def audit_structure(repo: Path) -> list[Finding]:
             )
         )
 
-    for rel in AGENT_FILES:
-        if (repo / rel).is_file():
-            findings.append(Finding(f"agent {Path(rel).stem}", OK, "present"))
+    for claude_rel, codex_rel in zip(AGENT_FILES, CODEX_AGENT_FILES):
+        role = Path(claude_rel).stem
+        missing = [rel for rel in (claude_rel, codex_rel) if not (repo / rel).is_file()]
+        if not missing:
+            findings.append(Finding(f"agent {role}", OK, "Claude and Codex roles present"))
         else:
             findings.append(
                 Finding(
-                    f"agent {Path(rel).stem}",
+                    f"agent {role}",
                     MISSING,
-                    f"{rel} not found",
-                    f"Copy templates/{rel} and fill its placeholders.",
+                    "; ".join(f"{rel} not found" for rel in missing),
+                    "Copy the missing harness-native role template(s) and fill their "
+                    "placeholders.",
                 )
             )
 
@@ -830,21 +844,29 @@ def audit_structure(repo: Path) -> list[Finding]:
         text = _read(gitignore)
         has_ignore = ".claude/*" in text
         has_unignore = "!.claude/agents/" in text or "!/.claude/agents/" in text
-        if has_ignore and has_unignore:
+        has_codex_unignore = (
+            "!.codex/agents/" in text or "!/.codex/agents/" in text
+        )
+        if has_ignore and has_unignore and has_codex_unignore:
             findings.append(
-                Finding("gitignore rules", OK, ".claude/* ignored, .claude/agents/ tracked")
+                Finding(
+                    "gitignore rules",
+                    OK,
+                    ".claude/* ignored; both native agent directories tracked",
+                )
             )
         else:
             findings.append(
                 Finding(
                     "gitignore rules",
                     MISSING,
-                    "missing {}{}".format(
+                    "missing {}{}{}".format(
                         "the .claude/* ignore " if not has_ignore else "",
                         "the !.claude/agents/ un-ignore" if not has_unignore else "",
+                        "the !.codex/agents/ un-ignore" if not has_codex_unignore else "",
                     ).strip(),
-                    "Append templates/.gitignore.snippet. The un-ignore must come "
-                    "after the ignore line or it has no effect.",
+                    "Append templates/.gitignore.snippet. Any Claude un-ignore must "
+                    "come after its ignore line or it has no effect.",
                 )
             )
     else:
@@ -878,6 +900,8 @@ def _substitutions(args: argparse.Namespace) -> dict[str, str]:
         ("TEST_CMD", args.test_cmd),
         ("LINT_CMD", args.lint_cmd),
         ("RUN_CMD", args.run_cmd),
+        ("CODEX_STRONG_MODEL", args.codex_strong_model),
+        ("CODEX_CHEAP_MODEL", args.codex_cheap_model),
     ):
         if value:
             subs[key] = value
@@ -1044,6 +1068,16 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--run-cmd", default=None, help="the command that runs the project")
     init.add_argument("--main-branch", default="main")
     init.add_argument("--branch-prefix", default="claude/")
+    init.add_argument(
+        "--codex-strong-model",
+        default=None,
+        help="Codex model for tester, builder, and reviewer roles",
+    )
+    init.add_argument(
+        "--codex-cheap-model",
+        default=None,
+        help="Codex model for the read-only recon role",
+    )
     init.add_argument("--force", action="store_true", help="overwrite existing files")
     init.set_defaults(func=cmd_init)
 

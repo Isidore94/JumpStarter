@@ -1,6 +1,6 @@
 # JumpStarter documentation index
 
-Last reconciled: **2026-09-03** (second pass)
+Last reconciled: **2026-09-04** (packet C1)
 
 Start here when a supporting detail is not in the root control set. This index classifies
 **every** maintained Markdown file, so a historical plan can never be mistaken for
@@ -62,8 +62,8 @@ Retain detailed contracts. They do **not** own roadmap order or status.
 
 ## Agent definitions
 
-Not prose: front-mattered role briefs the harness loads. Listed so the rule above holds
-— every Markdown file is classified.
+Not prose: harness-native role briefs. Claude Code loads front-mattered Markdown;
+Codex loads TOML. They are listed here with the maintained documentation.
 
 | File | Role |
 |---|---|
@@ -71,9 +71,14 @@ Not prose: front-mattered role briefs the harness loads. Listed so the rule abov
 | [`../.claude/agents/builder.md`](../.claude/agents/builder.md) | Builds one packet on its own branch, with fail-before-fix tests |
 | [`../.claude/agents/reviewer.md`](../.claude/agents/reviewer.md) | Reviews one branch by reproduction. GO / NO-GO. Never edits |
 | [`../.claude/agents/recon.md`](../.claude/agents/recon.md) | Read-only reconnaissance with `file:line` evidence |
+| [`../.codex/agents/tester.toml`](../.codex/agents/tester.toml) | Native Codex tester; Terra/high; same scope and handoff as the Claude tester |
+| [`../.codex/agents/builder.toml`](../.codex/agents/builder.toml) | Native Codex builder; Terra/high; same packet and branch convention |
+| [`../.codex/agents/reviewer.toml`](../.codex/agents/reviewer.toml) | Native Codex reviewer; Terra/high; reproduction-only review |
+| [`../.codex/agents/recon.toml`](../.codex/agents/recon.toml) | Native Codex recon; Luna/medium; read-only evidence gathering |
 
-These are generated from `templates/.claude/agents/` — JumpStarter runs its own control
-set, so a template change that does not reach them is stale dogfood.
+The two sets mirror `templates/.claude/agents/` and `templates/.codex/agents/`.
+JumpStarter runs its own control set, so a template change that does not reach its
+native dogfood copy is stale.
 
 ## Historical evidence
 

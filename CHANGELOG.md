@@ -1,6 +1,6 @@
 # JumpStarter implemented history
 
-Last reconciled: **2026-09-03** (second pass)
+Last reconciled: **2026-09-04** (packet C1)
 
 Authoritative for: **what exists, and the historical sequence of revisions.**
 Remaining work: [`plan.md`](plan.md). Where we are now:
@@ -34,8 +34,11 @@ do not rebuild landed work.**
   ruling all live in the opening paragraph; then what was measured; then prose items
   naming the fail-before-fix assertion; then two gate blocks (pre-handoff commands, and
   the real-world gate) and a "still owed, as packet X" tail.
-- **Codex** — `codex/CODEX_NOTES.md`, installed as `docs/CODEX_NOTES.md`. What Codex
-  reads, what it cannot do, and how the same packet reaches it.
+- **Codex** — `.codex/agents/{tester,builder,reviewer,recon}.toml` plus generic
+  templates with explicit strong/cheap model placeholders. `init` fills configured
+  models; `check` exposes unfilled choices; `retrofit` audits each native role beside
+  its Claude counterpart without duplicating finding names. `docs/CODEX_NOTES.md`
+  describes native spawning and the shared packet/handoff interface.
 - The two files that keep their placeholders on purpose are
   `docs/decisions/0000-template.md` and `.claude/packets/PACKET_TEMPLATE.md`.
 
@@ -123,6 +126,17 @@ do not rebuild landed work.**
 
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
+
+### 2026-09-04 — Packet C1: native Codex roles, additive to Claude
+
+- Added four tracked native Codex role definitions and four generic templates. Tester,
+  builder and reviewer use Terra/high in this repo; recon uses Luna/medium. The eight
+  Claude role files remain byte-identical to the pre-packet versions.
+- `init`, `check`, `retrofit` and the gitignore contract now cover both harness-native
+  role sets. Claude finding names and the 25-finding retrofit report shape are retained.
+- Replaced manual pasted-role guidance with native spawning from `.codex/agents/`, the
+  same packet path under `.claude/packets/`, and the same handoff/verdict interface.
+  Gate 4 remains open until a real Codex role crossing is observed.
 
 ### 2026-09-03 — The second pass verified, and the team exercised on packet I1
 

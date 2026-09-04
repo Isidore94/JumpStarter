@@ -34,6 +34,16 @@ Describe actions someone may perform **now**.
 | [`CODEX_NOTES.md`](CODEX_NOTES.md) | What a Codex session reads here, what it cannot do, how packets reach it |
 | {{RUNBOOK}} | {{WHEN_TO_USE_IT}} |
 
+## Agent definitions
+
+Not prose: harness-native role briefs that implement the same packet and handoff
+interface.
+
+| Files | Role |
+|---|---|
+| `.claude/agents/{tester,builder,reviewer,recon}.md` | Native Claude Code roles |
+| `.codex/agents/{tester,builder,reviewer,recon}.toml` | Native Codex roles with strong/cheap model placeholders |
+
 ## Active references
 
 Retain detailed contracts or doctrine. They do **not** own roadmap order or status.

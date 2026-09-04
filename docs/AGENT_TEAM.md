@@ -10,12 +10,18 @@ records what is specific here.
 
 ## The roles
 
+Claude Code loads the Markdown definitions in `.claude/agents/`; Codex loads the TOML
+definitions in `.codex/agents/`. They implement the same four roles and the same packet
+and handoff contract. The harness chooses the native definition; the workflow does not
+change.
+
 | Agent | Where it runs | What it may do | What it must never do |
 |---|---|---|---|
 | **lead** (the session the owner talks to) | the main checkout | ask the owner, write packets, spawn the others, merge, run the suite, reconcile the ledgers | build a packet itself when a builder could |
-| **builder** (`.claude/agents/builder.md`) | its own worktree, branch `claude/<slug>` | edit, test, commit, push its branch, reconcile docs | touch the main checkout, merge, edit an ask-first file without a recorded yes |
-| **reviewer** (`.claude/agents/reviewer.md`) | its own worktree, on the branch under review | run tests, revert-and-rerun to prove fail-before-fix, run the CLI against fixture repos | write, edit, commit, push |
-| **recon** (`.claude/agents/recon.md`) | the main checkout, read-only | map code with `file:line`, count things, find gaps | write anything, propose designs unasked |
+| **tester** (`tester.md` / `tester.toml`) | its own worktree, on the packet branch | write tests, prove each fails, commit them red | write the fix; weaken a test |
+| **builder** (`builder.md` / `builder.toml`) | its own worktree, branch `claude/<slug>` | edit, test, commit, push its branch, reconcile docs | touch the main checkout, merge, edit an ask-first file without a recorded yes |
+| **reviewer** (`reviewer.md` / `reviewer.toml`) | its own worktree, on the branch under review | run tests, revert-and-rerun to prove fail-before-fix, run the CLI against fixture repos | write, edit, commit, push |
+| **recon** (`recon.md` / `recon.toml`) | the main checkout, read-only | map code with `file:line`, count things, find gaps | write anything, propose designs unasked |
 
 ## What is specific to JumpStarter
 
@@ -45,14 +51,17 @@ rule, not after.
 
 ## Setup on a machine
 
-1. `.claude/agents/` is tracked; the rest of `.claude/` is machine-local, except
+1. `.claude/agents/` and `.codex/agents/` are tracked; the rest of `.claude/` is
+   machine-local, except
    `.claude/packets/` if this project chooses to track its packets.
 2. `.claude/settings.json` allow-lists pytest, ruff, the CLI, `git worktree`, and commits
    and pushes to `claude/*`. It also **denies** the destructive git verbs outright.
-3. No flag or restart is needed: a changed file in `.claude/agents/` is picked up by the
-   running session.
+3. No flag or restart is needed: each harness picks up changes in its native role
+   directory.
 
 ## For Codex
 
-Codex reads `AGENTS.md` (the generated copy of `CLAUDE.md`) and not `.claude/`. See
+Codex reads `AGENTS.md` and loads its native roles from `.codex/agents/`. In this repo,
+tester, builder and reviewer route to Terra/high while recon routes to Luna/medium.
+Both harnesses receive the same packet path under `.claude/packets/`; see
 [`CODEX_NOTES.md`](CODEX_NOTES.md).

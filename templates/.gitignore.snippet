@@ -3,6 +3,9 @@
 # The order matters: the un-ignore lines must come after the ignore line.
 /.claude/*
 !/.claude/agents/
+# Codex role definitions are project control files. Other .codex configuration remains
+# project-owned rather than being treated as machine-local by JumpStarter.
+!/.codex/agents/
 # Uncomment the next line if this project tracks its build packets (recommended:
 # a packet is the record of what was authorized, and reviews cite it).
 #!/.claude/packets/

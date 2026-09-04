@@ -257,9 +257,12 @@ def filled_repo(repo: Path) -> Path:
         lint_cmd="ruff check .",
         run_cmd="python -m widget",
     )
-    for path in repo.rglob("*.md"):
-        text = path.read_text(encoding="utf-8")
-        path.write_text(jumpstart.PLACEHOLDER_RE.sub("filled", text), encoding="utf-8")
+    for pattern in ("*.md", "*.toml"):
+        for path in repo.rglob(pattern):
+            text = path.read_text(encoding="utf-8")
+            path.write_text(
+                jumpstart.PLACEHOLDER_RE.sub("filled", text), encoding="utf-8"
+            )
     settings = repo / ".claude/settings.json"
     settings.write_text(
         jumpstart.PLACEHOLDER_RE.sub("filled", settings.read_text(encoding="utf-8")),

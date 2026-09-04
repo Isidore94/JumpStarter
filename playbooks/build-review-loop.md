@@ -2,6 +2,11 @@
 
 The loop the lead session runs, with the exact prompts it gives each agent.
 
+Claude Code loads roles from `.claude/agents/`; Codex loads equivalent native roles
+from `.codex/agents/`. The lead uses the current session model, routes substantive
+testing/build/review to the strong tier and recon to the cheap tier, and gives either
+harness the same packet path under `.claude/packets/`.
+
 ```
 recon → packet → tests-first → build → review-by-reproduction → fix → integrate → owner restarts
 ```

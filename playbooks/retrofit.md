@@ -35,10 +35,10 @@ This writes nothing. It prints a gap report over these checks:
 | Rules carry evidence | An internals file holds the incident behind each rule |
 | Docs classified | Every Markdown file is active runbook / reference / historical evidence |
 | Owner goals record | The owner's priorities exist in their own words |
-| Agent definitions | `.claude/agents/{tester,builder,reviewer,recon}.md` |
+| Agent definitions | Claude `.claude/agents/*.md` and Codex `.codex/agents/*.toml` |
 | Command allow-list | `.claude/settings.json` |
 | Stray ledgers | Root-level files that read like a second roadmap, handoff or status log |
-| `.gitignore` rules | `.claude/*` ignored, `.claude/agents/` tracked |
+| `.gitignore` rules | `.claude/*` ignored; `.claude/agents/` and `.codex/agents/` tracked |
 | Size limits | Checkpoint ≤ 1,500 lines; `plan.md` ≤ 1,200; changelog recent section bounded (or, with no such section, the whole file); `CLAUDE.md` ≤ 400 |
 
 **`ADVISORY` is not `MISSING`.** Two results are advisories, and neither fails the run:
@@ -141,8 +141,10 @@ record says `Date: backfilled <today>` and states what was true when the choice 
 
 ## Step 8 — Add the agent team
 
-Copy `.claude/agents/{tester,builder,reviewer,recon}.md` and `.claude/settings.json`, fill the
-placeholders with this repo's real toolchain, live stores and ask-first files, add
+Copy both `.claude/agents/{tester,builder,reviewer,recon}.md` and
+`.codex/agents/{tester,builder,reviewer,recon}.toml`, plus `.claude/settings.json`. Fill
+the placeholders with this repo's real toolchain, live stores, ask-first files, and
+current Codex strong/cheap model choices; add
 `docs/AGENT_TEAM.md`, and add the `.gitignore` lines from `templates/.gitignore.snippet`.
 
 The ask-first file list is the part to get right: the files where an edit can change

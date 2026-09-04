@@ -77,6 +77,29 @@ file itself, not silently substituted.
 
 ---
 
+## Native role definitions are adapted, never mechanically converted (2026-09-04)
+
+**The rule:** Claude Code and Codex keep one shared rules source and one packet format,
+but each harness gets a native role definition. Changes to
+`templates/.codex/agents/*.toml` are ask-first and must preserve the Claude role's scope,
+branch convention, safety clauses, and handoff interface.
+
+**What happened.** A global Claude-to-Codex text substitution produced plausible TOML
+that was operationally unsafe. It turned the parity check into `AGENTS.md == AGENTS.md`,
+invented a `Codex/<slug>` branch family instead of retaining `claude/<slug>`, and changed
+the ask-first paths to names that do not exist. It also omitted the model value, so cost
+routing was not defined. Because every line looked familiar, review by appearance did
+not expose the damage.
+
+**What is deliberately NOT done.** The `.claude/agents/*.md` files and their model
+routing are unchanged. Codex definitions are additive, and their semantics are checked
+against the original roles rather than generated with a blind word replacement.
+
+**Reopen trigger.** Revisit the native TOML only when Codex changes its agent schema or
+the owner changes the strong/cheap routing. Never update it with global substitution.
+
+---
+
 ## One source for two tools (2026-09-03, first build)
 
 **The rule:** `AGENTS.md` is generated from `CLAUDE.md` by `sync-agents` and verified by

@@ -128,16 +128,18 @@ changing the behaviour a rule governs.**
 - Run: `python tools/jumpstart.py {init,retrofit,sync-agents,check} <path>`.
 
 ## Working agreement for agents
-- **The agent team.** A session builds and reviews through the sub-agents in
-  `.claude/agents/` (`tester`, `builder`, `reviewer`, `recon`); the contract, the loop and
-  the delegation policy are in [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). `tester`
-  writes the failing tests and never the fix.
+- **The agent team.** Claude Code loads `.claude/agents/`; Codex loads
+  `.codex/agents/`. Both expose `tester`, `builder`, `reviewer` and `recon`, use the same
+  packets under `.claude/packets/`, and follow the contract in
+  [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). `tester` writes the failing tests and never
+  the fix.
 - `main` is the trunk; branch per packet as `claude/<slug>`.
 - Commit small and green; one commit per component. Push after each commit.
 - **File-scoped ask-first rule.** Any edit to a file that changes what a *downstream
   project* is told to do is asked about BEFORE it is made: `templates/CLAUDE.md`,
-  `templates/plan.md`, `templates/.claude/agents/*.md`, and the limit constants in
-  `tools/jumpstart.py`. Those files land in other people's repos; a change there
+  `templates/plan.md`, `templates/.claude/agents/*.md`,
+  `templates/.codex/agents/*.toml`, and the limit constants in `tools/jumpstart.py`.
+  Those files land in other people's repos; a change there
   propagates silently to every project initialised afterwards.
 - Any change to a template is mirrored in the playbook that describes it, and in the
   check that enforces it, in the same commit. A template, a playbook and a check that

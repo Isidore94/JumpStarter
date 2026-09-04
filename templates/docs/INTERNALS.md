@@ -18,6 +18,28 @@ If you change a rule, change it in both places, in the same commit.
 
 ---
 
+## Native role definitions are adapted, never mechanically converted
+
+**The rule:** Claude Code and Codex keep one shared rules source and one packet format,
+but each harness gets a native role definition. Changes to
+`templates/.codex/agents/*.toml` are ask-first and must preserve the Claude role's scope,
+branch convention, safety clauses, and handoff interface.
+
+**What happened.** A global Claude-to-Codex text substitution produced plausible TOML
+that was operationally unsafe. It turned the parity check into `AGENTS.md == AGENTS.md`,
+invented a `Codex/<slug>` branch family instead of retaining the configured branch
+prefix, and changed ask-first paths to names that did not exist. Familiar wording hid
+the damaged instructions.
+
+**What is deliberately NOT done.** The `.claude/agents/*.md` files and their model
+routing remain independent and unchanged. Native Codex roles preserve their semantics;
+they are not global search-and-replace copies.
+
+**Reopen trigger.** Revisit the native TOML only when Codex changes its agent schema or
+the owner changes the strong/cheap routing. Never update it with global substitution.
+
+---
+
 ## {{RULE_NAME}} ({{DATE}}, {{WHAT_PROMPTED_IT}})
 
 **The rule, as it appears in `CLAUDE.md`:** {{THE_ONE_LINE}}
