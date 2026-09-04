@@ -89,7 +89,9 @@ When documents disagree, use this order:
 - `retrofit` never writes to the audited repo.
 - `init` never overwrites an existing file without `--force`.
 - No domain-specific content in `templates/`.
-- Every rule in `CLAUDE.md` has an entry in `docs/INTERNALS.md`.
+- Every rule in `CLAUDE.md` has an entry in `docs/INTERNALS.md` — **enforced by `check`
+  since 2026-09-03** (`audit_rule_evidence`), for rules that cite one. A bolded rule that
+  cites nothing is still invisible to the check — owed as packet I2, not authorized yet.
 - `sha256(CLAUDE.md) == sha256(AGENTS.md)`.
 - A change to a template is mirrored in its playbook and its check in the same commit.
 
@@ -144,11 +146,13 @@ Until then it ships as the default but is described in the playbook as unproven.
 2. **Hand one packet to a Codex session and one to Claude Code from the same packet
    file.** — `PLANNED`. Prove the handoff and verdict formats survive the crossing.
    Gate 4.
-3. **Exercise the `tester` role once, for real.** — `PLANNED`. It was added from the
-   source project's runbook, not from a run in this repo. Until a tester has written a
-   red test here and a builder has made it green without weakening it, the role is
-   documented rather than proven. No gate number until the owner authorises the work
-   that would use it.
+3. **Exercise the `tester` role once, for real.** — `GREEN in one repo`, 2026-09-03,
+   packet I1. A tester wrote four tests against a function that did not exist and
+   committed them red at `e404283`; a builder made them pass at `677a5d2` without
+   weakening one, and added a fifth. **What remains is the crossing, not the split**: the
+   run happened entirely inside Claude Code, so it does not yet show that a tester's
+   red tests and a builder's handoff survive a Codex session picking either half up.
+   Folded into item 2's gate 4 rather than carrying its own.
 
 ### Phase 2 — CI and distribution
 

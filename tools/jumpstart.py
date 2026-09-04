@@ -611,6 +611,84 @@ def audit_stray_ledgers(repo: Path) -> list[Finding]:
     ]
 
 
+# A citation as CLAUDE.md writes it: *(INTERNALS: "the rule name")*. The name may be
+# wrapped across a line break, so the whitespace inside the quotes is joined to one
+# space before it is compared.
+CITATION_RE = re.compile(r'\(INTERNALS:\s*"([^"]*)"\s*\)')
+# An example citation lives inside an HTML comment in templates/CLAUDE.md. A check that
+# counts it fires on a correct template, and a check that fires on correct work gets
+# ignored - taking the real findings with it.
+HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+# A rule heading is exactly two hashes; `###` is a sub-heading, not a rule.
+RULE_HEADING_RE = re.compile(r"^## +(.+?)\s*$", re.MULTILINE)
+# Every INTERNALS heading is suffixed with `(date, what prompted it)`.
+TRAILING_PARENTHETICAL_RE = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+def _rule_key(name: str) -> str:
+    """Compare rule names the way a human reads them: whitespace collapsed, case
+    ignored. `CLAUDE.md` cites "unfilled placeholders are visible" against the heading
+    `## Unfilled placeholders are visible`, and both mean the same rule."""
+    return " ".join(name.split()).lower()
+
+
+def audit_rule_evidence(repo: Path) -> list[Finding]:
+    """Every rule that cites `docs/INTERNALS.md` must have an entry there.
+
+    `plan.md` section 5 has required this since the first build and nothing checked it.
+    A citation is a promise that the incident is written down; an unkept promise is
+    worse than no citation, because the next agent reads it, does not go looking, and
+    treats the rule as settled.
+
+    Silent - an empty list - when there is no `CLAUDE.md` or no `docs/INTERNALS.md`:
+    `retrofit` already reports a missing rulebook as its own gap, and `check` must not
+    fail a repo that has not been retrofitted yet for a reason it has already been told.
+    """
+    claude = repo / "CLAUDE.md"
+    internals = repo / "docs/INTERNALS.md"
+    if not claude.is_file() or not internals.is_file():
+        return []
+
+    text = HTML_COMMENT_RE.sub("", _read(claude))
+    cited: list[str] = []
+    seen: set[str] = set()
+    for match in CITATION_RE.finditer(text):
+        name = " ".join(match.group(1).split())
+        if _rule_key(name) in seen:
+            continue
+        seen.add(_rule_key(name))
+        cited.append(name)
+
+    if not cited:
+        return [Finding("rules carry evidence", OK, "no INTERNALS citations in CLAUDE.md")]
+
+    documented = {
+        _rule_key(TRAILING_PARENTHETICAL_RE.sub("", heading))
+        for heading in RULE_HEADING_RE.findall(_read(internals))
+    }
+    unmatched = [name for name in cited if _rule_key(name) not in documented]
+    if not unmatched:
+        return [
+            Finding(
+                "rules carry evidence",
+                OK,
+                f"{len(cited)} cited rule(s), each with an entry in docs/INTERNALS.md",
+            )
+        ]
+
+    listed = ", ".join(f'"{name}"' for name in unmatched)
+    return [
+        Finding(
+            "rules carry evidence",
+            MISSING,
+            f"{len(unmatched)} cited rule(s) with no docs/INTERNALS.md entry: {listed}",
+            "Add a '## <name> (<date>, <what prompted it>)' entry to docs/INTERNALS.md "
+            "with the incident behind the rule, or fix the citation. Where the incident "
+            "cannot be recovered, write 'Evidence not recovered' - never invent one.",
+        )
+    ]
+
+
 def audit_structure(repo: Path) -> list[Finding]:
     """The full standard. Used by ``retrofit``."""
     findings: list[Finding] = []
@@ -674,7 +752,14 @@ def audit_structure(repo: Path) -> list[Finding]:
 
     internals = repo / "docs/INTERNALS.md"
     if internals.is_file():
-        findings.append(Finding("rules carry evidence", OK, "docs/INTERNALS.md present"))
+        # Presence was never the question - the file exists and the rules it is supposed
+        # to hold may not. `audit_rule_evidence` is silent when there is no CLAUDE.md to
+        # read citations from, and the presence finding stands in for it there so the
+        # retrofit report's check count does not move.
+        findings.extend(
+            audit_rule_evidence(repo)
+            or [Finding("rules carry evidence", OK, "docs/INTERNALS.md present")]
+        )
     else:
         alt = [p for p in (repo / "docs").glob("*INTERNALS*.md")] if (repo / "docs").is_dir() else []
         if alt:
@@ -934,6 +1019,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     findings: list[Finding] = [audit_agents_identical(repo)]
     findings.extend(audit_sizes(repo))
     findings.extend(audit_placeholders(repo))
+    findings.extend(audit_rule_evidence(repo))
     return _print_report("JumpStarter check", findings, repo)
 
 

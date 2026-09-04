@@ -356,5 +356,5 @@ recorded here and not made.
   unaddressed.
 - **The stray-ledgers advisory is not promoted to a gap** — a limit-constant decision.
 - **`.codex/agents/*.toml`** at the root is untracked and unexplained; left alone.
-- **`main` still does not exist.** Every branch here is `claude/*` off
+- **`main` did not exist when this report was written** (created later the same day on the owner's instruction). Every branch was `claude/*` off
   `claude/jumpstarter-repo-setup-dn3rof`.
