@@ -1,6 +1,6 @@
 # JumpStarter implemented history
 
-Last reconciled: **2026-09-04** (packet C1)
+Last reconciled: **2026-09-10** (packet C2)
 
 Authoritative for: **what exists, and the historical sequence of revisions.**
 Remaining work: [`plan.md`](plan.md). Where we are now:
@@ -35,9 +35,11 @@ do not rebuild landed work.**
   naming the fail-before-fix assertion; then two gate blocks (pre-handoff commands, and
   the real-world gate) and a "still owed, as packet X" tail.
 - **Codex** — `.codex/agents/{tester,builder,reviewer,recon}.toml` plus generic
-  templates with explicit strong/cheap model placeholders. `init` fills configured
-  models; `check` exposes unfilled choices; `retrofit` audits each native role beside
-  its Claude counterpart without duplicating finding names. `docs/CODEX_NOTES.md`
+  templates with required native metadata and explicit strong/cheap model placeholders.
+  `.codex/config.toml` selects Astra/high as this repo's lead and Terra/high as fallback;
+  its template uses explicit lead/strong placeholders, filled by `init` model options.
+  `check` and `retrofit` report missing lead configuration and native role metadata.
+  `docs/CODEX_NOTES.md`
   describes native spawning and the shared packet/handoff interface.
 - The two files that keep their placeholders on purpose are
   `docs/decisions/0000-template.md` and `.claude/packets/PACKET_TEMPLATE.md`.
@@ -60,15 +62,16 @@ do not rebuild landed work.**
 - **`init`** copies `INSTALL_MAP`, fills the placeholders it was given, generates
   `AGENTS.md` from `CLAUDE.md`, and appends the `.gitignore` block idempotently. It
   skips files that exist unless `--force`.
-- **`retrofit`** audits **25 checks** and **writes nothing**.
+- **`retrofit`** includes native Codex configuration and metadata audits and **writes nothing**.
 - **`check`** enforces `CLAUDE == AGENTS` (sha256), the four size limits, unfilled
   placeholders, and — since 2026-09-03 — that every cited rule carries its evidence.
-  **7 checks** on this repo.
+  It also checks native Codex lead configuration and role metadata; current counts are
+  recorded in `CURRENT_CHECKPOINT.md`.
 - **`audit_rule_evidence`** — every rule that cites `(INTERNALS: "<name>")` in
   `CLAUDE.md` must have a matching `## ` heading in `docs/INTERNALS.md`, or the finding
   is a gap and the exit code is 1. Check name `rules carry evidence` in both commands:
-  `check` runs it as its seventh check, and `audit_structure` uses it **in place of**
-  retrofit's old presence-only finding, so `retrofit` still audits 25. Matching ignores
+  `audit_structure` uses it **in place of** retrofit's old presence-only finding.
+  C2's Codex audits add findings to that historical 25-check baseline. Matching ignores
   case, joins a name wrapped across a line break, strips one trailing parenthetical from
   the heading, skips citations inside `<!-- ... -->`, and does not treat `###` as a rule
   heading — all four shapes occur in the real files. Three traps: it is **silent** (no
@@ -126,6 +129,22 @@ do not rebuild landed work.**
 
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
+
+### 2026-09-10 — Packet C2: Astra orchestration and discoverable native roles
+
+- Owner authorized Astra lead, Terra substantive roles and Luna recon on 2026-09-09.
+- Added native `name` and `description` fields to all eight Codex roles. CLI 0.153.4
+  rejected the old files; repaired roles expose a native selector in a fresh session.
+- Added tracked lead configuration, generic template, `--codex-lead-model`, and
+  report-only audits. Normal no-overwrite and explicit-placeholder behavior is retained.
+- Codex uses the same recon, independent tester, builder and reviewer workflow as Claude.
+  Hosts without a native selector have a documented explicit adapted-role fallback.
+- Independent tests reproduced the missing fields, absent CLI option and false-green
+  audit before the fix. Review exercised missing files and metadata hidden in role prose.
+- Gate 4 closed with a real native Astra-to-recon C2 packet handoff. Gate 2 stays open.
+- Final independent reviewer sign-off is pending after the account usage limit ended
+  the subagent turns. The lead completed confirmed fixes and all gates (63 tests,
+  lint, 12 self-check findings and 30 retrofit findings); C2 remains on its draft branch.
 
 ### 2026-09-04 — Packet C1: native Codex roles, additive to Claude
 

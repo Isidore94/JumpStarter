@@ -1,3 +1,5 @@
+name = "builder"
+description = "Builds one approved packet in an isolated worktree, makes the tester's red tests pass without weakening them, and reconciles the required documentation."
 model = "{{CODEX_STRONG_MODEL}}"
 model_reasoning_effort = "high"
 developer_instructions = """

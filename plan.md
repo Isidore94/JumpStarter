@@ -33,9 +33,10 @@ Short form, in their terms: *"the foundation for future projects to know how to 
 their .md files to optimize claude and codex"* — and for existing projects to be directed
 here for the same. The foundation is the product; the CLI is how it gets into a repo.
 **The agent is the reader, not the owner**, so bounded reads and size limits are the
-product rather than housekeeping. **The orchestrating model is not fixed** — Fable 5.1
-with subagents today, possibly a Codex frontier model later — so nothing in `templates/`
-names a model or assumes which tool leads. **Cost is the trust signal**: the delegation
+product rather than housekeeping. **The owner selected Astra as JumpStarter's Codex
+orchestrator on 2026-09-09**, with Terra for substantive roles and Luna for recon.
+Downstream templates keep explicit model placeholders so each project chooses its lead.
+**Cost is the trust signal**: the delegation
 policy is load-bearing, and a design that is correct and expensive is a failure.
 
 ## 2. Status vocabulary
@@ -140,16 +141,16 @@ Until then it ships as the default but is described in the playbook as unproven.
 
 1. **Bootstrap one real new project from the templates.** — `PLANNED`. Every placeholder
    filled by a human answering the questionnaire; note which questions were hard to
-   answer and which placeholders had no good answer. **Gate 2 — one of two open gates
-   with gate 4.** The templates changed materially on 2026-09-03 (a fourth agent, a reshaped
+   answer and which placeholders had no good answer. **Gate 2 remains open.**
+   The templates changed materially on 2026-09-03 (a fourth agent, a reshaped
    packet, four new limits and advisories); none of that has been used from empty.
 2. **Hand one packet to a Codex session and one to Claude Code from the same packet
-   file.** — `GREEN machinery; GATE 4 OPEN`, 2026-09-04. Both harness-native role sets
-   are installed and audited; Codex uses native TOML with Terra/high for substantive
-   roles and Luna/medium for recon, while Claude's Opus/Sonnet role files are unchanged.
-   **Still owed:** a Codex lead must spawn a tracked native role with a packet under
-   `.claude/packets/` and record that the shared handoff or verdict survives the
-   crossing. Gate 4.
+   file.** — `VALIDATED for the native handoff; GATE 4 CLOSED`, 2026-09-10.
+   Packet C2 repaired native discovery and added Astra lead configuration. A fresh
+   Codex CLI 0.153.4 Astra session selected native `recon`, passed `.claude/packets/C2.md`
+   and received its file/line handoff using the tracked Luna/medium role. The command
+   exited 0; run evidence is in `CURRENT_CHECKPOINT.md`. This validates the named gate,
+   not every possible Claude/Codex builder-and-reviewer combination.
 3. **Exercise the `tester` role once, for real.** — `GREEN in one repo`, 2026-09-03,
    packet I1. A tester wrote four tests against a function that did not exist and
    committed them red at `e404283`; a builder made them pass at `677a5d2` without

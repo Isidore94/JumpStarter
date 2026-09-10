@@ -126,6 +126,19 @@ pointer to its evidence entry. A rule with no evidence entry is a draft.
   [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). Read it before spawning one. Builders and
   reviewers work in their own worktrees and never touch the main checkout; the lead
   session merges.
+- **Delegate the packet.** The lead spawns recon, then an independent tester, builder
+  and reviewer as the packet requires. Use the named native roles and their configured
+  models; the lead owns planning, integration and the final report.
+  *(INTERNALS: "Codex routing is explicit")*
+- **Codex lead routing.** `.codex/config.toml` holds the project's chosen lead model and
+  strong/high fallback. Tester, builder and reviewer use the strong/high route; recon
+  uses cheap/medium. Defaults do not switch a running session or override an explicit UI
+  choice.
+- **Adapted Codex role runs.** If a runtime lacks a native-role selector, disclose it
+  once. Read the tracked TOML and pass its model, effort, developer instructions, packet
+  and isolated worktree path to the generic spawner with `fork_turns="none"`. Call the
+  result an adapted role run; it does not prove a native-role crossing.
+  *(INTERNALS: "Codex routing is explicit")*
 - Follow the mandatory documentation workflow above. `plan.md` owns build order;
   `CURRENT_CHECKPOINT.md` owns the active item. Do not re-implement anything in
   `CHANGELOG.md` or implement anything directly from `WISHLIST.md`.

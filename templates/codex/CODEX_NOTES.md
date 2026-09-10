@@ -22,11 +22,13 @@ is how it gets caught.
 
 ## Native roles and model routing
 
-Codex loads `tester`, `builder`, `reviewer` and `recon` from `.codex/agents/`.
-Tester, builder and reviewer use `{{CODEX_STRONG_MODEL}}` at high reasoning effort; recon uses
-`{{CODEX_CHEAP_MODEL}}` at medium effort. The lead keeps the session model. This preserves the same
-strong/cheap cost split as Claude without changing `.claude/agents/` or its model
-routing.
+For example, JumpStarter uses `gpt-6-astra` for its lead, `gpt-5.6-terra` for
+substantive roles and `gpt-5.6-luna` for recon; choose this project's models explicitly.
+
+`.codex/config.toml` holds `{{CODEX_LEAD_MODEL}}` for a new lead, enables agents, and
+sets `{{CODEX_STRONG_MODEL}}`/high as the fallback route. Tester, builder and reviewer
+use `{{CODEX_STRONG_MODEL}}` at high effort; recon uses `{{CODEX_CHEAP_MODEL}}` at
+medium. Defaults do not switch a running session or override an explicit UI choice.
 
 Codex does not read `.claude/settings.json`; its own sandbox and approval settings
 apply. Anything the Claude allow-list treats as destructive is still destructive.
@@ -48,6 +50,14 @@ Codex session:
 
 One packet, one session, one role. A session that builds and then reviews its own work is
 not a review.
+
+### When native role selection is unavailable
+
+Disclose the limitation once. Read the tracked TOML, then pass its model, effort,
+developer instructions, packet and isolated worktree path to the generic spawner with
+`fork_turns="none"`. Label it an **adapted role run**; it does not close a native-role
+gate. Never silently use inherited lead-model workers. If spawning is unavailable,
+report the blocker.
 
 ## What stays the same in both tools
 

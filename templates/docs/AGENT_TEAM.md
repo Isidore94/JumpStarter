@@ -9,8 +9,9 @@ session and with {{OWNER}}.
 ## The roles
 
 The two native role sets implement the same four roles, packet shape and handoff
-interface. The harness chooses its own definition; both receive the same packet path
-under `.claude/packets/`.
+interface. `.codex/config.toml` names the project's new-session lead and strong/high
+fallback; strong/high Codex roles match Claude's substantive work and cheap/medium recon
+matches its read-only role. Both receive the same packet path under `.claude/packets/`.
 
 | Agent | Model | Where it runs | What it may do | What it must never do |
 |---|---|---|---|---|
@@ -149,4 +150,7 @@ two builders on the same files.
 Codex reads `AGENTS.md` and loads its native roles from `.codex/agents/`. Tester,
 builder and reviewer route to `{{CODEX_STRONG_MODEL}}` at high effort; recon routes to
 `{{CODEX_CHEAP_MODEL}}` at medium effort. Both harnesses receive the same packet path
-under `.claude/packets/`; see `docs/CODEX_NOTES.md`.
+under `.claude/packets/`; see `docs/CODEX_NOTES.md`. If a host lacks native-role
+selection, disclose it and run an adapted role by passing the TOML's model, effort,
+developer instructions, packet and isolated worktree with `fork_turns="none"`; never
+silently use inherited lead-model workers or call that a native-role crossing.

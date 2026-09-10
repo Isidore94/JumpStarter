@@ -3,9 +3,17 @@
 The loop the lead session runs, with the exact prompts it gives each agent.
 
 Claude Code loads roles from `.claude/agents/`; Codex loads equivalent native roles
-from `.codex/agents/`. The lead uses the current session model, routes substantive
+from `.codex/agents/`. `.codex/config.toml` supplies the Codex lead model for a new
+session (Astra in JumpStarter), with explicit model options during `init`. The lead routes substantive
 testing/build/review to the strong tier and recon to the cheap tier, and gives either
 harness the same packet path under `.claude/packets/`.
+
+Use native role selection when available. If a host lacks the selector, disclose it,
+read the tracked TOML, and explicitly pass its model, effort, role instructions and
+packet to the generic spawner with `fork_turns="none"`; provide its isolated worktree.
+This adapted run does not prove native loading. `check` and `retrofit` report missing
+Codex config or role metadata; the metadata audit covers the shipped string forms,
+not full TOML syntax or model availability.
 
 ```
 recon → packet → tests-first → build → review-by-reproduction → fix → integrate → owner restarts

@@ -143,9 +143,13 @@ Edit `CLAUDE.md`; never hand-edit `AGENTS.md`. Run `sync-agents` after any edit,
 - Codex loads the native `tester`, `builder`, `reviewer` and `recon` definitions from
   `.codex/agents/`. The lead gives them the same packet path under `.claude/packets/`
   that Claude uses, and their handoff formats are shared.
-- Strong Codex roles use the configured Terra tier at high effort; read-only recon uses
-  the configured Luna tier at medium effort. Claude keeps its existing Opus/Sonnet
-  routing.
+- `.codex/config.toml` configures Astra/high for a new lead and Terra/high as the
+  fallback subagent. Strong Codex roles use Terra/high and read-only recon uses
+  Luna/medium; Claude keeps its existing Opus/Sonnet routing. Defaults never override a
+  running session or an explicit UI choice.
+- If a host lacks a native-role selector, the lead says so and runs an adapted role from
+  its tracked TOML: explicit model, effort, developer instructions, packet and isolated
+  worktree with `fork_turns="none"`. That is not evidence for the native-role gate.
 - `docs/CODEX_NOTES.md` (installed by `init`) says exactly what Codex reads, what it
   cannot do, and how the packets are handed to it.
 

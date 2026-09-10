@@ -1,0 +1,7 @@
+model = "{{CODEX_LEAD_MODEL}}"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+default_subagent_model = "{{CODEX_STRONG_MODEL}}"
+default_subagent_reasoning_effort = "high"

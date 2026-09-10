@@ -53,6 +53,7 @@ INSTALL_MAP: dict[str, str] = {
     ".codex/agents/builder.toml": ".codex/agents/builder.toml",
     ".codex/agents/reviewer.toml": ".codex/agents/reviewer.toml",
     ".codex/agents/recon.toml": ".codex/agents/recon.toml",
+    ".codex/config.toml": ".codex/config.toml",
     ".claude/settings.json": ".claude/settings.json",
     ".claude/packets/PACKET_TEMPLATE.md": ".claude/packets/PACKET_TEMPLATE.md",
 }
@@ -89,6 +90,13 @@ CODEX_AGENT_FILES: tuple[str, ...] = (
     ".codex/agents/builder.toml",
     ".codex/agents/reviewer.toml",
     ".codex/agents/recon.toml",
+)
+
+CODEX_CONFIG_FILE = ".codex/config.toml"
+CODEX_METADATA_FIELDS: tuple[str, ...] = (
+    "name",
+    "description",
+    "developer_instructions",
 )
 
 # --------------------------------------------------------------------------- #
@@ -485,6 +493,102 @@ def audit_placeholders(repo: Path) -> list[Finding]:
     return findings
 
 
+def _native_metadata_present(text: str, field: str) -> bool:
+    """Check the literal string forms JumpStarter itself ships, not all TOML.
+
+    Python 3.9 has no TOML parser and the audit only promises to check Codex's required
+    role metadata.  A deliberately small recognizer keeps the CLI dependency-free and
+    makes unfamiliar TOML a visible gap rather than pretending to understand it.
+    """
+    scalar = re.compile(
+        rf"^\s*{re.escape(field)}\s*=\s*(?:\"([^\"\r\n]*)\"|'([^'\r\n]*)')"
+        r"\s*(?:#.*)?$"
+    )
+    multiline_start = re.compile(
+        r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(\"\"\"|''')\s*$"
+    )
+    inside: str | None = None
+    multiline_value: list[str] = []
+    target_multiline = False
+    for raw in text.splitlines():
+        if inside is not None:
+            if raw.strip() == inside:
+                if target_multiline:
+                    return bool("\n".join(multiline_value).strip())
+                inside = None
+                target_multiline = False
+                multiline_value = []
+                continue
+            if target_multiline:
+                multiline_value.append(raw)
+            continue
+        match = multiline_start.fullmatch(raw)
+        if match:
+            inside = match.group(2)
+            target_multiline = match.group(1) == field
+            continue
+        match = scalar.fullmatch(raw)
+        if match:
+            return bool((match.group(1) or match.group(2) or "").strip())
+    return False
+
+
+def audit_codex_lead_config(repo: Path) -> Finding:
+    """Report only whether a native lead config exists; project choices stay theirs."""
+    path = repo / CODEX_CONFIG_FILE
+    if path.is_file():
+        return Finding("native Codex lead config", OK, f"{CODEX_CONFIG_FILE} present")
+    return Finding(
+        "native Codex lead config",
+        MISSING,
+        f"{CODEX_CONFIG_FILE} not found",
+        "Add it from templates/.codex/config.toml. Choose the project's lead and "
+        "fallback models explicitly; the audit does not prescribe model IDs.",
+    )
+
+
+def audit_codex_role_metadata(repo: Path) -> list[Finding]:
+    """Audit only Codex's required role metadata on the known native role files."""
+    findings: list[Finding] = []
+    for rel in CODEX_AGENT_FILES:
+        path = repo / rel
+        if not path.is_file():
+            findings.append(
+                Finding(
+                    f"native role metadata {Path(rel).stem}",
+                    MISSING,
+                    f"{rel} not found",
+                    "Copy the missing native role template and fill its placeholders.",
+                )
+            )
+            continue
+        missing = [
+            field
+            for field in CODEX_METADATA_FIELDS
+            if not _native_metadata_present(_read(path), field)
+        ]
+        if missing:
+            findings.append(
+                Finding(
+                    f"native role metadata {Path(rel).stem}",
+                    MISSING,
+                    f"{rel} missing required {', '.join(missing)}",
+                    "Add non-empty native role metadata in the string form shipped by "
+                    "templates/.codex/agents/. Do not change the role's scope or "
+                    "model choice just to satisfy this audit.",
+                )
+            )
+        else:
+            findings.append(
+                Finding(
+                    f"native role metadata {Path(rel).stem}",
+                    OK,
+                    f"{rel} has name, description and developer_instructions",
+                )
+            )
+    return findings
+
+
 def audit_active_state(repo: Path) -> Finding:
     """One block answers "where are we?".
 
@@ -722,6 +826,8 @@ def audit_structure(repo: Path) -> list[Finding]:
             )
 
     findings.append(audit_agents_identical(repo))
+    findings.append(audit_codex_lead_config(repo))
+    findings.extend(audit_codex_role_metadata(repo))
 
     claude = repo / "CLAUDE.md"
     if claude.is_file():
@@ -902,6 +1008,7 @@ def _substitutions(args: argparse.Namespace) -> dict[str, str]:
         ("RUN_CMD", args.run_cmd),
         ("CODEX_STRONG_MODEL", args.codex_strong_model),
         ("CODEX_CHEAP_MODEL", args.codex_cheap_model),
+        ("CODEX_LEAD_MODEL", args.codex_lead_model),
     ):
         if value:
             subs[key] = value
@@ -1043,6 +1150,8 @@ def cmd_check(args: argparse.Namespace) -> int:
     findings: list[Finding] = [audit_agents_identical(repo)]
     findings.extend(audit_sizes(repo))
     findings.extend(audit_placeholders(repo))
+    findings.append(audit_codex_lead_config(repo))
+    findings.extend(audit_codex_role_metadata(repo))
     findings.extend(audit_rule_evidence(repo))
     return _print_report("JumpStarter check", findings, repo)
 
@@ -1068,6 +1177,11 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--run-cmd", default=None, help="the command that runs the project")
     init.add_argument("--main-branch", default="main")
     init.add_argument("--branch-prefix", default="claude/")
+    init.add_argument(
+        "--codex-lead-model",
+        default=None,
+        help="Codex model for the lead session configured in .codex/config.toml",
+    )
     init.add_argument(
         "--codex-strong-model",
         default=None,

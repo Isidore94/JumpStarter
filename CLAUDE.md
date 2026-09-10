@@ -133,6 +133,19 @@ changing the behaviour a rule governs.**
   packets under `.claude/packets/`, and follow the contract in
   [`docs/AGENT_TEAM.md`](docs/AGENT_TEAM.md). `tester` writes the failing tests and never
   the fix.
+- **Delegate the packet.** The lead spawns recon, then an independent tester, builder
+  and reviewer as the packet requires. Use the named native roles and their configured
+  models; the lead owns planning, integration and the final report.
+  *(INTERNALS: "Codex routing is explicit")*
+- **Codex lead routing.** `.codex/config.toml` selects Astra/high for a new lead and
+  Terra/high as its fallback subagent. Role TOMLs keep Terra/high for tester, builder
+  and reviewer, and Luna/medium for recon. Defaults do not switch a running session or
+  override an explicit UI choice.
+- **Adapted Codex role runs.** If a runtime lacks a native-role selector, disclose it
+  once. Read the tracked role TOML and pass its model, effort, developer instructions,
+  packet path and isolated worktree path to the generic spawner with `fork_turns="none"`.
+  Label this an adapted role run; it cannot close the native-role gate.
+  *(INTERNALS: "Codex routing is explicit")*
 - `main` is the trunk; branch per packet as `claude/<slug>`.
 - Commit small and green; one commit per component. Push after each commit.
 - **File-scoped ask-first rule.** Any edit to a file that changes what a *downstream
