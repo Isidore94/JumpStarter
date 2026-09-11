@@ -35,8 +35,9 @@ CITATION_MARK = '(INTERNALS: "'
 # What the template ships, counted by hand on 2026-09-03 against
 # `templates/CLAUDE.md`: citations at lines 40, 90, 113 and 144, of which line 90
 # sits inside the `<!-- ... -->` example block at lines 88-90. Three are live.
-TEMPLATE_CITATIONS_IN_TEXT = 4
-TEMPLATE_CITATIONS_LIVE = 3
+# C2 adds two references to one distinct Codex routing rule (2026-09-10).
+TEMPLATE_CITATIONS_IN_TEXT = 6
+TEMPLATE_CITATIONS_LIVE = 4
 
 
 def run(*argv: str) -> int:
@@ -188,10 +189,10 @@ def test_matching_survives_line_wrapping_case_and_html_comments(
     assert finding.status == jumpstart.OK
     assert finding.ok is True
 
-    # Three live template citations plus the two added here. The commented-out one
+    # Four distinct live template citations plus the two added here. The commented-out one
     # is not a citation, and the `###` sub-heading is not a rule heading.
     expected = TEMPLATE_CITATIONS_LIVE + 2
-    assert expected == 5
+    assert expected == 6
     assert f"{expected} cited rule(s)" in finding.detail
     assert "Not a real rule" not in finding.detail
 
@@ -244,15 +245,14 @@ def test_no_internals_file_yields_no_finding_and_no_citations_is_not_a_gap(
 # --------------------------------------------------------------------------- #
 
 
-def test_retrofit_carries_one_rules_carry_evidence_finding_and_stays_at_25_checks(
+def test_retrofit_carries_one_rules_carry_evidence_finding_with_codex_audits(
     capsys,
 ) -> None:
     """The new audit replaces retrofit's presence-only finding; it does not add one.
 
-    Two findings under the same name, or a 26th check, means the audit was bolted on
-    beside `audit_structure` instead of into it - and a retrofit report whose count
-    moves for no reason is a report nobody reconciles. Read-only: `retrofit` writes
-    nothing, ever.
+    C2 adds five named Codex findings to the historical 25. The rules audit still
+    replaces its old presence-only finding rather than duplicating it. Read-only:
+    `retrofit` writes nothing, ever.
     """
     before = _tracked_tree()
 
@@ -262,7 +262,7 @@ def test_retrofit_carries_one_rules_carry_evidence_finding_and_stays_at_25_check
     lines = [line for line in out.splitlines() if "rules carry evidence" in line]
     assert len(lines) == 1, lines
     assert "[OK      ]" in lines[0]
-    assert "No gaps: 25 checks passed." in out
+    assert "No gaps: 30 checks passed." in out
 
     assert _tracked_tree() == before
 

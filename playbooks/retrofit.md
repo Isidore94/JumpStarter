@@ -35,7 +35,7 @@ This writes nothing. It prints a gap report over these checks:
 | Rules carry evidence | An internals file holds the incident behind each rule |
 | Docs classified | Every Markdown file is active runbook / reference / historical evidence |
 | Owner goals record | The owner's priorities exist in their own words |
-| Agent definitions | Claude `.claude/agents/*.md` and Codex `.codex/agents/*.toml` |
+| Agent definitions | Claude `.claude/agents/*.md`, Codex `.codex/agents/*.toml`, and `.codex/config.toml` for a lead |
 | Command allow-list | `.claude/settings.json` |
 | Stray ledgers | Root-level files that read like a second roadmap, handoff or status log |
 | `.gitignore` rules | `.claude/*` ignored; `.claude/agents/` and `.codex/agents/` tracked |
@@ -141,10 +141,10 @@ record says `Date: backfilled <today>` and states what was true when the choice 
 
 ## Step 8 — Add the agent team
 
-Copy both `.claude/agents/{tester,builder,reviewer,recon}.md` and
-`.codex/agents/{tester,builder,reviewer,recon}.toml`, plus `.claude/settings.json`. Fill
-the placeholders with this repo's real toolchain, live stores, ask-first files, and
-current Codex strong/cheap model choices; add
+Copy both `.claude/agents/{tester,builder,reviewer,recon}.md`,
+`.codex/agents/{tester,builder,reviewer,recon}.toml`, `.codex/config.toml`, plus
+`.claude/settings.json`. Fill the placeholders with this repo's real toolchain, live
+stores, ask-first files, and current Codex lead/strong/cheap model choices; add
 `docs/AGENT_TEAM.md`, and add the `.gitignore` lines from `templates/.gitignore.snippet`.
 
 The ask-first file list is the part to get right: the files where an edit can change

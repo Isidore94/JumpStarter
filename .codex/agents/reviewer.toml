@@ -1,3 +1,5 @@
+name = "reviewer"
+description = "Independently reviews a built packet by reproduction, including fail-before-fix, and returns a GO or NO-GO verdict without editing the branch."
 model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 developer_instructions = """

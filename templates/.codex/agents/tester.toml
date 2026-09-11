@@ -1,3 +1,5 @@
+name = "tester"
+description = "Writes packet behaviour tests before the fix, proves they fail, and hands the red branch to the builder without changing production code."
 model = "{{CODEX_STRONG_MODEL}}"
 model_reasoning_effort = "high"
 developer_instructions = """

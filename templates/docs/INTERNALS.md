@@ -16,6 +16,25 @@ by the next agent who finds it inconvenient, and the incident happens again.
 
 If you change a rule, change it in both places, in the same commit.
 
+## Codex routing is explicit
+
+**The rules:** the lead delegates recon, independent tests, implementation and review
+to the named roles. `.codex/config.toml` holds the project's chosen lead and fallback;
+role TOMLs explicitly select the strong or cheap model and effort. Defaults do not
+switch a running session. A host without native selection discloses it, reads the
+tracked TOML, and passes its model, effort, instructions, packet and worktree to the
+generic spawner with `fork_turns="none"`; that is an adapted run, not native proof.
+
+**Source incident:** JumpStarter's 2026-09-10 C2 run found all eight role TOMLs lacked
+required metadata. The CLI ignored the roles although 57 tests passed. Correct metadata
+restored native selection and a real lead-to-recon packet handoff succeeded. Explicit
+role routing preserves the same substantive/cheap split as Claude's team.
+
+**Enforcement:** init installs configurable lead/role files without overwriting owner
+choices. Check and retrofit report missing config, roles and non-empty required metadata
+in the shipped string forms; they are not full TOML or model-availability validators.
+Keep this project's models explicit and preserve the common packet/handoff contract.
+
 ---
 
 ## Native role definitions are adapted, never mechanically converted

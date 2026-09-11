@@ -11,9 +11,11 @@ records what is specific here.
 ## The roles
 
 Claude Code loads the Markdown definitions in `.claude/agents/`; Codex loads the TOML
-definitions in `.codex/agents/`. They implement the same four roles and the same packet
-and handoff contract. The harness chooses the native definition; the workflow does not
-change.
+definitions in `.codex/agents/`. Astra/high leads here; Terra/high handles tester,
+builder and reviewer responsibilities matching Claude Opus, and Luna/medium handles
+read-only recon matching Claude Sonnet. Recon then independent tester, builder and
+reviewer share packets, worktree isolation and handoffs.
+Both harnesses receive the same packet and use the same handoff contract.
 
 | Agent | Where it runs | What it may do | What it must never do |
 |---|---|---|---|
@@ -61,7 +63,10 @@ rule, not after.
 
 ## For Codex
 
-Codex reads `AGENTS.md` and loads its native roles from `.codex/agents/`. In this repo,
-tester, builder and reviewer route to Terra/high while recon routes to Luna/medium.
-Both harnesses receive the same packet path under `.claude/packets/`; see
-[`CODEX_NOTES.md`](CODEX_NOTES.md).
+Codex reads `AGENTS.md`, uses `.codex/config.toml` for new-session Astra/high lead
+defaults, and loads its native roles from `.codex/agents/`. Tester, builder and reviewer
+route to Terra/high while recon routes to Luna/medium. Both harnesses receive the same
+packet path under `.claude/packets/`; see [`CODEX_NOTES.md`](CODEX_NOTES.md). If a host
+lacks native-role selection, disclose and use the TOML as an adapted role: explicitly
+pass its model, effort, instructions, packet and isolated worktree with `fork_turns="none"`.
+That does not close gate 4.

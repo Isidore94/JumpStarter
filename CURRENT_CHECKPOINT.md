@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`main`** at `aa7f901` — packet C1 fast-forwarded after reviewer GO; both harnesses keep `claude/<slug>` packet branches |
-| Also in flight | **NOTHING unmerged.** Packet C1 is integrated; its branch remains as review evidence |
-| Active items | `plan.md` **Phase 1 item 2** — native Codex role machinery is green; gate 4 remains open until a real Codex lead spawns a tracked role with the shared packet. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
-| Last verified baseline | Measured 2026-09-04 on **CPython 3.9.25**, on `main` after C1 integration and checkpoint reconciliation: `pytest tests/ -q` **57 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory** |
+| Working branch | **`claude/c2-astra-orchestration`**, based on `d3c3f81`; implementation green, awaiting final independent review before main integration |
+| Also in flight | Packet C2 only: Astra lead configuration, native metadata, audit and workflow parity. Tester, builder and reviewer hit the account usage limit; lead completed the confirmed fixes and checks. No final reviewer GO is claimed |
+| Active items | `plan.md` **Phase 1 item 2 gate 4 CLOSED** by a live native C2 recon handoff on 2026-09-10. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
+| Last verified baseline | Measured 2026-09-10 on **CPython 3.9.25**, C2 branch: `pytest tests/ -q` **63 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **12 checks, no gaps**, exit 0; `retrofit .` **exit 0, 30 checks, 1 existing advisory** |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
@@ -43,7 +43,7 @@ dated entry named beside it.
 
 | # | Gate | Owed by |
 |---|---|---|
-| 4 | **A Codex lead spawns at least one native role from the tracked `.codex/agents/` TOML, gives it the same packet path under `.claude/packets/` used by Claude Code, and records that the handoff or verdict survives the crossing.** Machinery and automated tests are green; the crossing is not yet observed | `plan.md` Phase 1 item 2 |
+| ~~4~~ | ~~**A Codex lead spawns a tracked native role with the shared packet and receives its handoff.**~~ **CLOSED 2026-09-10:** Codex CLI 0.153.4 Astra lead selected native `recon` with C2, received file/line findings from the Luna/medium definition; process exit 0. Details below | closed |
 | ~~5~~ | ~~**`retrofit` against a real repository whose `CLAUDE.md` cites a rule its `docs/INTERNALS.md` lacks reports that name and exits 1**~~ — **CLOSED 2026-09-03.** Observed twice with the branch's code against temp copies of this repo's own pair: the lead removed `## Templates by nature`, the reviewer removed `## An unpinned linter is not a gate` (the citation wrapped across two lines); both times `check` and `retrofit` printed the missing name and exited 1 | closed |
 | ~~3~~ | ~~**The declared Python floor is real**~~ — **CLOSED 2026-09-03.** Installed CPython **3.9.25** and ran it: `pytest tests/ -q` 49 passed, process exit 0; `check .`, `retrofit .`, `sync-agents .` and `init` all run and return the same exit codes as on 3.12.13. `README.md` now states the measurement, the version and the date | closed |
 | 2 | **One new project bootstrapped end to end** — a human answers the questionnaire, fills every placeholder, and `check` is green on a repo that was empty this morning. Record which questions were hard to answer and which placeholders had no good answer. The templates changed materially and none of that has been used from empty | `plan.md` Phase 1 item 1 |
@@ -53,6 +53,35 @@ A gate is closed by striking its row through and writing what was observed — n
 deleting the row.
 
 ---
+
+### 2026-09-10 — Packet C2: Astra lead and native model routing verified
+
+The owner requested Astra orchestration with Terra and Luna workers matching Claude's
+Opus/Sonnet responsibilities. All eight Codex role files lacked required `name` and
+`description` metadata. CLI 0.153.4 actually ignored all four dogfood roles, despite
+the original 57-test suite passing on CPython 3.9.25 (process exit 0).
+
+The repaired files load, and a fresh runtime exposes the four native role choices.
+The real gate run used `codex exec --ephemeral --strict-config -m gpt-6-astra
+-c model_reasoning_effort=low -s read-only --json` from the C2 worktree. Its bounded
+prompt requested exactly one native `recon`, `.claude/packets/C2.md`, and branch
+`claude/c2-astra-orchestration`, without a child model/effort override.
+Run ID: `01a08b7c-7d94-7ad0-b92c-deb08dd4fa65`; process exit **0**.
+
+The handoff identified Astra/high in `.codex/config.toml:1-6`, Terra/high in the
+tester/builder/reviewer definitions and Luna/medium in recon, with file/line evidence.
+The parent confirmed native `agent_type: recon` and `fork_turns: none`. Gate 4 is closed.
+The smoke run explicitly lowered the parent effort; the repository default stays high.
+The previous absence of a native selector was caused by malformed roles, not by an
+unsupported runtime. Hosts that lack it still have an explicitly labelled fallback.
+
+Independent tester, builder and reviewer roles exercised C2. The lead reconciled the
+root ledgers and completed the remaining fixes after the subagents reached the account
+usage limit. Reviewer reproduced metadata-in-prose and missing-role escapes; both are
+now regression-tested. Final reviewer GO remains owed, so C2 is a draft PR rather than
+a main integration. Final automated counts and integration state are in the active block.
+Gate 2 remains open; no service restart is owed. Existing sessions must start a new
+task in the repo to adopt its model default, or explicitly choose Astra.
 
 ### 2026-09-04 — Packet C1: native Codex roles added without changing Claude
 

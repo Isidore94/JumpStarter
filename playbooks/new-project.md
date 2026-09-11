@@ -37,6 +37,7 @@ python tools/jumpstart.py init /path/to/repo \
     --run-cmd "python -m myproject" \
     --main-branch main \
     --branch-prefix "claude/" \
+    --codex-lead-model "gpt-6-astra" \
     --codex-strong-model "gpt-5.6-terra" \
     --codex-cheap-model "gpt-5.6-luna"
 ```
@@ -92,7 +93,7 @@ Walk each file and replace the `{{TOKENS}}`:
 | `CHANGELOG.md` | the inventory areas; it is allowed to be nearly empty on day one |
 | `docs/README.md` | every Markdown file in the repo, classified |
 | `docs/decisions/0001-...` | the verbatim answers from step 1 |
-| `.claude/agents/*.md` and `.codex/agents/*.toml` | project name, toolchain path, live stores, ask-first files; current Codex strong/cheap model choices |
+| `.claude/agents/*.md`, `.codex/agents/*.toml`, `.codex/config.toml` | project name, toolchain path, live stores, ask-first files; current Codex lead, strong and cheap model choices |
 
 `python tools/jumpstart.py check /path/to/repo` lists any token you missed.
 
@@ -127,7 +128,7 @@ One commit, its own commit, before any feature work:
 
 ```
 git add CLAUDE.md AGENTS.md plan.md CURRENT_CHECKPOINT.md CHANGELOG.md \
-        WISHLIST.md docs/ .claude/agents/ .codex/agents/ .claude/settings.json .gitignore
+        WISHLIST.md docs/ .claude/agents/ .codex/ .claude/settings.json .gitignore
 git commit -m "Add the control set: bounded read, active state, inventory, agent team"
 ```
 

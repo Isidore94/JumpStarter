@@ -1,3 +1,5 @@
+name = "recon"
+description = "Read-only reconnaissance that verifies packet premises with file-and-line evidence before implementation begins."
 model = "{{CODEX_CHEAP_MODEL}}"
 model_reasoning_effort = "medium"
 developer_instructions = """

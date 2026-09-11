@@ -98,6 +98,30 @@ against the original roles rather than generated with a blind word replacement.
 **Reopen trigger.** Revisit the native TOML only when Codex changes its agent schema or
 the owner changes the strong/cheap routing. Never update it with global substitution.
 
+## Codex routing is explicit (2026-09-10, packet C2)
+
+**The rules:** the lead delegates recon, independent tests, implementation and review
+to the named roles. JumpStarter selects Astra/high for a new Codex lead, Terra/high for
+tester, builder and reviewer, and Luna/medium for recon. Model defaults do not change
+an already-running session. A host without native selection must disclose that fact,
+read the tracked TOML and explicitly pass model, effort, instructions, packet and
+worktree to its generic spawner with `fork_turns="none"`. That is an adapted run.
+
+**Incident:** the owner asked for Codex/Claude parity on 2026-09-09. All eight Codex
+TOMLs lacked `name` and `description`; CLI 0.153.4 ignored the four project roles while
+57 tests passed. Adding metadata made the native selector available. A real Astra lead
+then selected recon with C2 and received its handoff (checkpoint gate 4).
+
+**Enforcement:** init installs a configurable lead template without overwriting owner
+configuration. Check and retrofit report missing config, roles and non-empty required
+metadata. The lightweight audit recognizes shipped scalar/multiline string forms,
+including literal quotes and scalar comments; it is not a full TOML validator or a
+model-availability check. Review found metadata-like lines inside role prose and absent
+files could escape the first audit; regression fixtures now cover both.
+
+**Reopen trigger:** a changed native schema or owner-selected routing. Keep Claude role
+definitions intact and preserve the shared packet/handoff contract.
+
 ---
 
 ## One source for two tools (2026-09-03, first build)

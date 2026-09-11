@@ -1,6 +1,6 @@
 # JumpStarter documentation index
 
-Last reconciled: **2026-09-04** (packet C1)
+Last reconciled: **2026-09-10** (packet C2)
 
 Start here when a supporting detail is not in the root control set. This index classifies
 **every** maintained Markdown file, so a historical plan can never be mistaken for
@@ -64,6 +64,9 @@ Retain detailed contracts. They do **not** own roadmap order or status.
 
 Not prose: harness-native role briefs. Claude Code loads front-mattered Markdown;
 Codex loads TOML. They are listed here with the maintained documentation.
+
+`.codex/config.toml` selects the new-session Astra lead and Terra fallback. It is
+tracked project configuration; native role definitions below retain their own models.
 
 | File | Role |
 |---|---|
