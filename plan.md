@@ -139,6 +139,12 @@ Until then it ships as the default but is described in the playbook as unproven.
 
 ### Phase 1 — NEXT: close the loop on the templates
 
+Owner-directed workspace maintenance, 2026-09-11: packet M1 adds hierarchical
+memory and standing read/write rules for this checkout, including Codex agents.
+Implementation and fresh Codex session routing verification are complete; independent
+review returned GO on 2026-09-11. No memory gate remains. This does not promote a
+downstream template or close the real-project bootstrap gate below.
+
 1. **Bootstrap one real new project from the templates.** — `PLANNED`. Every placeholder
    filled by a human answering the questionnaire; note which questions were hard to
    answer and which placeholders had no good answer. **Gate 2 remains open.**

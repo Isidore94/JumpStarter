@@ -116,6 +116,13 @@ do not rebuild landed work.**
 
 ### Root
 
+- `MEMORY.md` routes workspace-local recall to `memory/people/`, `projects/`,
+  `decisions/`, prunable `context/`, and dated raw notes. Standing instructions enforce
+  provenance, recurrence before inferred rules, in-place supersession, narrow reads
+  and retention of non-re-derivable knowledge. All four native Codex roles use the
+  same policy; read-only roles hand proposed updates to the lead. This is not a CLI
+  payload feature.
+
 - `README.md` carries the exact instruction "apply JumpStarter here" and the steps it
   triggers, and states the Python floor **as measured** (3.9.25, 2026-09-03) rather than
   claimed. `PRINCIPLES.md` holds **sixteen** lessons with the incident behind each —
@@ -129,6 +136,21 @@ do not rebuild landed work.**
 
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
+
+### 2026-09-11 — Packet M1: workspace memory and Codex recall
+
+Added a pure routing index and dated, provenance-tagged person/project/decision files,
+same-day raw notes, and prunable context. No existing flat memory needed migration.
+CLAUDE.md carries the write, retrieval and maintenance rules; sync-agents generates
+AGENTS.md. Native Codex roles reference this policy and retain their role boundaries.
+The Codex read guide now separates boot from task reads and references current owner
+decision record 0002. No templates, CLI commands, limits or dependencies changed.
+
+A fresh ephemeral Codex process routed through the index to one person and one project
+file and returned both facts with path, provenance and date, exit 0. On CPython 3.9.25,
+the existing 63 tests pass. An isolated checkout initially converted an unchanged
+template to CRLF and failed its pinned byte hash; restoring the Git blob's LF bytes
+resolved that environment issue without changing tests or tracked template content.
 
 ### 2026-09-10 — Packet C2: Astra orchestration and discoverable native roles
 

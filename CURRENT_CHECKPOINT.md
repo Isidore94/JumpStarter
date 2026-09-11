@@ -17,17 +17,16 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`main`** — PR #1 merged at `81f6358` on the owner's explicit instruction; this reconciliation records that integration |
-| Also in flight | **NOTHING unmerged.** C2 is integrated. The owner authorized merging after being told final independent reviewer sign-off was interrupted by usage limits; no reviewer GO is claimed |
-| Active items | `plan.md` **Phase 1 item 2 gate 4 CLOSED** by a live native C2 recon handoff on 2026-09-10. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
-| Last verified baseline | Measured 2026-09-10 on **CPython 3.9.25**, merged main at `81f6358`: `pytest tests/ -q` **63 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **12 checks, no gaps**, exit 0; `retrofit .` **exit 0, 30 checks, 1 existing advisory** |
+| Working branch | **`main`** — fast-forwarded through M1 at `556cffd`; this reconciliation records integration after independent reviewer GO |
+| Also in flight | **NOTHING unmerged.** M1 workspace memory is integrated. C2 remains integrated; its interrupted final reviewer GO is not claimed |
+| Active items | **M1 COMPLETE**, including fresh Codex session and independent native-agent person/project recall. Phase 1 item 1/gate 2 remain unstarted; item 2/gate 4 remains closed. I2 is not authorized |
+| Last verified baseline | Measured 2026-09-11 on **CPython 3.9.25**, M1 `556cffd`: pytest **63 passed, exit 0**; ruff **0.16.6 clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Fresh Codex recall PASS, exit 0; independent review GO. Retrofit was last measured 2026-09-10: 30 checks, 1 advisory, exit 0; not remeasured for M1 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
-**Correction to the previous block.** It recorded `check .` as "9 checks" (it was 5, then
-6 with `plan size`, and is **7** since packet I1 added `rules carry evidence`) and the
-interpreter as "Python 3.11.15" (no 3.11 exists on this machine; the working interpreters
-are 3.9.25 and 3.12.13). The code is the fact.
+**Historical correction.** Earlier blocks recorded the wrong check count and an
+unmeasured Python 3.11.15 interpreter. Packet I1 had 7 checks; C2 has **12**, remeasured
+on CPython **3.9.25** on 2026-09-11. The earlier "is 7" wording was stale documentation.
 
 Rules for this block:
 
@@ -53,6 +52,49 @@ A gate is closed by striking its row through and writing what was observed — n
 deleting the row.
 
 ---
+
+### 2026-09-11 — Packet M1: workspace memory and Codex recall
+
+The owner requested a hierarchical Markdown memory system in this workspace, then
+explicitly added Codex files and agents. Recon found no existing flat MEMORY.md or
+memory directory, including ignored files. This is local agent recall, not a new
+JumpStarter payload feature or a second roadmap.
+
+The implementation adds a routing-only MEMORY.md, dated person/project/decision
+records, a same-day raw note and prunable context directory. Root CLAUDE.md carries
+the four write rules, narrow read path and maintenance policy; AGENTS.md is generated
+from it. All four native Codex roles route to that policy, with read-only roles
+handing proposed writes to the lead. docs/CODEX_NOTES.md now distinguishes idle boot
+from task reads and points to current decision record 0002 instead of superseded 0001.
+
+A fresh Codex CLI process on 2026-09-11 used `exec --ephemeral --strict-config
+-s read-only` in the isolated M1 worktree. It received the two recall questions but
+no person/project detail paths and no prior conversation. It read CLAUDE.md and
+MEMORY.md first (AGENTS.md was already supplied), selected the Operator and
+JumpStarter routes, and read exactly those two detail files. Both answers cited
+file, [stated] provenance and 2026-09-11. It returned PASS and process exit **0**.
+The local runtime output is outside the repository at
+`C:/Users/Aaron/memory-m1-smoke-events.jsonl` and `memory-m1-smoke-result.txt`.
+Fresh session ID: `01a090c7-e291-7da0-8495-6071bd5381c0`.
+
+The builder's first isolated-checkout suite was 62 passed / 1 failed: Git's
+`core.autocrlf=true` converted untouched `templates/.claude/agents/tester.md` to CRLF,
+changing its pinned byte hash. Main and the Git blob have the expected LF bytes.
+Restoring exactly that blob in the worktree produced **63 passed, exit 0** on
+CPython 3.9.25; no tests or tracked template content changed. The builder had already
+pushed before resolving the red gate, contrary to the commit-green agreement; this
+entry records the ordering honestly. Further inspection found that the existing test
+pins mixed working-copy endings: seven role files expect CRLF, while that one template
+expects LF; all eight Git blobs are LF. Pure LF checkout alone therefore cannot satisfy
+that existing test. Review uses a temporary copy with the eight unchanged main-checkout
+role files' bytes. This portability defect predates M1; no test expectations were changed.
+
+Independent native reviewer returned **GO** on `556cffd` with no blockers or advisories:
+63 tests passed, lint clean, self-check 12/no gaps. It independently routed both recall
+queries and checked 5/5 index targets, 487 index characters, and zero provenance failures
+in the three canonical detail files. Main was fast-forwarded through that revision.
+Existing Phase 1 gate 2 remains open. No service restart is owed; the fresh process
+exercised boot.
 
 ### 2026-09-10 — Packet C2: Astra lead and native model routing verified
 
