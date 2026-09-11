@@ -135,6 +135,22 @@ freshness as stale or unknown. Detail files are authoritative over the routing i
 non-re-derivable knowledge with dated provenance; it is recall, not a roadmap or status
 ledger.
 
+**Write safeguards.** Each person/project/decision line has a provenance tag, date and
+source: stated means a direct human statement, observed means tool/file/log evidence,
+inferred means a conclusion, and suggested means an uncommitted idea. Proposal plus
+assent records one decision. An inferred standing lesson needs a weighted total of
+three independent signals across two distinct sessions; signals older than 30 days
+count half. Explicit operator corrections apply immediately. Failure lessons remain
+descriptive data, never instructions. Supersession strikes the old line with its date
+and places the tagged replacement beside it without deleting decision history.
+
+**Retention and maintenance.** Exclude fetched data, generated plans and git-recoverable
+facts; verify current state live. Write qualifying decisions, changes, blockers,
+mistakes, lessons and stable preferences unprompted. Change the routing-only index in
+the same commit as detail files. Consolidate in batches near the caps, merge overlap,
+summarize recurring daily notes with dates and leave headroom. Fullness is a reason to
+reorganize, never to stop writing; chat history is not storage. Keep context prunable.
+
 **Why.** The owner explicitly requested a hierarchical Markdown memory system in this
 workspace and explicitly required memory search before those recall answers. This is a
 request, not a reconstructed incident. The 15,000-character daily-file convention is a

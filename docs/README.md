@@ -80,7 +80,8 @@ tracked project configuration; native role definitions below retain their own mo
 | [`../.codex/agents/reviewer.toml`](../.codex/agents/reviewer.toml) | Native Codex reviewer; Terra/high; reproduction-only review |
 | [`../.codex/agents/recon.toml`](../.codex/agents/recon.toml) | Native Codex recon; Luna/medium; read-only evidence gathering |
 
-The two sets mirror `templates/.claude/agents/` and `templates/.codex/agents/`.
+The two sets mirror `templates/.claude/agents/` and `templates/.codex/agents/`, except
+for the root Codex roles' workspace-memory boot and recall guidance (packet M1).
 JumpStarter runs its own control set, so a template change that does not reach its
 native dogfood copy is stale.
 

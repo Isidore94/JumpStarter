@@ -44,7 +44,9 @@ roadmap or status ledger. *(INTERNALS: "Workspace memory is request-grounded")*
 - **Write memory as part of the work.** Update `MEMORY.md` in the same commit as a detail
   change, including a route or trigger refinement when routes stay the same. Write
   unprompted for decisions, system changes, blockers or mistakes, lessons and stable
-  preferences when they meet the non-re-derivable rule. Consolidate near caps: merge
+  preferences when they meet the non-re-derivable rule. No mental-only notes: chat history
+  is not storage. Consolidate near caps and leave headroom; fullness means reorganize,
+  never stop writing. In batches, merge
   overlap, summarize recurring notes by date and preserve decision history. `MEMORY.md`
   is capped at 15,000 characters; daily files also use 15,000 characters as a local
   operating convention chosen for this workspace. Daily raw logs record the actual local
