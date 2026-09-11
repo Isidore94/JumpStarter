@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`claude/c2-astra-orchestration`**, based on `d3c3f81`; implementation green, awaiting final independent review before main integration |
-| Also in flight | Packet C2 only: Astra lead configuration, native metadata, audit and workflow parity. Tester, builder and reviewer hit the account usage limit; lead completed the confirmed fixes and checks. No final reviewer GO is claimed |
+| Working branch | **`main`** — PR #1 merged at `81f6358` on the owner's explicit instruction; this reconciliation records that integration |
+| Also in flight | **NOTHING unmerged.** C2 is integrated. The owner authorized merging after being told final independent reviewer sign-off was interrupted by usage limits; no reviewer GO is claimed |
 | Active items | `plan.md` **Phase 1 item 2 gate 4 CLOSED** by a live native C2 recon handoff on 2026-09-10. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
-| Last verified baseline | Measured 2026-09-10 on **CPython 3.9.25**, C2 branch: `pytest tests/ -q` **63 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **12 checks, no gaps**, exit 0; `retrofit .` **exit 0, 30 checks, 1 existing advisory** |
+| Last verified baseline | Measured 2026-09-10 on **CPython 3.9.25**, merged main at `81f6358`: `pytest tests/ -q` **63 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **12 checks, no gaps**, exit 0; `retrofit .` **exit 0, 30 checks, 1 existing advisory** |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
@@ -78,8 +78,10 @@ unsupported runtime. Hosts that lack it still have an explicitly labelled fallba
 Independent tester, builder and reviewer roles exercised C2. The lead reconciled the
 root ledgers and completed the remaining fixes after the subagents reached the account
 usage limit. Reviewer reproduced metadata-in-prose and missing-role escapes; both are
-now regression-tested. Final reviewer GO remains owed, so C2 is a draft PR rather than
-a main integration. Final automated counts and integration state are in the active block.
+now regression-tested. The owner subsequently instructed "Merge to main", authorizing
+integration without the interrupted final reviewer sign-off. PR #1 merged at `81f6358`;
+the local main checkout was fast-forwarded. No reviewer GO is claimed. Final automated
+counts and integration state are in the active block.
 Gate 2 remains open; no service restart is owed. Existing sessions must start a new
 task in the repo to adopt its model default, or explicitly choose Astra.
 

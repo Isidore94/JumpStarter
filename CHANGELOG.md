@@ -142,9 +142,10 @@ entries under `docs/` and leave a pointer.
 - Independent tests reproduced the missing fields, absent CLI option and false-green
   audit before the fix. Review exercised missing files and metadata hidden in role prose.
 - Gate 4 closed with a real native Astra-to-recon C2 packet handoff. Gate 2 stays open.
-- Final independent reviewer sign-off is pending after the account usage limit ended
-  the subagent turns. The lead completed confirmed fixes and all gates (63 tests,
-  lint, 12 self-check findings and 30 retrofit findings); C2 remains on its draft branch.
+- Final independent reviewer sign-off was interrupted by the account usage limit.
+  The lead completed confirmed fixes and all gates (63 tests, lint, 12 self-check
+  findings and 30 retrofit findings). The owner then explicitly instructed "Merge to
+  main"; PR #1 merged at `81f6358`. No reviewer GO is claimed.
 
 ### 2026-09-04 — Packet C1: native Codex roles, additive to Claude
 
