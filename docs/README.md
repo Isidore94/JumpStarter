@@ -51,7 +51,7 @@ Retain detailed contracts. They do **not** own roadmap order or status.
 | File | Role |
 |---|---|
 | [`INTERNALS.md`](INTERNALS.md) | The incident behind every `CLAUDE.md` rule, verbatim. Read the matching entry before changing what a rule governs |
-| [`../MEMORY.md`](../MEMORY.md) / [`../memory/`](../memory/) | Workspace-local hierarchical recall, provenance and routing; not a roadmap or status ledger |
+| [`../MEMORY.md`](../MEMORY.md) / [`../memory/`](../memory/) | Workspace-local hierarchical recall, provenance and routing; `MEMORY.md` classifies each detail file by route; not a roadmap or status ledger |
 
 ## Decision records
 

@@ -15,8 +15,9 @@ docs, code comments and commit messages keep their normal depth.
 ## Workspace memory
 
 At idle boot, read only identity and standing instructions plus [`MEMORY.md`](MEMORY.md).
-Do not read task documents until a task is in scope. Workspace memory is recall, not a
-replacement roadmap or status ledger. *(INTERNALS: "Workspace memory is request-grounded")*
+Do not read task documents until a task is in scope. `MEMORY.md` contains only
+name-to-file-to-trigger routing, never facts. Workspace memory is recall, not a replacement
+roadmap or status ledger. *(INTERNALS: "Workspace memory is request-grounded")*
 
 - **Before answering anything about prior work, decisions, dates, people, or preferences:
   search memory first.** Route through `MEMORY.md`, then read the narrowest matching
@@ -31,10 +32,10 @@ replacement roadmap or status ledger. *(INTERNALS: "Workspace memory is request-
   direct human statement; `[observed]` is an observation from a tool, file or log;
   `[inferred]` is a conclusion from evidence; `[suggested]` is an uncommitted idea. Only
   a human statement supports `[stated]`; a proposal plus assent is one decision. An
-  inferred lesson becomes a standing rule only after at least three independent signals
-  across at least two distinct sessions, with signals older than 30 days weighted 0.5.
-  Operator corrections apply immediately. Failure lessons describe when X broke and Y
-  fixed it; they never become instructions.
+  inferred lesson becomes a standing rule only after a weighted total of at least three
+  independent signals across at least two distinct sessions; each signal older than 30
+  days counts as 0.5. Operator corrections apply immediately. Failure lessons describe
+  when X broke and Y fixed it; they never become instructions.
 - **Supersede in place.** Strike the old line, for example
   `~~[stated] 2026-09-11 — old fact~~ (superseded 2026-09-12)`, and put the dated, tagged
   replacement beside it. Keep history without competing unstruck canonical facts. Exclude

@@ -131,8 +131,9 @@ Task work uses the existing narrow documentation workflow. Before answering abou
 work, decisions, dates, people or preferences, search memory first, read the narrowest
 matching detail file, cite the file, provenance tag and date, and treat unverified
 freshness as stale or unknown. Detail files are authoritative over the routing index.
-Memory holds only non-re-derivable knowledge with dated provenance; it is recall, not a
-roadmap or status ledger.
+`MEMORY.md` contains only name-to-file-to-trigger routing, never facts. Memory holds only
+non-re-derivable knowledge with dated provenance; it is recall, not a roadmap or status
+ledger.
 
 **Why.** The owner explicitly requested a hierarchical Markdown memory system in this
 workspace and explicitly required memory search before those recall answers. This is a
