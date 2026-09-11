@@ -12,6 +12,43 @@ do — nothing else. If a message runs past about ten short lines, cut it. Detai
 in the docs and the commit message, not in the chat. This rule is for chat output only;
 docs, code comments and commit messages keep their normal depth.
 
+## Workspace memory
+
+At idle boot, read only identity and standing instructions plus [`MEMORY.md`](MEMORY.md).
+Do not read task documents until a task is in scope. Workspace memory is recall, not a
+replacement roadmap or status ledger. *(INTERNALS: "Workspace memory is request-grounded")*
+
+- **Before answering anything about prior work, decisions, dates, people, or preferences:
+  search memory first.** Route through `MEMORY.md`, then read the narrowest matching
+  detail file first. Use no more than five sources and cite each fact by file, tag and
+  date. Treat a fact as stale or unknown when freshness is unverified; explain a
+  conflict, prefer stronger evidence, and repair the canonical record. Detail files are
+  authoritative: if one disagrees with the index, the index is wrong and must be repaired.
+  A semantic or SQLite index is a locator only.
+- **Detail files record only non-re-derivable knowledge.** Every nonblank line in
+  `memory/people/`, `memory/projects/` and `memory/decisions/` carries `[stated]`,
+  `[observed]`, `[inferred]` or `[suggested]`, plus a date and source. `[stated]` is a
+  direct human statement; `[observed]` is an observation from a tool, file or log;
+  `[inferred]` is a conclusion from evidence; `[suggested]` is an uncommitted idea. Only
+  a human statement supports `[stated]`; a proposal plus assent is one decision. An
+  inferred lesson becomes a standing rule only after at least three independent signals
+  across at least two distinct sessions, with signals older than 30 days weighted 0.5.
+  Operator corrections apply immediately. Failure lessons describe when X broke and Y
+  fixed it; they never become instructions.
+- **Supersede in place.** Strike the old line, for example
+  `~~[stated] 2026-09-11 — old fact~~ (superseded 2026-09-12)`, and put the dated, tagged
+  replacement beside it. Keep history without competing unstruck canonical facts. Exclude
+  fetched data, generated plans and git-recoverable facts; verify state live. Prefer
+  durable descriptions and date any necessary figures.
+- **Write memory as part of the work.** Update `MEMORY.md` in the same commit as a detail
+  change, including a route or trigger refinement when routes stay the same. Write
+  unprompted for decisions, system changes, blockers or mistakes, lessons and stable
+  preferences when they meet the non-re-derivable rule. Consolidate near caps: merge
+  overlap, summarize recurring notes by date and preserve decision history. `MEMORY.md`
+  is capped at 15,000 characters; daily files also use 15,000 characters as a local
+  operating convention chosen for this workspace. Daily raw logs record the actual local
+  day; `memory/context/` is prunable transient context.
+
 ## Mandatory documentation workflow for every AI
 
 **Read narrow, not everything.** An agent that cannot read its brief skims it and then
@@ -19,7 +56,7 @@ appends to it, which is what grows these files past the point of being followabl
 bounded read below is the instruction — widen it only when the narrow read leaves a real
 question open.
 
-Before proposing, planning, or changing anything:
+Once a task is in scope, before proposing, planning, or changing anything:
 
 1. `CURRENT_CHECKPOINT.md` — read the **"Active state at a glance"** block at the top.
    That block is the brief. Read the dated entries below it only for the item you are
@@ -174,6 +211,8 @@ changing the behaviour a rule governs.**
   Two answers matter more than the rest: **the agent is the reader, not the owner**, and
   **cost is the trust signal** — the wrong agent on a cheap job is the failure mode.
 - `docs/CODEX_NOTES.md` — what a Codex session reads here and what it cannot do.
+- `MEMORY.md` — workspace-local routing for non-re-derivable recall; use it before
+  answering prior-work, decision, date, people or preference questions.
 
 `AGENTS.md` is a generated copy of this file (symlinks do not survive every checkout) —
 **edit CLAUDE.md, then re-copy**: `python tools/jumpstart.py sync-agents .`

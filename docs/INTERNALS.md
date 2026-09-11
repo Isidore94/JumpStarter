@@ -124,6 +124,32 @@ definitions intact and preserve the shared packet/handoff contract.
 
 ---
 
+## Workspace memory is request-grounded (2026-09-11, M1)
+
+**The rule:** Idle boot reads only identity and standing instructions plus `MEMORY.md`.
+Task work uses the existing narrow documentation workflow. Before answering about prior
+work, decisions, dates, people or preferences, search memory first, read the narrowest
+matching detail file, cite the file, provenance tag and date, and treat unverified
+freshness as stale or unknown. Detail files are authoritative over the routing index.
+Memory holds only non-re-derivable knowledge with dated provenance; it is recall, not a
+roadmap or status ledger.
+
+**Why.** The owner explicitly requested a hierarchical Markdown memory system in this
+workspace and explicitly required memory search before those recall answers. This is a
+request, not a reconstructed incident. The 15,000-character daily-file convention is a
+local implementation choice because the owner did not specify that cap.
+
+**Role copies.** The root `.codex/agents/*.toml` carry an additive workspace-memory
+paragraph so native Codex roles honor boot and recall. It preserves their models, role
+boundaries and packet/handoff contract: recon and reviewer report a proposed sourced line
+to the lead, tester does the same while writing red tests, and only a builder may record
+an in-scope durable detail. Templates remain unchanged because this applies only here.
+
+**Reopen trigger.** The owner changes the recall policy, evidence tags, caps or workspace
+scope.
+
+---
+
 ## One source for two tools (2026-09-03, first build)
 
 **The rule:** `AGENTS.md` is generated from `CLAUDE.md` by `sync-agents` and verified by

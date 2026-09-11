@@ -1,6 +1,6 @@
 # JumpStarter documentation index
 
-Last reconciled: **2026-09-10** (packet C2)
+Last reconciled: **2026-09-11** (packet M1)
 
 Start here when a supporting detail is not in the root control set. This index classifies
 **every** maintained Markdown file, so a historical plan can never be mistaken for
@@ -51,6 +51,7 @@ Retain detailed contracts. They do **not** own roadmap order or status.
 | File | Role |
 |---|---|
 | [`INTERNALS.md`](INTERNALS.md) | The incident behind every `CLAUDE.md` rule, verbatim. Read the matching entry before changing what a rule governs |
+| [`../MEMORY.md`](../MEMORY.md) / [`../memory/`](../memory/) | Workspace-local hierarchical recall, provenance and routing; not a roadmap or status ledger |
 
 ## Decision records
 

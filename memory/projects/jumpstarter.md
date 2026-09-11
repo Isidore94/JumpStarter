@@ -1,0 +1,1 @@
+- [stated] 2026-09-11 — Source: owner M1 request — "Build yourself a hierarchical markdown memory system in your workspace."

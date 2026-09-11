@@ -1,0 +1,1 @@
+- [stated] 2026-09-11 — Source: owner M1 request — "Before answering anything about prior work, decisions, dates, people, or preferences: search memory first."

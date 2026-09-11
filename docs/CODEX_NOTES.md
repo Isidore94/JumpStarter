@@ -7,13 +7,18 @@ The generic version that ships to other projects is `templates/codex/CODEX_NOTES
 
 ## What Codex reads
 
-- **`AGENTS.md` at the repo root** — a byte-identical generated copy of `CLAUDE.md`, so
-  the operating rules are the same for both tools. There is no Codex-specific variant, on
-  purpose: two files that say almost the same thing drift, and then agents disagree.
-- Everything `AGENTS.md` points at: `CURRENT_CHECKPOINT.md`'s "Active state at a glance"
-  block, `plan.md` sections 5/6/7 and the current phase, `CHANGELOG.md`'s inventory
-  (searched, not read), `docs/README.md`, `docs/INTERNALS.md`, `PRINCIPLES.md`, and
-  `docs/decisions/0001-owner-goals-and-priorities.md`.
+At idle boot, Codex reads only its identity and standing instructions plus
+[`MEMORY.md`](../MEMORY.md). `AGENTS.md` is a byte-identical generated copy of
+`CLAUDE.md`, so the operating rules are the same for both tools; there is no
+Codex-specific rules variant.
+
+When a task is in scope, use `AGENTS.md`'s narrow mandatory workflow: the active-state
+block, `plan.md` sections 5/6/7 and the task's phase, a search of the changelog inventory,
+the relevant `docs/README.md` entries, and only the supporting documents the task needs.
+For questions about prior work, decisions, dates, people or preferences, search memory
+first and cite the detail file, provenance tag and date. `MEMORY.md` routes recall; it
+does not replace the project plan or status ledgers. The current owner-goals record is
+[`decisions/0002-owner-goals-asked-properly.md`](decisions/0002-owner-goals-asked-properly.md).
 
 **Never hand-edit `AGENTS.md`.** Edit `CLAUDE.md` and run
 `python tools/jumpstart.py sync-agents .`. `check .` fails on the sha256 mismatch, which
@@ -65,3 +70,7 @@ workers. If spawning itself is unavailable, report the blocker.
 - One checkout, many agents: worktrees for builders and reviewers.
 - Chat is short; detail lives in commits, docs and handoffs.
 - The owner decides priorities and promotions.
+
+The root Codex role copies contain a local workspace-memory paragraph for boot and recall.
+It preserves their models, role boundaries and packet/handoff contract; templates remain
+unchanged because the extension does not instruct downstream projects.

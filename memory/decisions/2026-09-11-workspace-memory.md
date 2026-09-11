@@ -1,0 +1,1 @@
+- [stated] 2026-09-11 — Source: owner M1 authorization — The owner approved the workspace hierarchical memory scheme as a whole.
