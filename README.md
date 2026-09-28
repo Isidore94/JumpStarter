@@ -87,6 +87,9 @@ python tools/jumpstart.py init /path/to/repo --name MyProject \
     --codex-cheap-model "gpt-5.6-luna"
 ```
 
+Add `--tier core` to leave out the agent-team module (subagent roles, packets, Codex
+files) for a small repo; `full` is the default.
+
 Writes the control set: `CLAUDE.md`, `AGENTS.md`, `plan.md`,
 `CURRENT_CHECKPOINT.md`, `CHANGELOG.md`, `WISHLIST.md`, `docs/README.md`,
 `docs/INTERNALS.md`, `docs/AGENT_TEAM.md`, `docs/CODEX_NOTES.md`,

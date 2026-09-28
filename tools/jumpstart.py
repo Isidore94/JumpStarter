@@ -58,6 +58,31 @@ INSTALL_MAP: dict[str, str] = {
     ".claude/packets/PACKET_TEMPLATE.md": ".claude/packets/PACKET_TEMPLATE.md",
 }
 
+#: The optional agent-team module: subagent roles, packets and the Codex files. Installed
+#: by ``init --tier full`` (the default); ``--tier core`` leaves it out. Everything else in
+#: INSTALL_MAP is the core control set.
+AGENT_MODULE: frozenset[str] = frozenset(
+    {
+        "docs/AGENT_TEAM.md",
+        "codex/CODEX_NOTES.md",
+        ".claude/agents/tester.md",
+        ".claude/agents/builder.md",
+        ".claude/agents/reviewer.md",
+        ".claude/agents/recon.md",
+        ".codex/agents/tester.toml",
+        ".codex/agents/builder.toml",
+        ".codex/agents/reviewer.toml",
+        ".codex/agents/recon.toml",
+        ".codex/config.toml",
+        ".claude/packets/PACKET_TEMPLATE.md",
+    }
+)
+
+#: Lines in templates/CLAUDE.md that fence the agent-team text. ``core`` removes the
+#: block, ``full`` removes only the two marker lines.
+AGENTS_BEGIN = "<!-- agents:begin -->"
+AGENTS_END = "<!-- agents:end -->"
+
 #: Files whose whole purpose is to be copied and filled in later. Their
 #: ``{{TOKEN}}``s are the product, not an omission, so the placeholder check skips them.
 TEMPLATES_BY_NATURE: tuple[str, ...] = (
@@ -533,9 +558,34 @@ def _native_metadata_present(text: str, field: str) -> bool:
     return False
 
 
+def _agent_module_absent(repo: Path) -> bool:
+    """True when the repo never adopted the agent-team module (a ``core`` init).
+
+    All-or-nothing on purpose: a repo with *some* of the files is half-adopted and gets
+    the normal audit. Only a repo that already has a CLAUDE.md is treated this way; an
+    empty directory keeps reporting everything missing, as before.
+    """
+    if not (repo / "CLAUDE.md").is_file():
+        return False
+    module = [INSTALL_MAP[key] for key in AGENT_MODULE]
+    return not any((repo / rel).exists() for rel in module)
+
+
+def _module_advisory(check: str) -> Finding:
+    return Finding(
+        check,
+        ADVISORY,
+        "agent-team module not adopted",
+        "Optional. Subagent roles, packets and Codex files come from "
+        "`jumpstart.py init --tier full`; a core repo does not need them.",
+    )
+
+
 def audit_codex_lead_config(repo: Path) -> Finding:
     """Report only whether a native lead config exists; project choices stay theirs."""
     path = repo / CODEX_CONFIG_FILE
+    if _agent_module_absent(repo):
+        return _module_advisory("native Codex lead config")
     if path.is_file():
         return Finding("native Codex lead config", OK, f"{CODEX_CONFIG_FILE} present")
     return Finding(
@@ -550,8 +600,12 @@ def audit_codex_lead_config(repo: Path) -> Finding:
 def audit_codex_role_metadata(repo: Path) -> list[Finding]:
     """Audit only Codex's required role metadata on the known native role files."""
     findings: list[Finding] = []
+    absent = _agent_module_absent(repo)
     for rel in CODEX_AGENT_FILES:
         path = repo / rel
+        if absent:
+            findings.append(_module_advisory(f"native role metadata {Path(rel).stem}"))
+            continue
         if not path.is_file():
             findings.append(
                 Finding(
@@ -929,7 +983,9 @@ def audit_structure(repo: Path) -> list[Finding]:
     for claude_rel, codex_rel in zip(AGENT_FILES, CODEX_AGENT_FILES):
         role = Path(claude_rel).stem
         missing = [rel for rel in (claude_rel, codex_rel) if not (repo / rel).is_file()]
-        if not missing:
+        if _agent_module_absent(repo):
+            findings.append(_module_advisory(f"agent {role}"))
+        elif not missing:
             findings.append(Finding(f"agent {role}", OK, "Claude and Codex roles present"))
         else:
             findings.append(
@@ -1025,6 +1081,25 @@ def fill(text: str, subs: dict[str, str]) -> str:
     return PLACEHOLDER_RE.sub(_sub, text)
 
 
+def render_claude(text: str, tier: str) -> str:
+    """Apply the tier to CLAUDE.md: drop the fenced agent-team block for ``core``, and
+    always drop the marker lines themselves so they never ship."""
+    out: list[str] = []
+    inside = False
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        if stripped == AGENTS_BEGIN:
+            inside = True
+            continue
+        if stripped == AGENTS_END:
+            inside = False
+            continue
+        if inside and tier == "core":
+            continue
+        out.append(line)
+    return "".join(out)
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     repo = Path(args.path).resolve()
     if not repo.is_dir():
@@ -1038,7 +1113,10 @@ def cmd_init(args: argparse.Namespace) -> int:
     written: list[str] = []
     skipped: list[str] = []
 
+    tier = getattr(args, "tier", "full")
     for template_rel, dest_rel in sorted(INSTALL_MAP.items()):
+        if tier == "core" and template_rel in AGENT_MODULE:
+            continue
         source = TEMPLATES_DIR / template_rel
         if not source.is_file():
             print(f"error: missing template {source}", file=sys.stderr)
@@ -1048,7 +1126,10 @@ def cmd_init(args: argparse.Namespace) -> int:
             skipped.append(dest_rel)
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(fill(_read(source), subs), encoding="utf-8")
+        text = fill(_read(source), subs)
+        if template_rel == "CLAUDE.md":
+            text = render_claude(text, tier)
+        dest.write_text(text, encoding="utf-8")
         written.append(dest_rel)
 
     # AGENTS.md is generated, never copied: one source, one sync.
@@ -1191,6 +1272,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--codex-cheap-model",
         default=None,
         help="Codex model for the read-only recon role",
+    )
+    init.add_argument(
+        "--tier",
+        choices=("core", "full"),
+        default="full",
+        help="core: control set only; full (default): plus the agent-team module "
+        "(subagent roles, packets, Codex files)",
     )
     init.add_argument("--force", action="store_true", help="overwrite existing files")
     init.set_defaults(func=cmd_init)

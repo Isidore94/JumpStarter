@@ -39,10 +39,18 @@ python tools/jumpstart.py init /path/to/repo \
     --branch-prefix "claude/" \
     --codex-lead-model "gpt-6-astra" \
     --codex-strong-model "gpt-5.6-terra" \
-    --codex-cheap-model "gpt-5.6-luna"
+    --codex-cheap-model "gpt-5.6-luna" \
+    --tier full
 ```
 
-This writes both native role sets (`.claude/agents/` and `.codex/agents/`) and the rest
+`--tier` picks how much ships. `full` (the default) is what is described here. `core`
+leaves out the agent-team module — `.claude/agents/`, `.codex/`, `.claude/packets/`,
+`docs/AGENT_TEAM.md`, `docs/CODEX_NOTES.md` — and strips the matching block from
+`CLAUDE.md`; pick it for a small repo that will not spawn subagents. `check` passes on a
+core repo, and `retrofit` reports the missing module as advisories, not gaps. Adopt it
+later by running `init --tier full` (existing files are skipped).
+
+With `full`, this writes both native role sets (`.claude/agents/` and `.codex/agents/`) and the rest
 of the control set, then appends the agent lines to `.gitignore`. It refuses
 to overwrite an existing file unless you pass `--force`, and it prints exactly what it
 wrote.

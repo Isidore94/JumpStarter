@@ -366,3 +366,10 @@ safety, definition-of-done or untrusted-content rules. It is now 107 lines: the 
 routing detail lives in `docs/CODEX_NOTES.md`, delegation is six lines pointing at
 `docs/AGENT_TEAM.md`, and safety and "done" are added. Still no numeric limit on the
 template itself; the reasoning above holds.
+
+**Addendum 2026-09-28 — the agent team is a module, not the baseline.** A small repo
+that will never spawn subagents was still handed four roles, two harness copies, packets
+and two long docs, and `retrofit` called their absence a gap. `init --tier core` now
+omits that module; an audited repo with *none* of it gets advisories, one with *some* of
+it is still a gap, and an empty directory is unchanged. All-or-nothing is deliberate:
+half a team is a defect, no team is a choice.

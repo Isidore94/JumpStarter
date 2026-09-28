@@ -84,6 +84,7 @@ actionable statement, then the pointer.
 ## Working with agents
 - `{{MAIN_BRANCH}}` is the trunk; branch per packet as `{{BRANCH_PREFIX}}<slug>`. Commit
   small and green; push after each commit.
+<!-- agents:begin -->
 - **The lead routes, it does not type.** Do lookups, `git` and doc edits under about 40
   lines yourself. Spawn `recon` (cheap) for anything over three files or a real count;
   `tester` then `builder` for multi-item or {{CRITICAL_AREA}} work; `reviewer` for
@@ -94,6 +95,7 @@ actionable statement, then the pointer.
   Code loads `.claude/agents/`; Codex loads `.codex/agents/`
   ([`docs/CODEX_NOTES.md`](docs/CODEX_NOTES.md)).
   *(INTERNALS: "Codex routing is explicit")*
+<!-- agents:end -->
 - If a task will exceed usage limits, commit and push so another agent can resume.
 
 ## Where to read more

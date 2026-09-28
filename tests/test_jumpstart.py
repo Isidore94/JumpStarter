@@ -578,3 +578,59 @@ def test_the_report_is_ascii_so_a_console_can_print_it(repo: Path, capsys) -> No
     out = capsys.readouterr().out
 
     out.encode("ascii")  # raises UnicodeEncodeError if any advice string is not ASCII
+
+
+# --------------------------------------------------------------------------- #
+# Tiers: `init --tier core` leaves the agent-team module out
+# --------------------------------------------------------------------------- #
+
+AGENT_MODULE_DESTS = (
+    "docs/AGENT_TEAM.md",
+    "docs/CODEX_NOTES.md",
+    ".claude/agents/builder.md",
+    ".codex/agents/builder.toml",
+    ".codex/config.toml",
+    ".claude/packets/PACKET_TEMPLATE.md",
+)
+
+
+def test_core_tier_omits_the_agent_module(tmp_path: Path) -> None:
+    assert jumpstart.main(["init", str(tmp_path), "--name", "W", "--tier", "core"]) == 0
+    for rel in AGENT_MODULE_DESTS:
+        assert not (tmp_path / rel).exists(), rel
+    for rel in ("CLAUDE.md", "AGENTS.md", "plan.md", ".claude/settings.json"):
+        assert (tmp_path / rel).is_file(), rel
+    text = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
+    assert "AGENT_TEAM" not in text and "agents:begin" not in text
+    assert "`{{MAIN_BRANCH}}`" not in text
+
+
+def test_full_tier_keeps_the_agent_text_and_drops_only_the_markers(tmp_path: Path) -> None:
+    assert jumpstart.main(["init", str(tmp_path), "--name", "W"]) == 0
+    for rel in AGENT_MODULE_DESTS:
+        assert (tmp_path / rel).is_file(), rel
+    text = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
+    assert "docs/AGENT_TEAM.md" in text and "agents:begin" not in text
+
+
+def test_core_repo_passes_check_and_retrofit_reports_advisories_not_gaps(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    jumpstart.main(["init", str(tmp_path), "--name", "W", "--tier", "core"])
+    capsys.readouterr()
+    fill_all = jumpstart.PLACEHOLDER_RE
+    for rel in jumpstart.INSTALL_MAP.values():
+        path = tmp_path / rel
+        if path.is_file() and rel not in jumpstart.TEMPLATES_BY_NATURE:
+            path.write_text(fill_all.sub("x", path.read_text(encoding="utf-8")), encoding="utf-8")
+    jumpstart.main(["sync-agents", str(tmp_path)])
+    assert jumpstart.main(["check", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "agent-team module not adopted" in out
+
+
+def test_half_adopted_agent_module_is_still_a_gap(tmp_path: Path) -> None:
+    jumpstart.main(["init", str(tmp_path), "--name", "W", "--tier", "core"])
+    (tmp_path / ".codex").mkdir()
+    (tmp_path / ".codex/config.toml").write_text("x = 1\n", encoding="utf-8")
+    assert jumpstart.main(["retrofit", str(tmp_path)]) == 1

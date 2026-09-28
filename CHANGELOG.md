@@ -134,6 +134,15 @@ do not rebuild landed work.**
 
 ## Recent changes (2026-09-03 onward)
 
+### 2026-09-28 — `init --tier core|full`
+
+`init` takes `--tier` (default `full`, unchanged). `core` skips `AGENT_MODULE` (agent
+roles, packets, Codex files, `AGENT_TEAM.md`, `CODEX_NOTES.md`) and `render_claude` strips
+the `<!-- agents:begin/end -->` block from `CLAUDE.md`. A repo with none of the module gets
+ADVISORY (not gap) findings from `check`/`retrofit`; a half-adopted module is still a gap;
+an empty directory still reports everything missing. 4 tests added (66 pass, plus the
+same pre-existing C1 hash failure). Playbook and README updated.
+
 ### 2026-09-28 — Lean `templates/CLAUDE.md`
 
 179 -> 107 lines. Removed Codex routing bullets, trading-flavoured example invariants and
@@ -141,8 +150,7 @@ the long commands prose; added Safety and a definition of done; subagent guidanc
 a six-line delegation policy pointing at `docs/AGENT_TEAM.md`. `templates/AGENTS.md`
 re-synced. `tests/test_i1_rules_carry_evidence.py` citation count 6 -> 5. Pytest 62 passed,
 1 failed (`test_c1...route_models_by_cost`: `.claude/agents/builder.md` hash differs; fails
-identically on the tree before this change). Ruff clean. Not done: opt-in modules chosen
-by `init` tier, which would change `tools/jumpstart.py`.
+identically on the tree before this change). Ruff clean. Tiers: see the entry above.
 
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
