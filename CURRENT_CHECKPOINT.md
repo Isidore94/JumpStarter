@@ -19,6 +19,7 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 |---|---|
 | Working branch | **`main`** — fast-forwarded through M1 at `556cffd`; this reconciliation records integration after independent reviewer GO |
 | Also in flight | **NOTHING unmerged.** M1 workspace memory is integrated. C2 remains integrated; its interrupted final reviewer GO is not claimed |
+| Lean template (2026-09-28) | `templates/CLAUDE.md` cut 179 -> 107 lines on branch `claude/pensive-meitner-il4h0b`, unmerged. pytest 62 passed / 1 failed (pre-existing builder.md hash in C1 test), ruff clean, self-check 12 checks no gaps |
 | Active items | **M1 COMPLETE**, including fresh Codex session and independent native-agent person/project recall. Phase 1 item 1/gate 2 remain unstarted; item 2/gate 4 remains closed. I2 is not authorized |
 | Last verified baseline | Measured 2026-09-11 on **CPython 3.9.25**, M1 `556cffd`: pytest **63 passed, exit 0**; ruff **0.16.6 clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Fresh Codex recall PASS, exit 0; independent review GO. Retrofit was last measured 2026-09-10: 30 checks, 1 advisory, exit 0; not remeasured for M1 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |

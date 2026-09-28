@@ -32,11 +32,10 @@ import jumpstart  # noqa: E402  (path set above)
 # template shipped, never to decide what the audit should have matched.
 CITATION_MARK = '(INTERNALS: "'
 
-# What the template ships, counted by hand on 2026-09-03 against
-# `templates/CLAUDE.md`: citations at lines 40, 90, 113 and 144, of which line 90
-# sits inside the `<!-- ... -->` example block at lines 88-90. Three are live.
-# C2 adds two references to one distinct Codex routing rule (2026-09-10).
-TEMPLATE_CITATIONS_IN_TEXT = 6
+# What the template ships, recounted 2026-09-28 after the lean rewrite of
+# `templates/CLAUDE.md`: five citations, one of them the example inside the
+# `<!-- ... -->` block under Core rules. Four are live.
+TEMPLATE_CITATIONS_IN_TEXT = 5
 TEMPLATE_CITATIONS_LIVE = 4
 
 

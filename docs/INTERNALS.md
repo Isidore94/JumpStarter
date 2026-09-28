@@ -358,3 +358,11 @@ a limit on an empty file.
 
 **Reopen trigger.** A template that passes 200 lines, or an agent that reports it did not
 finish reading one.
+
+**Addendum 2026-09-28 — the template was measured and cut.** The owner asked whether
+`templates/CLAUDE.md` was lean enough to be a rubric for any repo. Measured: 179 lines,
+10.8k characters; three Codex-only bullets, trading-flavoured example invariants and no
+safety, definition-of-done or untrusted-content rules. It is now 107 lines: the Codex
+routing detail lives in `docs/CODEX_NOTES.md`, delegation is six lines pointing at
+`docs/AGENT_TEAM.md`, and safety and "done" are added. Still no numeric limit on the
+template itself; the reasoning above holds.

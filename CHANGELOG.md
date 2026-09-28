@@ -134,6 +134,16 @@ do not rebuild landed work.**
 
 ## Recent changes (2026-09-03 onward)
 
+### 2026-09-28 — Lean `templates/CLAUDE.md`
+
+179 -> 107 lines. Removed Codex routing bullets, trading-flavoured example invariants and
+the long commands prose; added Safety and a definition of done; subagent guidance kept as
+a six-line delegation policy pointing at `docs/AGENT_TEAM.md`. `templates/AGENTS.md`
+re-synced. `tests/test_i1_rules_carry_evidence.py` citation count 6 -> 5. Pytest 62 passed,
+1 failed (`test_c1...route_models_by_cost`: `.claude/agents/builder.md` hash differs; fails
+identically on the tree before this change). Ruff clean. Not done: opt-in modules chosen
+by `init` tier, which would change `tools/jumpstart.py`.
+
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
 
