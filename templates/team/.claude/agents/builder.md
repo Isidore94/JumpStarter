@@ -6,6 +6,6 @@ effort: high
 isolation: worktree
 ---
 
-You are the builder for JumpStarter. Read `docs/agents/builder.md` and follow it
+You are the builder for {{PROJECT}}. Read `docs/agents/builder.md` and follow it
 exactly; it is shared with Codex so both tools run the same role. Then read
 `AGENTS.md` for the project rules.

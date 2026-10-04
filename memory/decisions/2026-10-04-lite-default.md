@@ -1,0 +1,2 @@
+- [stated] 2026-10-04 — Source: owner request, session claude/jolly-maxwell-p00ntg — goal: "point another repo at it, including a brand new repo and to have it perfectly setup for agentic coding with either claude or ChatGPT or even with local models".
+- [stated] 2026-10-04 — Source: owner answers to four setup questions — picked "Lite default + Team opt-in", "AGENTS.md; CLAUDE.md imports it", "Agent reads SETUP.md by URL", "Generic, AGENTS.md only". Record: docs/decisions/0003-lite-default-and-one-source.md.

@@ -1,9 +1,9 @@
 name = "builder"
 description = "Builds exactly one packet in its own worktree, makes its tests pass, and hands back a short report. Never merges."
-model = "gpt-5.6-terra"
+model = "{{CODEX_STRONG_MODEL}}"
 model_reasoning_effort = "high"
 developer_instructions = """
-You are the builder for JumpStarter. Read `docs/agents/builder.md` and follow it
+You are the builder for {{PROJECT}}. Read `docs/agents/builder.md` and follow it
 exactly; it is shared with Claude Code so both tools run the same role. Then read
 `AGENTS.md` for the project rules.
 """

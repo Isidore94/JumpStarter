@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""JumpStarter CLI: bootstrap, audit and enforce a project's agent control set.
+"""JumpStarter CLI: set up, audit and enforce a project's AI-agent control files.
 
 Four commands:
 
-    init <path> --name X    copy the templates in and fill the placeholders
-    retrofit <path>         audit an existing repo and print a gap report (writes nothing)
-    sync-agents <path>      copy CLAUDE.md to AGENTS.md and verify sha256 equality
-    check <path>            enforce the size limits, CLAUDE == AGENTS, and no unfilled
-                            placeholders
+    init <path> --name X [--profile lite|team]   copy the templates in, fill what it was told
+    retrofit <path>                              audit an existing repo; writes nothing
+    sync-agents <path>                           make CLAUDE.md a one-line import of AGENTS.md
+    check <path>                                 the same audit, as a gate for CI
 
 Pure standard library, Python 3.9+.
 
@@ -30,106 +29,64 @@ from pathlib import Path
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
-#: template path (relative to templates/) -> destination path (relative to the repo).
-INSTALL_MAP: dict[str, str] = {
-    "CLAUDE.md": "CLAUDE.md",
-    "plan.md": "plan.md",
-    "CURRENT_CHECKPOINT.md": "CURRENT_CHECKPOINT.md",
-    "CHANGELOG.md": "CHANGELOG.md",
-    "WISHLIST.md": "WISHLIST.md",
-    "docs/README.md": "docs/README.md",
-    "docs/INTERNALS.md": "docs/INTERNALS.md",
-    "docs/AGENT_TEAM.md": "docs/AGENT_TEAM.md",
-    "docs/decisions/0000-template.md": "docs/decisions/0000-template.md",
-    "docs/decisions/0001-owner-goals-and-priorities.md": (
-        "docs/decisions/0001-owner-goals-and-priorities.md"
-    ),
-    "codex/CODEX_NOTES.md": "docs/CODEX_NOTES.md",
-    ".claude/agents/tester.md": ".claude/agents/tester.md",
-    ".claude/agents/builder.md": ".claude/agents/builder.md",
-    ".claude/agents/reviewer.md": ".claude/agents/reviewer.md",
-    ".claude/agents/recon.md": ".claude/agents/recon.md",
-    ".codex/agents/tester.toml": ".codex/agents/tester.toml",
-    ".codex/agents/builder.toml": ".codex/agents/builder.toml",
-    ".codex/agents/reviewer.toml": ".codex/agents/reviewer.toml",
-    ".codex/agents/recon.toml": ".codex/agents/recon.toml",
-    ".codex/config.toml": ".codex/config.toml",
-    ".claude/settings.json": ".claude/settings.json",
-    ".claude/packets/PACKET_TEMPLATE.md": ".claude/packets/PACKET_TEMPLATE.md",
+#: Each profile is a stack of template folders, applied in order.
+PROFILES: dict[str, tuple[str, ...]] = {
+    "lite": ("lite",),
+    "team": ("lite", "team"),
 }
 
-#: Files whose whole purpose is to be copied and filled in later. Their
-#: ``{{TOKEN}}``s are the product, not an omission, so the placeholder check skips them.
+#: Not installed as a file: appended to the repo's .gitignore by the team profile.
+GITIGNORE_SNIPPET = "gitignore.snippet"
+GITIGNORE_MARKER = "--- JumpStarter ---"
+
+#: Files whose whole purpose is to be copied and filled later. Their ``{{TOKEN}}``s are
+#: the product, not an omission, so the placeholder check skips them.
 TEMPLATES_BY_NATURE: tuple[str, ...] = (
+    "docs/packets/TEMPLATE.md",
+    # The older layout's names, so a repo set up before 2026-10-04 is not failed for them.
     "docs/decisions/0000-template.md",
     ".claude/packets/PACKET_TEMPLATE.md",
 )
 
-GITIGNORE_SNIPPET = "templates/.gitignore.snippet"
-GITIGNORE_MARKER = "--- JumpStarter: agent control files ---"
-
-CONTROL_FILES: tuple[str, ...] = (
-    "CLAUDE.md",
-    "AGENTS.md",
-    "plan.md",
+#: Control files from the older layout (CLAUDE.md as the source, a separate checkpoint,
+#: wishlist and docs index). Still read by the audit so their placeholders are seen.
+LEGACY_FILES: tuple[str, ...] = (
     "CURRENT_CHECKPOINT.md",
-    "CHANGELOG.md",
     "WISHLIST.md",
     "docs/README.md",
+    "docs/INTERNALS.md",
+    "docs/CODEX_NOTES.md",
 )
 
-AGENT_FILES: tuple[str, ...] = (
-    ".claude/agents/tester.md",
-    ".claude/agents/builder.md",
-    ".claude/agents/reviewer.md",
-    ".claude/agents/recon.md",
-)
-
-CODEX_AGENT_FILES: tuple[str, ...] = (
-    ".codex/agents/tester.toml",
-    ".codex/agents/builder.toml",
-    ".codex/agents/reviewer.toml",
-    ".codex/agents/recon.toml",
-)
-
+ROLES: tuple[str, ...] = ("recon", "tester", "builder", "reviewer")
+CLAUDE_AGENTS_DIR = ".claude/agents"
+CODEX_AGENTS_DIR = ".codex/agents"
 CODEX_CONFIG_FILE = ".codex/config.toml"
-CODEX_METADATA_FIELDS: tuple[str, ...] = (
-    "name",
-    "description",
-    "developer_instructions",
-)
+TEAM_DOC = "docs/AGENT_TEAM.md"
+CODEX_METADATA_FIELDS: tuple[str, ...] = ("name", "description", "developer_instructions")
+
+LESSONS_FILES: tuple[str, ...] = ("docs/LESSONS.md", "docs/INTERNALS.md")
 
 # --------------------------------------------------------------------------- #
-# Limits. Principle 1: docs must be readable in bounded time.
+# Limits. The reader is an agent on a context budget: a file it cannot finish is a
+# file it skims and then appends to.
 # --------------------------------------------------------------------------- #
 
-CHECKPOINT_MAX_LINES = 1500
-CHANGELOG_RECENT_MAX_LINES = 800
-CLAUDE_MAX_LINES = 400
+#: AGENTS.md loads into every session of every tool. The lite template is about 75.
+AGENTS_MAX_LINES = 200
+#: ``## Now`` is the one block every task reads first.
+NOW_MAX_LINES = 25
+#: plan.md holds only unfinished work; done items move to CHANGELOG.md.
+PLAN_MAX_LINES = 400
+#: CHANGELOG.md's ``## Log``. The inventory above it is searched, not read.
+LOG_MAX_LINES = 400
 
-#: ``plan.md`` is in the mandatory read and nothing used to bound it. Measured
-#: 2026-09-03: 1,835 lines in the project these templates came from, 2,960 in another
-#: real repository. Both are past the point where the phase you need can be found.
-PLAN_MAX_LINES = 1200
+NOW_HEADING = "Now"
+INVENTORY_HEADINGS: tuple[str, ...] = ("What exists", "Current implemented inventory")
+LOG_HEADINGS: tuple[str, ...] = ("Log", "Recent changes")
+LEGACY_STATE_HEADING = "Active state at a glance"
 
-#: The markers that carry meaning, and the check that reports each as missing.
-ACTIVE_STATE_MARKER = "Active state at a glance"
-
-#: Headings a repo may already use for the same block. Finding one is not a pass — the
-#: block has to be findable by name from CLAUDE.md — but it is an advisory, not a gap:
-#: reporting "no active state block" at a repo that has one under its own heading is a
-#: false positive, and a check that fires on correct work takes the real findings with it.
-ACTIVE_STATE_ALIASES: tuple[str, ...] = (
-    "Active item",
-    "Active state",
-    "Current state",
-    "Where we are",
-)
-
-#: Root-level Markdown that is not part of the control set and reads like a second
-#: ledger. Matched on the stem, upper-cased. The rule these violate is in every
-#: CLAUDE.md this tool ships: do not create another roadmap, progress ledger, handoff
-#: or status file.
+#: Root-level Markdown that reads like a second ledger. Matched on the stem.
 STRAY_LEDGER_WORDS: tuple[str, ...] = (
     "HANDOFF",
     "REVIEW",
@@ -143,10 +100,28 @@ STRAY_LEDGER_WORDS: tuple[str, ...] = (
     "NOTES",
     "SUMMARY",
 )
-INVENTORY_MARKER = "Current implemented inventory"
-RECENT_CHANGES_MARKER = "Recent changes"
+KNOWN_ROOT_FILES: frozenset[str] = frozenset(
+    {
+        "README.MD",
+        "AGENTS.MD",
+        "CLAUDE.MD",
+        "PLAN.MD",
+        "CHANGELOG.MD",
+        "SETUP.MD",
+        "MEMORY.MD",
+        "LICENSE.MD",
+        "CONTRIBUTING.MD",
+        "CODE_OF_CONDUCT.MD",
+        "SECURITY.MD",
+        "CURRENT_CHECKPOINT.MD",
+        "WISHLIST.MD",
+    }
+)
 
 PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
+IMPORT_LINES: tuple[str, ...] = ("@AGENTS.md", "@./AGENTS.md")
+#: The one-line CLAUDE.md that sync-agents writes is the lite template itself.
+CLAUDE_STUB_TEMPLATE = "lite/CLAUDE.md"
 
 
 # --------------------------------------------------------------------------- #
@@ -160,54 +135,53 @@ def _read(path: Path) -> str:
 
 
 def _line_count(text: str) -> int:
-    if not text:
-        return 0
-    return len(text.splitlines())
+    return len(text.splitlines()) if text else 0
 
 
 def sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _has_marker(text: str, marker: str) -> bool:
-    return marker.lower() in text.lower()
-
-
-def section_line_count(text: str, heading_marker: str) -> int | None:
-    """Lines from the heading containing ``heading_marker`` to the next same-or-higher
-    heading. ``None`` when no such heading exists."""
-    lines = text.splitlines()
-    start = None
-    start_level = 0
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if not stripped.startswith("#"):
-            continue
-        level = len(stripped) - len(stripped.lstrip("#"))
-        if heading_marker.lower() in stripped.lower():
-            start = i
-            start_level = level
-            break
-    if start is None:
+def _heading(line: str) -> tuple[int, str] | None:
+    stripped = line.strip()
+    if not stripped.startswith("#"):
         return None
-    for j in range(start + 1, len(lines)):
-        stripped = lines[j].strip()
-        if not stripped.startswith("#"):
+    level = len(stripped) - len(stripped.lstrip("#"))
+    return level, stripped[level:].strip()
+
+
+def _title_matches(title: str, name: str) -> bool:
+    """``## Now`` and ``## Now (read first)`` match "Now"; ``## Known issues`` does not."""
+    return re.match(rf"{re.escape(name)}\b", title, re.IGNORECASE) is not None
+
+
+def section_line_count(text: str, *names: str) -> int | None:
+    """Lines from the first heading whose title starts with one of ``names`` to the next
+    same-or-higher heading. ``None`` when no such heading exists."""
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        head = _heading(line)
+        if head is None or not any(_title_matches(head[1], n) for n in names):
             continue
-        level = len(stripped) - len(stripped.lstrip("#"))
-        if level <= start_level:
-            return j - start
-    return len(lines) - start
+        for j in range(i + 1, len(lines)):
+            nxt = _heading(lines[j])
+            if nxt is not None and nxt[0] <= head[0]:
+                return j - i
+        return len(lines) - i
+    return None
 
 
 def find_placeholders(text: str) -> list[str]:
     """Unfilled ``{{TOKEN}}`` names, in first-seen order, without duplicates."""
     seen: list[str] = []
     for match in PLACEHOLDER_RE.finditer(text):
-        name = match.group(1)
-        if name not in seen:
-            seen.append(name)
+        if match.group(1) not in seen:
+            seen.append(match.group(1))
     return seen
+
+
+def imports_agents(text: str) -> bool:
+    return any(line.strip() in IMPORT_LINES for line in text.splitlines())
 
 
 def _today() -> str:
@@ -215,6 +189,24 @@ def _today() -> str:
     # filling it in reads off their own wall clock. A UTC date would be wrong for
     # anyone west of Greenwich after 16:00 local.
     return _dt.date.today().isoformat()  # noqa: DTZ011
+
+
+def template_files(profile: str) -> list[tuple[Path, str]]:
+    """(source, destination) for every file the profile installs, in install order."""
+    out: list[tuple[Path, str]] = []
+    for layer in PROFILES[profile]:
+        root = TEMPLATES_DIR / layer
+        for source in sorted(p for p in root.rglob("*") if p.is_file()):
+            rel = source.relative_to(root).as_posix()
+            if rel != GITIGNORE_SNIPPET:
+                out.append((source, rel))
+    return out
+
+
+def control_paths() -> list[str]:
+    """Every path any profile installs, plus the older layout's files."""
+    paths = {rel for profile in PROFILES for _, rel in template_files(profile)}
+    return sorted(paths | set(LEGACY_FILES))
 
 
 # --------------------------------------------------------------------------- #
@@ -231,7 +223,7 @@ UNFILLED = "UNFILLED"
 
 class Finding:
     """One audit result. ``ok`` findings are printed too: a report that only lists
-    problems does not tell you what was checked."""
+    problems does not say what was checked."""
 
     def __init__(self, check: str, status: str, detail: str, remedy: str = "") -> None:
         self.check = check
@@ -241,16 +233,12 @@ class Finding:
 
     @property
     def ok(self) -> bool:
-        """An advisory is not a gap. It is something a human should look at, not
-        something that fails a build: a repo whose active-state block sits under its own
-        heading, or whose allow-list is correctly machine-local, has not failed."""
+        """An advisory is not a gap: something to look at, not something to fail on."""
         return self.status in (OK, ADVISORY)
 
     def render(self) -> str:
         line = f"  [{self.status:<8}] {self.check}: {self.detail}"
-        if self.remedy and self.status == ADVISORY:
-            return line + f"\n             -> {self.remedy}"
-        if self.remedy and not self.ok:
+        if self.remedy and self.status != OK:
             line += f"\n             -> {self.remedy}"
         return line
 
@@ -260,14 +248,9 @@ def _print_report(title: str, findings: Sequence[Finding], repo: Path) -> int:
     advisories = [f for f in findings if f.status == ADVISORY]
     print(f"{title}: {repo}")
     print("=" * 78)
-
-    # A repo with nothing needs one sentence, not twenty-two identical lines.
-    if len(gaps) == len(findings) and not (repo / "CLAUDE.md").is_file():
-        print("  No control set at all: every check is missing.")
-        print("  Start with `jumpstart.py init` and fill the placeholders by hand;")
-        print("  the full list below is the standard, not a to-do list for today.")
+    if not (repo / "AGENTS.md").is_file() and not (repo / "CLAUDE.md").is_file():
+        print("  No agent setup here yet. Run `jumpstart.py init` or follow SETUP.md.")
         print("-" * 78)
-
     for finding in findings:
         print(finding.render())
     print("-" * 78)
@@ -285,247 +268,312 @@ def _print_report(title: str, findings: Sequence[Finding], repo: Path) -> int:
 # --------------------------------------------------------------------------- #
 
 
+def _rules_file(repo: Path) -> Path | None:
+    """AGENTS.md is the source. A repo on the older layout may only have CLAUDE.md."""
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        if (repo / name).is_file():
+            return repo / name
+    return None
+
+
+def audit_rules_files(repo: Path) -> list[Finding]:
+    agents = repo / "AGENTS.md"
+    claude = repo / "CLAUDE.md"
+    if not agents.is_file() and not claude.is_file():
+        return [
+            Finding(
+                "rules file",
+                MISSING,
+                "no AGENTS.md and no CLAUDE.md",
+                "Run `jumpstart.py init <path> --name <Name>`.",
+            )
+        ]
+    if not agents.is_file():
+        return [
+            Finding(
+                "rules file",
+                MISSING,
+                "rules are only in CLAUDE.md; Codex and other tools read AGENTS.md",
+                "Run `jumpstart.py sync-agents <path>`: it moves them to AGENTS.md and "
+                "leaves CLAUDE.md as a one-line import.",
+            )
+        ]
+
+    findings = [Finding("rules file", OK, "AGENTS.md present")]
+    if not claude.is_file():
+        findings.append(
+            Finding(
+                "CLAUDE.md imports AGENTS.md",
+                MISSING,
+                "no CLAUDE.md, so Claude Code will not load the rules",
+                "Run `jumpstart.py sync-agents <path>` to write the one-line import.",
+            )
+        )
+    elif imports_agents(_read(claude)):
+        findings.append(Finding("CLAUDE.md imports AGENTS.md", OK, "one source of rules"))
+    elif sha256_of(claude) == sha256_of(agents):
+        findings.append(
+            Finding(
+                "CLAUDE.md imports AGENTS.md",
+                ADVISORY,
+                "CLAUDE.md and AGENTS.md are identical copies (the older layout)",
+                "This works. To keep one copy, run `jumpstart.py sync-agents <path>`.",
+            )
+        )
+    else:
+        findings.append(
+            Finding(
+                "CLAUDE.md imports AGENTS.md",
+                DRIFT,
+                "CLAUDE.md and AGENTS.md differ, so Claude and Codex follow different rules",
+                "Merge CLAUDE.md's rules into AGENTS.md by hand (the difference usually "
+                "holds real rules), then run `jumpstart.py sync-agents <path>`.",
+            )
+        )
+    return findings
+
+
 def audit_sizes(repo: Path) -> list[Finding]:
     findings: list[Finding] = []
 
-    checkpoint = repo / "CURRENT_CHECKPOINT.md"
-    if checkpoint.is_file():
-        lines = _line_count(_read(checkpoint))
-        if lines > CHECKPOINT_MAX_LINES:
+    rules = _rules_file(repo)
+    if rules is not None:
+        lines = _line_count(_read(rules))
+        if lines > AGENTS_MAX_LINES:
             findings.append(
                 Finding(
-                    "checkpoint size",
+                    f"{rules.name} size",
                     OVERSIZE,
-                    f"CURRENT_CHECKPOINT.md is {lines} lines (limit {CHECKPOINT_MAX_LINES})",
-                    "Move the entries older than the oldest open gate into "
-                    "docs/CHECKPOINT_ARCHIVE_<period>.md and leave a pointer. "
-                    "Archive, do not delete.",
+                    f"{lines} lines (limit {AGENTS_MAX_LINES})",
+                    "It loads into every session. Keep one line per rule and move the "
+                    "story behind each into docs/LESSONS.md.",
                 )
             )
         else:
             findings.append(
-                Finding(
-                    "checkpoint size",
-                    OK,
-                    f"{lines} lines (limit {CHECKPOINT_MAX_LINES})",
-                )
+                Finding(f"{rules.name} size", OK, f"{lines} lines (limit {AGENTS_MAX_LINES})")
             )
-    else:
-        findings.append(
-            Finding(
-                "checkpoint size",
-                MISSING,
-                "CURRENT_CHECKPOINT.md not found",
-                "Add it from templates/CURRENT_CHECKPOINT.md.",
-            )
-        )
 
     plan = repo / "plan.md"
-    if plan.is_file():
-        lines = _line_count(_read(plan))
+    if not plan.is_file():
+        findings.append(
+            Finding("plan", MISSING, "plan.md not found", "Add it from templates/lite/plan.md.")
+        )
+    else:
+        text = _read(plan)
+        lines = _line_count(text)
         if lines > PLAN_MAX_LINES:
             findings.append(
                 Finding(
                     "plan size",
                     OVERSIZE,
                     f"plan.md is {lines} lines (limit {PLAN_MAX_LINES})",
-                    "plan.md is in the mandatory read. Move finished phases into "
-                    "CHANGELOG.md's inventory and completed detail into a dated archive "
-                    "under docs/. Only unfinished work belongs in plan.md.",
+                    "Only unfinished work belongs in plan.md. Move done items to "
+                    "CHANGELOG.md and old detail to docs/archive/.",
                 )
             )
         else:
-            findings.append(
-                Finding("plan size", OK, f"{lines} lines (limit {PLAN_MAX_LINES})")
-            )
-    else:
-        findings.append(
-            Finding(
-                "plan size",
-                MISSING,
-                "plan.md not found",
-                "Add it from templates/plan.md.",
-            )
-        )
+            findings.append(Finding("plan size", OK, f"{lines} lines (limit {PLAN_MAX_LINES})"))
+        findings.append(_audit_now(repo, text))
 
     changelog = repo / "CHANGELOG.md"
-    if changelog.is_file():
-        text = _read(changelog)
-        recent = section_line_count(text, RECENT_CHANGES_MARKER)
-        if recent is None:
-            # No bounded section means the whole file is the recent section. Measure it,
-            # or a 2,000-line chronological changelog passes the size checks entirely.
-            whole = _line_count(text)
-            over = "" if whole <= CHANGELOG_RECENT_MAX_LINES else (
-                f" and the whole file is {whole} lines "
-                f"(limit {CHANGELOG_RECENT_MAX_LINES})"
-            )
-            findings.append(
-                Finding(
-                    "changelog recent section",
-                    MISSING,
-                    f"no '{RECENT_CHANGES_MARKER}' heading in CHANGELOG.md{over}",
-                    "Split the file: a searchable inventory at the top, a bounded "
-                    "'Recent changes' section, and a dated archive under docs/.",
-                )
-            )
-        elif recent > CHANGELOG_RECENT_MAX_LINES:
-            findings.append(
-                Finding(
-                    "changelog recent section",
-                    OVERSIZE,
-                    f"'{RECENT_CHANGES_MARKER}' is {recent} lines (limit {CHANGELOG_RECENT_MAX_LINES})",
-                    "Move the older entries into docs/CHANGELOG_ARCHIVE_<period>.md "
-                    "and leave a pointer.",
-                )
-            )
-        else:
-            findings.append(
-                Finding(
-                    "changelog recent section",
-                    OK,
-                    f"{recent} lines (limit {CHANGELOG_RECENT_MAX_LINES})",
-                )
-            )
-    else:
+    if not changelog.is_file():
         findings.append(
             Finding(
-                "changelog recent section",
+                "changelog",
                 MISSING,
                 "CHANGELOG.md not found",
-                "Add it from templates/CHANGELOG.md.",
+                "Add it from templates/lite/CHANGELOG.md.",
             )
         )
+        return findings
 
-    claude = repo / "CLAUDE.md"
-    if claude.is_file():
-        lines = _line_count(_read(claude))
-        if lines > CLAUDE_MAX_LINES:
-            findings.append(
-                Finding(
-                    "CLAUDE.md size",
-                    OVERSIZE,
-                    f"{lines} lines (limit {CLAUDE_MAX_LINES})",
-                    "CLAUDE.md loads into every session. Keep the rules here and move "
-                    "the incident behind each into docs/INTERNALS.md.",
-                )
-            )
-        else:
-            findings.append(
-                Finding(
-                    "CLAUDE.md size", OK, f"{lines} lines (limit {CLAUDE_MAX_LINES})"
-                )
-            )
-    else:
+    text = _read(changelog)
+    if section_line_count(text, *INVENTORY_HEADINGS) is None:
         findings.append(
             Finding(
-                "CLAUDE.md size",
+                "what exists",
                 MISSING,
-                "CLAUDE.md not found",
-                "Add it from templates/CLAUDE.md.",
+                "no '## What exists' section in CHANGELOG.md",
+                "List one line per thing that works today. Agents search it before "
+                "building so they never rebuild it.",
             )
         )
+    else:
+        findings.append(Finding("what exists", OK, "present in CHANGELOG.md"))
 
+    log = section_line_count(text, *LOG_HEADINGS)
+    if log is None:
+        whole = _line_count(text)
+        over = f"; the whole file is {whole} lines" if whole > LOG_MAX_LINES else ""
+        findings.append(
+            Finding(
+                "changelog log",
+                MISSING,
+                f"no '## Log' section in CHANGELOG.md{over}",
+                "Split it: '## What exists' at the top, then a bounded '## Log'. Move "
+                "old entries to docs/archive/.",
+            )
+        )
+    elif log > LOG_MAX_LINES:
+        findings.append(
+            Finding(
+                "changelog log",
+                OVERSIZE,
+                f"'## Log' is {log} lines (limit {LOG_MAX_LINES})",
+                "Move older entries to docs/archive/CHANGELOG_<period>.md and leave a "
+                "pointer.",
+            )
+        )
+    else:
+        findings.append(Finding("changelog log", OK, f"{log} lines (limit {LOG_MAX_LINES})"))
     return findings
 
 
-def audit_agents_identical(repo: Path) -> Finding:
-    claude = repo / "CLAUDE.md"
-    agents = repo / "AGENTS.md"
-    if not claude.is_file() and not agents.is_file():
+def _audit_now(repo: Path, plan_text: str) -> Finding:
+    now = section_line_count(plan_text, NOW_HEADING)
+    if now is not None:
+        if now > NOW_MAX_LINES:
+            return Finding(
+                "## Now",
+                OVERSIZE,
+                f"{now} lines (limit {NOW_MAX_LINES})",
+                "Every task reads it first. Keep: working on, last test result, next "
+                "step, waiting on. Move history to CHANGELOG.md.",
+            )
+        return Finding("## Now", OK, f"{now} lines in plan.md (limit {NOW_MAX_LINES})")
+
+    checkpoint = repo / "CURRENT_CHECKPOINT.md"
+    if checkpoint.is_file() and section_line_count(_read(checkpoint), LEGACY_STATE_HEADING):
         return Finding(
-            "CLAUDE == AGENTS",
+            "## Now",
+            ADVISORY,
+            f"the brief is '{LEGACY_STATE_HEADING}' in CURRENT_CHECKPOINT.md (older layout)",
+            "This works. To slim down, move it to '## Now' in plan.md and archive the "
+            "rest of the checkpoint under docs/archive/.",
+        )
+    return Finding(
+        "## Now",
+        MISSING,
+        "no '## Now' section in plan.md",
+        "Add a short block: working on, last test result, next step, waiting on.",
+    )
+
+
+def audit_goals(repo: Path) -> Finding:
+    decisions = repo / "docs/decisions"
+    goals = sorted(decisions.glob("*goals*.md")) if decisions.is_dir() else []
+    if goals:
+        return Finding("owner goals", OK, f"docs/decisions/{goals[0].name}")
+    return Finding(
+        "owner goals",
+        MISSING,
+        "no docs/decisions/*goals*.md",
+        "Ask the five questions in templates/lite/docs/decisions/0001-goals.md, one at a "
+        "time, and record the answers word for word.",
+    )
+
+
+# A citation as AGENTS.md writes it: (LESSONS: "the rule name"). The older layout wrote
+# (INTERNALS: "..."). The name may wrap across a line break.
+CITATION_RE = re.compile(r'\((?:LESSONS|INTERNALS):\s*"([^"]*)"\s*\)')
+# An example citation inside an HTML comment is documentation, not a citation.
+HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+# A rule heading is exactly two hashes; `###` is a sub-heading, not a rule.
+RULE_HEADING_RE = re.compile(r"^## +(.+?)\s*$", re.MULTILINE)
+# Older entries are suffixed with `(date, what prompted it)`.
+TRAILING_PARENTHETICAL_RE = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+def _rule_key(name: str) -> str:
+    return " ".join(name.split()).lower()
+
+
+def audit_lessons(repo: Path) -> Finding:
+    """Every rule that cites a lesson must have that lesson written down. A citation
+    is a promise that the incident is recorded; an unkept one reads as settled."""
+    present = [repo / rel for rel in LESSONS_FILES if (repo / rel).is_file()]
+    if not present:
+        return Finding(
+            "lessons",
             MISSING,
-            "neither CLAUDE.md nor AGENTS.md exists",
-            "Run `jumpstart.py init` for a new project, or add both.",
+            "no docs/LESSONS.md",
+            "Add it from templates/lite/docs/LESSONS.md.",
         )
-    if not claude.is_file():
-        return Finding(
-            "CLAUDE == AGENTS",
-            MISSING,
-            "AGENTS.md exists but CLAUDE.md does not",
-            "CLAUDE.md is the source. Copy AGENTS.md to CLAUDE.md, then "
-            "`jumpstart.py sync-agents`.",
-        )
-    if not agents.is_file():
-        return Finding(
-            "CLAUDE == AGENTS",
-            MISSING,
-            "CLAUDE.md exists but AGENTS.md does not",
-            "Run `jumpstart.py sync-agents <path>`; Codex reads AGENTS.md.",
-        )
-    if sha256_of(claude) != sha256_of(agents):
-        return Finding(
-            "CLAUDE == AGENTS",
-            DRIFT,
-            f"sha256 differs: {sha256_of(claude)[:12]}... vs {sha256_of(agents)[:12]}...",
-            "The two tools are running on different rules. Merge by hand into "
-            "CLAUDE.md (the divergence usually holds real rules), then "
-            "`jumpstart.py sync-agents <path>`.",
-        )
-    return Finding("CLAUDE == AGENTS", OK, f"byte-identical ({sha256_of(claude)[:12]}...)")
+
+    rules = _rules_file(repo)
+    cited: list[str] = []
+    if rules is not None:
+        seen: set[str] = set()
+        text = HTML_COMMENT_RE.sub("", _read(rules))
+        for match in CITATION_RE.finditer(text):
+            name = " ".join(match.group(1).split())
+            if _rule_key(name) not in seen:
+                seen.add(_rule_key(name))
+                cited.append(name)
+
+    documented = {
+        _rule_key(TRAILING_PARENTHETICAL_RE.sub("", heading))
+        for path in present
+        for heading in RULE_HEADING_RE.findall(_read(path))
+    }
+    unmatched = [name for name in cited if _rule_key(name) not in documented]
+    shown = ", ".join(p.relative_to(repo).as_posix() for p in present)
+    if not unmatched:
+        return Finding("lessons", OK, f"{len(cited)} cited rule(s), all recorded in {shown}")
+    listed = ", ".join(f'"{name}"' for name in unmatched)
+    return Finding(
+        "lessons",
+        MISSING,
+        f"{len(unmatched)} cited rule(s) with no entry in {shown}: {listed}",
+        "Add a '## <name>' entry with what broke and why, or fix the citation. If the "
+        "cause cannot be recovered, write 'cause not found'. Never invent one.",
+    )
 
 
 def audit_placeholders(repo: Path) -> list[Finding]:
     findings: list[Finding] = []
-    for rel in [*list(INSTALL_MAP.values()), "AGENTS.md"]:
-        if rel in TEMPLATES_BY_NATURE:
+    for rel in control_paths():
+        if rel in TEMPLATES_BY_NATURE or not (repo / rel).is_file():
             continue
-        path = repo / rel
-        if not path.is_file():
-            continue
-        names = find_placeholders(_read(path))
+        names = find_placeholders(_read(repo / rel))
         if names:
-            shown = ", ".join(names[:6])
-            if len(names) > 6:
-                shown += f", +{len(names) - 6} more"
+            shown = ", ".join(names[:6]) + (f", +{len(names) - 6} more" if len(names) > 6 else "")
             findings.append(
                 Finding(
-                    f"placeholders in {rel}",
+                    f"blanks in {rel}",
                     UNFILLED,
                     f"{len(names)} unfilled: {shown}",
-                    "Fill them, or delete the block they are in. A half-written "
-                    "control file is one an agent will act on.",
+                    "Fill them, or delete the line they are in. A half-written control "
+                    "file is one an agent will act on.",
                 )
             )
-    if not findings:
-        findings.append(Finding("placeholders", OK, "no unfilled {{TOKEN}} in the control set"))
-    return findings
+    return findings or [Finding("blanks", OK, "no unfilled {{TOKEN}} in the control files")]
 
 
 def _native_metadata_present(text: str, field: str) -> bool:
-    """Check the literal string forms JumpStarter itself ships, not all TOML.
-
-    Python 3.9 has no TOML parser and the audit only promises to check Codex's required
-    role metadata.  A deliberately small recognizer keeps the CLI dependency-free and
-    makes unfamiliar TOML a visible gap rather than pretending to understand it.
-    """
+    """Check the literal string forms JumpStarter ships, not all TOML. Python 3.9 has
+    no TOML parser; unfamiliar TOML becomes a visible gap rather than a guess."""
     scalar = re.compile(
-        rf"^\s*{re.escape(field)}\s*=\s*(?:\"([^\"\r\n]*)\"|'([^'\r\n]*)')"
-        r"\s*(?:#.*)?$"
+        rf"^\s*{re.escape(field)}\s*=\s*(?:\"([^\"\r\n]*)\"|'([^'\r\n]*)')\s*(?:#.*)?$"
     )
-    multiline_start = re.compile(
-        r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(\"\"\"|''')\s*$"
-    )
+    multiline_start = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(\"\"\"|''')\s*$")
     inside: str | None = None
-    multiline_value: list[str] = []
-    target_multiline = False
+    value: list[str] = []
+    target = False
     for raw in text.splitlines():
         if inside is not None:
             if raw.strip() == inside:
-                if target_multiline:
-                    return bool("\n".join(multiline_value).strip())
-                inside = None
-                target_multiline = False
-                multiline_value = []
+                if target:
+                    return bool("\n".join(value).strip())
+                inside, target, value = None, False, []
                 continue
-            if target_multiline:
-                multiline_value.append(raw)
+            if target:
+                value.append(raw)
             continue
         match = multiline_start.fullmatch(raw)
         if match:
-            inside = match.group(2)
-            target_multiline = match.group(1) == field
+            inside, target = match.group(2), match.group(1) == field
             continue
         match = scalar.fullmatch(raw)
         if match:
@@ -533,459 +581,128 @@ def _native_metadata_present(text: str, field: str) -> bool:
     return False
 
 
-def audit_codex_lead_config(repo: Path) -> Finding:
-    """Report only whether a native lead config exists; project choices stay theirs."""
-    path = repo / CODEX_CONFIG_FILE
-    if path.is_file():
-        return Finding("native Codex lead config", OK, f"{CODEX_CONFIG_FILE} present")
-    return Finding(
-        "native Codex lead config",
-        MISSING,
-        f"{CODEX_CONFIG_FILE} not found",
-        "Add it from templates/.codex/config.toml. Choose the project's lead and "
-        "fallback models explicitly; the audit does not prescribe model IDs.",
+def team_present(repo: Path) -> bool:
+    return any(
+        (repo / rel).exists() for rel in (TEAM_DOC, CLAUDE_AGENTS_DIR, CODEX_AGENTS_DIR)
     )
 
 
-def audit_codex_role_metadata(repo: Path) -> list[Finding]:
-    """Audit only Codex's required role metadata on the known native role files."""
+def audit_team(repo: Path) -> list[Finding]:
+    """Only for a repo that uses helper agents. A lite repo has nothing to check here."""
+    if not team_present(repo):
+        return []
     findings: list[Finding] = []
-    for rel in CODEX_AGENT_FILES:
-        path = repo / rel
-        if not path.is_file():
-            findings.append(
-                Finding(
-                    f"native role metadata {Path(rel).stem}",
-                    MISSING,
-                    f"{rel} not found",
-                    "Copy the missing native role template and fill its placeholders.",
-                )
+    native = [
+        (CLAUDE_AGENTS_DIR, ".md", "Claude helper agents"),
+        (CODEX_AGENTS_DIR, ".toml", "Codex helper agents"),
+    ]
+    in_use = [(d, ext, label) for d, ext, label in native if (repo / d).is_dir()]
+    if not in_use:
+        findings.append(
+            Finding(
+                "helper agents",
+                MISSING,
+                f"{TEAM_DOC} exists but neither {CLAUDE_AGENTS_DIR}/ nor {CODEX_AGENTS_DIR}/",
+                "Run `jumpstart.py init <path> --name <Name> --profile team`, or delete "
+                f"{TEAM_DOC} if this project does not use helper agents.",
             )
-            continue
-        missing = [
-            field
-            for field in CODEX_METADATA_FIELDS
-            if not _native_metadata_present(_read(path), field)
-        ]
+        )
+
+    for directory, ext, label in in_use:
+        missing = [r for r in ROLES if not (repo / directory / f"{r}{ext}").is_file()]
         if missing:
             findings.append(
                 Finding(
-                    f"native role metadata {Path(rel).stem}",
+                    label,
                     MISSING,
-                    f"{rel} missing required {', '.join(missing)}",
-                    "Add non-empty native role metadata in the string form shipped by "
-                    "templates/.codex/agents/. Do not change the role's scope or "
-                    "model choice just to satisfy this audit.",
+                    f"{directory}/ lacks {', '.join(missing)}",
+                    "Copy the missing role from templates/team/ and fill its blanks.",
                 )
             )
         else:
+            findings.append(Finding(label, OK, f"{len(ROLES)} roles in {directory}/"))
+
+        # A thin wrapper that points at a shared role file is only as good as the file.
+        dangling = [
+            f"docs/agents/{r}.md"
+            for r in ROLES
+            if (repo / directory / f"{r}{ext}").is_file()
+            and f"docs/agents/{r}.md" in _read(repo / directory / f"{r}{ext}")
+            and not (repo / f"docs/agents/{r}.md").is_file()
+        ]
+        if dangling:
             findings.append(
                 Finding(
-                    f"native role metadata {Path(rel).stem}",
-                    OK,
-                    f"{rel} has name, description and developer_instructions",
+                    f"{label} instructions",
+                    MISSING,
+                    f"wrappers point at missing {', '.join(dangling)}",
+                    "Copy them from templates/team/docs/agents/.",
                 )
             )
+
+    if (repo / CODEX_AGENTS_DIR).is_dir():
+        if (repo / CODEX_CONFIG_FILE).is_file():
+            findings.append(Finding("Codex config", OK, f"{CODEX_CONFIG_FILE} present"))
+        else:
+            findings.append(
+                Finding(
+                    "Codex config",
+                    MISSING,
+                    f"{CODEX_CONFIG_FILE} not found",
+                    "Add it from templates/team/.codex/config.toml and choose the lead "
+                    "and helper models.",
+                )
+            )
+        for role in ROLES:
+            path = repo / CODEX_AGENTS_DIR / f"{role}.toml"
+            if not path.is_file():
+                continue
+            text = _read(path)
+            lacking = [f for f in CODEX_METADATA_FIELDS if not _native_metadata_present(text, f)]
+            if lacking:
+                findings.append(
+                    Finding(
+                        f"Codex role {role}",
+                        MISSING,
+                        f"{path.relative_to(repo).as_posix()} lacks {', '.join(lacking)}",
+                        "Codex needs non-empty name, description and "
+                        "developer_instructions in every role file.",
+                    )
+                )
     return findings
 
 
-def audit_active_state(repo: Path) -> Finding:
-    """One block answers "where are we?".
-
-    Reported MISSING only when no such block can be found at all. A repo that keeps the
-    same block under its own heading gets an ADVISORY naming the heading: it has an
-    answer to "where are we?", it just is not findable by the name CLAUDE.md sends
-    agents to. Measured 2026-09-03 against a real repository whose block is
-    `## Active item`, complete with a measured gate stamp - calling that "missing"
-    reads as "this repo has no idea where it is", which was not true.
-    """
-    checkpoint = repo / "CURRENT_CHECKPOINT.md"
-    if not checkpoint.is_file():
-        return Finding(
-            "active state block",
-            MISSING,
-            "no CURRENT_CHECKPOINT.md",
-            "Add it at the top of the file the repo already uses for current state, "
-            "with numbers you measure now.",
-        )
-
-    text = _read(checkpoint)
-    if _has_marker(text, ACTIVE_STATE_MARKER):
-        return Finding("active state block", OK, "present in CURRENT_CHECKPOINT.md")
-
-    for alias in ACTIVE_STATE_ALIASES:
-        if _has_marker(text, alias):
-            return Finding(
-                "active state block",
-                ADVISORY,
-                f"found '{alias}' in CURRENT_CHECKPOINT.md, not '{ACTIVE_STATE_MARKER}'",
-                f"The block exists. Either rename it to '{ACTIVE_STATE_MARKER}' or point "
-                "CLAUDE.md's mandatory read at the name it actually has - an agent "
-                "cannot read a block it was sent to under the wrong name. Check it "
-                "carries the branch, the active item, the last measured baseline with "
-                "its exit code, and the open gates.",
-            )
-
-    return Finding(
-        "active state block",
-        MISSING,
-        f"no '{ACTIVE_STATE_MARKER}' block",
-        "Add it at the top of the file the repo already uses for current state, with "
-        "numbers you measure now - including a red suite if the suite is red.",
-    )
-
-
-def _claude_dir_is_gitignored(repo: Path) -> bool:
-    """True when .gitignore keeps .claude/ out of the repository.
-
-    Text match, deliberately: running `git check-ignore` would need git on the PATH and
-    a real work tree, and this tool takes no dependency it does not need.
-    """
-    gitignore = repo / ".gitignore"
-    if not gitignore.is_file():
-        return False
-    for raw in _read(gitignore).splitlines():
-        line = raw.strip()
-        if line.startswith("#") or line.startswith("!"):
-            continue
-        if line.rstrip("/") in (".claude", "/.claude", ".claude/*", "/.claude/*"):
-            return True
-    return False
-
-
-def audit_allow_list(repo: Path) -> Finding:
-    """The command allow-list.
-
-    A project with no allow-list at all is a real finding. A project that keeps its
-    allow-list machine-local is not: the file cannot be in a checkout, by design. The
-    audit cannot tell those apart by looking at files, so it reads .gitignore. This
-    produced the one false positive of the 2026-09-03 dry run, against a clone of a
-    project whose own runbook says the file is machine-local - and it fires against
-    JumpStarter itself for the same reason.
-    """
-    if (repo / ".claude/settings.json").is_file():
-        return Finding("command allow-list", OK, ".claude/settings.json present")
-    if _claude_dir_is_gitignored(repo):
-        return Finding(
-            "command allow-list",
-            ADVISORY,
-            ".claude/settings.json not in the checkout, and .gitignore keeps .claude/ out",
-            "Machine-local by design, so this cannot be checked from a checkout. "
-            "Confirm on the machine that runs the agents that the file exists, that it "
-            "is narrow, and that it denies force-push, hard reset and stash.",
-        )
-    return Finding(
-        "command allow-list",
-        MISSING,
-        ".claude/settings.json not found",
-        "Copy templates/.claude/settings.json. Keep it narrow: an entry covering "
-        "'git *' covers 'git reset --hard'.",
-    )
-
-
 def audit_stray_ledgers(repo: Path) -> list[Finding]:
-    """Root-level Markdown that reads like a second ledger.
-
-    Every CLAUDE.md this tool ships says: do not create another roadmap, progress
-    ledger, handoff or status file. Nothing enforced it. Measured 2026-09-03 against a
-    real repository: seven such files at the root, 1,465 lines, forbidden in that same
-    repo's own CLAUDE.md - and the audit was silent about all of them. That is the most
-    visible symptom of the disease this tool exists to treat.
-
-    An ADVISORY, not a gap: a repo is allowed its own file names, and this matches on
-    words in a filename, which is a heuristic. It names each file so a human can judge.
-    """
-    known = {Path(rel).name.upper() for rel in CONTROL_FILES}
-    known.update({"README.MD", "AGENTS.MD", "LICENSE.MD", "CONTRIBUTING.MD",
-                  "CODE_OF_CONDUCT.MD", "SECURITY.MD", "PRINCIPLES.MD"})
-
-    stray = []
-    for path in sorted(repo.glob("*.md")):
-        if path.name.upper() in known:
-            continue
-        stem = path.stem.upper()
-        if any(word in stem for word in STRAY_LEDGER_WORDS):
-            stray.append((path.name, _line_count(_read(path))))
-
+    """Root Markdown that reads like a second status file. A heuristic on file names,
+    so an advisory that names each file, never a gap."""
+    stray = [
+        (path.name, _line_count(_read(path)))
+        for path in sorted(repo.glob("*.md"))
+        if path.name.upper() not in KNOWN_ROOT_FILES
+        and any(word in path.stem.upper() for word in STRAY_LEDGER_WORDS)
+    ]
     if not stray:
-        return [Finding("stray ledgers", OK, "no second ledger at the repo root")]
-
-    total = sum(lines for _, lines in stray)
+        return [Finding("extra status files", OK, "none at the repo root")]
     listed = ", ".join(f"{name} ({lines} lines)" for name, lines in stray)
     return [
         Finding(
-            "stray ledgers",
+            "extra status files",
             ADVISORY,
-            f"{len(stray)} root file(s), {total} lines, reading like a second ledger: "
-            f"{listed}",
-            "The control set is CLAUDE.md/AGENTS.md, CHANGELOG.md, plan.md, "
-            "CURRENT_CHECKPOINT.md, WISHLIST.md and docs/README.md. Fold what is still "
-            "true into those, move the rest under docs/ as dated evidence, and delete "
-            "nothing until it has been read. A handoff file is a ledger nobody updates.",
+            f"{len(stray)} root file(s) reading like a second status file: {listed}",
+            "Fold what is still true into plan.md or CHANGELOG.md, move the rest to "
+            "docs/archive/, and delete nothing until it has been read.",
         )
     ]
 
 
-# A citation as CLAUDE.md writes it: *(INTERNALS: "the rule name")*. The name may be
-# wrapped across a line break, so the whitespace inside the quotes is joined to one
-# space before it is compared.
-CITATION_RE = re.compile(r'\(INTERNALS:\s*"([^"]*)"\s*\)')
-# An example citation lives inside an HTML comment in templates/CLAUDE.md. A check that
-# counts it fires on a correct template, and a check that fires on correct work gets
-# ignored - taking the real findings with it.
-HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
-# A rule heading is exactly two hashes; `###` is a sub-heading, not a rule.
-RULE_HEADING_RE = re.compile(r"^## +(.+?)\s*$", re.MULTILINE)
-# Every INTERNALS heading is suffixed with `(date, what prompted it)`.
-TRAILING_PARENTHETICAL_RE = re.compile(r"\s*\([^()]*\)\s*$")
-
-
-def _rule_key(name: str) -> str:
-    """Compare rule names the way a human reads them: whitespace collapsed, case
-    ignored. `CLAUDE.md` cites "unfilled placeholders are visible" against the heading
-    `## Unfilled placeholders are visible`, and both mean the same rule."""
-    return " ".join(name.split()).lower()
-
-
-def audit_rule_evidence(repo: Path) -> list[Finding]:
-    """Every rule that cites `docs/INTERNALS.md` must have an entry there.
-
-    `plan.md` section 5 has required this since the first build and nothing checked it.
-    A citation is a promise that the incident is written down; an unkept promise is
-    worse than no citation, because the next agent reads it, does not go looking, and
-    treats the rule as settled.
-
-    Silent - an empty list - when there is no `CLAUDE.md` or no `docs/INTERNALS.md`:
-    `retrofit` already reports a missing rulebook as its own gap, and `check` must not
-    fail a repo that has not been retrofitted yet for a reason it has already been told.
-    """
-    claude = repo / "CLAUDE.md"
-    internals = repo / "docs/INTERNALS.md"
-    if not claude.is_file() or not internals.is_file():
-        return []
-
-    text = HTML_COMMENT_RE.sub("", _read(claude))
-    cited: list[str] = []
-    seen: set[str] = set()
-    for match in CITATION_RE.finditer(text):
-        name = " ".join(match.group(1).split())
-        if _rule_key(name) in seen:
-            continue
-        seen.add(_rule_key(name))
-        cited.append(name)
-
-    if not cited:
-        return [Finding("rules carry evidence", OK, "no INTERNALS citations in CLAUDE.md")]
-
-    documented = {
-        _rule_key(TRAILING_PARENTHETICAL_RE.sub("", heading))
-        for heading in RULE_HEADING_RE.findall(_read(internals))
-    }
-    unmatched = [name for name in cited if _rule_key(name) not in documented]
-    if not unmatched:
-        return [
-            Finding(
-                "rules carry evidence",
-                OK,
-                f"{len(cited)} cited rule(s), each with an entry in docs/INTERNALS.md",
-            )
-        ]
-
-    listed = ", ".join(f'"{name}"' for name in unmatched)
-    return [
-        Finding(
-            "rules carry evidence",
-            MISSING,
-            f"{len(unmatched)} cited rule(s) with no docs/INTERNALS.md entry: {listed}",
-            "Add a '## <name> (<date>, <what prompted it>)' entry to docs/INTERNALS.md "
-            "with the incident behind the rule, or fix the citation. Where the incident "
-            "cannot be recovered, write 'Evidence not recovered' - never invent one.",
-        )
-    ]
-
-
-def audit_structure(repo: Path) -> list[Finding]:
-    """The full standard. Used by ``retrofit``."""
-    findings: list[Finding] = []
-
-    for rel in CONTROL_FILES:
-        path = repo / rel
-        if path.is_file():
-            findings.append(Finding(f"control file {rel}", OK, "present"))
-        else:
-            findings.append(
-                Finding(
-                    f"control file {rel}",
-                    MISSING,
-                    "not found",
-                    "Add it from templates/{}. Do not delete whatever the repo uses "
-                    "today - point it at the new file.".format(
-                        "CLAUDE.md" if rel == "AGENTS.md" else rel
-                    ),
-                )
-            )
-
-    findings.append(audit_agents_identical(repo))
-    findings.append(audit_codex_lead_config(repo))
-    findings.extend(audit_codex_role_metadata(repo))
-
-    claude = repo / "CLAUDE.md"
-    if claude.is_file():
-        text = _read(claude)
-        if _has_marker(text, ACTIVE_STATE_MARKER) or _has_marker(text, "Read narrow"):
-            findings.append(
-                Finding("bounded read", OK, "CLAUDE.md names a block to read, not whole files")
-            )
-        else:
-            findings.append(
-                Finding(
-                    "bounded read",
-                    MISSING,
-                    "CLAUDE.md does not name a bounded block to read",
-                    "An unbounded 'read these files' instruction stops being "
-                    "followable as they grow. Name the block.",
-                )
-            )
-    else:
-        findings.append(
-            Finding("bounded read", MISSING, "no CLAUDE.md", "Add it from templates/CLAUDE.md.")
-        )
-
-    findings.append(audit_active_state(repo))
-
-    changelog = repo / "CHANGELOG.md"
-    if changelog.is_file() and _has_marker(_read(changelog), INVENTORY_MARKER):
-        findings.append(Finding("implemented inventory", OK, "present in CHANGELOG.md"))
-    else:
-        findings.append(
-            Finding(
-                "implemented inventory",
-                MISSING,
-                f"no '{INVENTORY_MARKER}' section",
-                "Extract one entry per capability that exists today, by area, from "
-                "the existing docs. It is the contract to search before building.",
-            )
-        )
-
-    internals = repo / "docs/INTERNALS.md"
-    if internals.is_file():
-        # Presence was never the question - the file exists and the rules it is supposed
-        # to hold may not. `audit_rule_evidence` is silent when there is no CLAUDE.md to
-        # read citations from, and the presence finding stands in for it there so the
-        # retrofit report's check count does not move.
-        findings.extend(
-            audit_rule_evidence(repo)
-            or [Finding("rules carry evidence", OK, "docs/INTERNALS.md present")]
-        )
-    else:
-        alt = [p for p in (repo / "docs").glob("*INTERNALS*.md")] if (repo / "docs").is_dir() else []
-        if alt:
-            findings.append(
-                Finding("rules carry evidence", OK, f"found {alt[0].name}")
-            )
-        else:
-            findings.append(
-                Finding(
-                    "rules carry evidence",
-                    MISSING,
-                    "no docs/INTERNALS.md",
-                    "A rule without the incident behind it gets 'fixed' by the next "
-                    "agent. Where the incident cannot be recovered, write 'Evidence "
-                    "not recovered' - never invent one.",
-                )
-            )
-
-    docs_readme = repo / "docs/README.md"
-    if docs_readme.is_file():
-        findings.append(Finding("docs classified", OK, "docs/README.md present"))
-    else:
-        findings.append(
-            Finding(
-                "docs classified",
-                MISSING,
-                "no docs/README.md",
-                "Classify every Markdown file as active runbook / reference / "
-                "decision record / historical evidence.",
-            )
-        )
-
-    decisions = repo / "docs/decisions"
-    goals = list(decisions.glob("*owner-goals*.md")) + list(decisions.glob("*priorities*.md")) \
-        if decisions.is_dir() else []
-    if goals:
-        findings.append(Finding("owner goals record", OK, f"found {goals[0].name}"))
-    else:
-        findings.append(
-            Finding(
-                "owner goals record",
-                MISSING,
-                "no owner-goals decision record under docs/decisions/",
-                "Ask the questionnaire in templates/docs/decisions/"
-                "0001-owner-goals-and-priorities.md one question at a time and "
-                "record the answers verbatim.",
-            )
-        )
-
-    for claude_rel, codex_rel in zip(AGENT_FILES, CODEX_AGENT_FILES):
-        role = Path(claude_rel).stem
-        missing = [rel for rel in (claude_rel, codex_rel) if not (repo / rel).is_file()]
-        if not missing:
-            findings.append(Finding(f"agent {role}", OK, "Claude and Codex roles present"))
-        else:
-            findings.append(
-                Finding(
-                    f"agent {role}",
-                    MISSING,
-                    "; ".join(f"{rel} not found" for rel in missing),
-                    "Copy the missing harness-native role template(s) and fill their "
-                    "placeholders.",
-                )
-            )
-
-    findings.append(audit_allow_list(repo))
-    findings.extend(audit_stray_ledgers(repo))
-
-    gitignore = repo / ".gitignore"
-    if gitignore.is_file():
-        text = _read(gitignore)
-        has_ignore = ".claude/*" in text
-        has_unignore = "!.claude/agents/" in text or "!/.claude/agents/" in text
-        has_codex_unignore = (
-            "!.codex/agents/" in text or "!/.codex/agents/" in text
-        )
-        if has_ignore and has_unignore and has_codex_unignore:
-            findings.append(
-                Finding(
-                    "gitignore rules",
-                    OK,
-                    ".claude/* ignored; both native agent directories tracked",
-                )
-            )
-        else:
-            findings.append(
-                Finding(
-                    "gitignore rules",
-                    MISSING,
-                    "missing {}{}{}".format(
-                        "the .claude/* ignore " if not has_ignore else "",
-                        "the !.claude/agents/ un-ignore" if not has_unignore else "",
-                        "the !.codex/agents/ un-ignore" if not has_codex_unignore else "",
-                    ).strip(),
-                    "Append templates/.gitignore.snippet. Any Claude un-ignore must "
-                    "come after its ignore line or it has no effect.",
-                )
-            )
-    else:
-        findings.append(
-            Finding(
-                "gitignore rules",
-                MISSING,
-                "no .gitignore",
-                "Create one from templates/.gitignore.snippet.",
-            )
-        )
-
+def audit(repo: Path) -> list[Finding]:
+    findings = audit_rules_files(repo)
     findings.extend(audit_sizes(repo))
+    findings.append(audit_goals(repo))
+    findings.append(audit_lessons(repo))
+    findings.extend(audit_placeholders(repo))
+    findings.extend(audit_team(repo))
+    findings.extend(audit_stray_ledgers(repo))
     return findings
 
 
@@ -1003,12 +720,14 @@ def _substitutions(args: argparse.Namespace) -> dict[str, str]:
         "DATE": _today(),
     }
     for key, value in (
+        ("ONE_LINE_DESCRIPTION", args.description),
+        ("STACK", args.stack),
         ("TEST_CMD", args.test_cmd),
         ("LINT_CMD", args.lint_cmd),
         ("RUN_CMD", args.run_cmd),
+        ("CODEX_LEAD_MODEL", args.codex_lead_model),
         ("CODEX_STRONG_MODEL", args.codex_strong_model),
         ("CODEX_CHEAP_MODEL", args.codex_cheap_model),
-        ("CODEX_LEAD_MODEL", args.codex_lead_model),
     ):
         if value:
             subs[key] = value
@@ -1016,19 +735,22 @@ def _substitutions(args: argparse.Namespace) -> dict[str, str]:
 
 
 def fill(text: str, subs: dict[str, str]) -> str:
-    """Replace known ``{{TOKEN}}``s. Unknown ones are left in place on purpose: `check`
+    """Replace known ``{{TOKEN}}``s. Unknown ones stay in place on purpose: `check`
     reports them, so a half-written control set cannot quietly ship."""
+    return PLACEHOLDER_RE.sub(lambda m: subs.get(m.group(1), m.group(0)), text)
 
-    def _sub(match: re.Match[str]) -> str:
-        return subs.get(match.group(1), match.group(0))
 
-    return PLACEHOLDER_RE.sub(_sub, text)
+def _require_dir(path: str) -> Path | None:
+    repo = Path(path).resolve()
+    if not repo.is_dir():
+        print(f"error: {repo} is not a directory", file=sys.stderr)
+        return None
+    return repo
 
 
 def cmd_init(args: argparse.Namespace) -> int:
-    repo = Path(args.path).resolve()
-    if not repo.is_dir():
-        print(f"error: {repo} is not a directory", file=sys.stderr)
+    repo = _require_dir(args.path)
+    if repo is None:
         return 2
     if not TEMPLATES_DIR.is_dir():
         print(f"error: templates not found at {TEMPLATES_DIR}", file=sys.stderr)
@@ -1036,124 +758,117 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     subs = _substitutions(args)
     written: list[str] = []
-    skipped: list[str] = []
+    skipped: list[tuple[str, str]] = []
+    exists = "exists; --force to overwrite"
 
-    for template_rel, dest_rel in sorted(INSTALL_MAP.items()):
-        source = TEMPLATES_DIR / template_rel
-        if not source.is_file():
-            print(f"error: missing template {source}", file=sys.stderr)
-            return 2
-        dest = repo / dest_rel
+    # A repo whose rules live only in CLAUDE.md: writing a template AGENTS.md beside it
+    # would split the rules in two. Move them first with sync-agents.
+    claude = repo / "CLAUDE.md"
+    legacy_rules = (
+        claude.is_file()
+        and not (repo / "AGENTS.md").exists()
+        and not imports_agents(_read(claude))
+        and not args.force
+    )
+
+    for source, rel in template_files(args.profile):
+        dest = repo / rel
+        if legacy_rules and rel in ("AGENTS.md", "CLAUDE.md"):
+            skipped.append((rel, "CLAUDE.md holds your rules; run sync-agents first"))
+            continue
         if dest.exists() and not args.force:
-            skipped.append(dest_rel)
+            skipped.append((rel, exists))
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(fill(_read(source), subs), encoding="utf-8")
-        written.append(dest_rel)
+        written.append(rel)
 
-    # AGENTS.md is generated, never copied: one source, one sync.
-    claude = repo / "CLAUDE.md"
-    agents = repo / "AGENTS.md"
-    if claude.is_file() and (not agents.exists() or args.force or "CLAUDE.md" in written):
-        agents.write_bytes(claude.read_bytes())
-        written.append("AGENTS.md")
-    elif agents.exists():
-        skipped.append("AGENTS.md")
-
-    gitignore_written = _append_gitignore(repo)
-    if gitignore_written:
+    if args.profile == "team" and _append_gitignore(repo):
         written.append(".gitignore (appended)")
-    else:
-        skipped.append(".gitignore (JumpStarter block already present)")
 
-    print(f"Initialised {args.name} in {repo}")
+    print(f"Set up {args.name} ({args.profile}) in {repo}")
     print("-" * 78)
     for rel in written:
         print(f"  wrote    {rel}")
-    for rel in skipped:
-        print(f"  skipped  {rel} (exists; --force to overwrite)")
+    for rel, why in skipped:
+        print(f"  skipped  {rel} ({why})")
     print("-" * 78)
 
     remaining = sorted(
         {
             name
-            for rel in INSTALL_MAP.values()
+            for _, rel in template_files(args.profile)
             if rel not in TEMPLATES_BY_NATURE and (repo / rel).is_file()
             for name in find_placeholders(_read(repo / rel))
         }
     )
     if remaining:
-        print(f"Unfilled placeholders, to complete by hand ({len(remaining)}):")
-        print("  " + ", ".join(remaining))
-        print()
-    print("Next: playbooks/new-project.md - the owner questionnaire comes first,")
-    print(f"then fill the placeholders, then `jumpstart.py check {repo}`.")
+        print(f"Blanks left to fill ({len(remaining)}): {', '.join(remaining)}")
+    print(f"Next: fill the blanks (SETUP.md step 4), then `jumpstart.py check {repo}`.")
     return 0
 
 
 def _append_gitignore(repo: Path) -> bool:
-    snippet_path = TEMPLATES_DIR.parent / GITIGNORE_SNIPPET
-    if not snippet_path.is_file():
-        return False
-    snippet = _read(snippet_path)
+    snippet = _read(TEMPLATES_DIR / "team" / GITIGNORE_SNIPPET)
     gitignore = repo / ".gitignore"
-    if gitignore.is_file():
-        existing = _read(gitignore)
-        if GITIGNORE_MARKER in existing:
-            return False
-        separator = "" if existing.endswith("\n") else "\n"
-        gitignore.write_text(existing + separator + "\n" + snippet, encoding="utf-8")
-    else:
+    if not gitignore.is_file():
         gitignore.write_text(snippet, encoding="utf-8")
+        return True
+    existing = _read(gitignore)
+    if GITIGNORE_MARKER in existing:
+        return False
+    separator = "" if existing.endswith("\n") else "\n"
+    gitignore.write_text(existing + separator + "\n" + snippet, encoding="utf-8")
     return True
 
 
 def cmd_retrofit(args: argparse.Namespace) -> int:
-    repo = Path(args.path).resolve()
-    if not repo.is_dir():
-        print(f"error: {repo} is not a directory", file=sys.stderr)
+    repo = _require_dir(args.path)
+    if repo is None:
         return 2
-    findings = audit_structure(repo)
-    status = _print_report("JumpStarter retrofit audit", findings, repo)
+    status = _print_report("JumpStarter audit", audit(repo), repo)
     print()
-    print("This audit changed nothing. Next: playbooks/retrofit.md.")
-    print("Archive, do not delete. Never rewrite history.")
+    print("This audit changed nothing. Next: SETUP.md, 'Existing repo'.")
     return status
 
 
 def cmd_sync_agents(args: argparse.Namespace) -> int:
-    repo = Path(args.path).resolve()
+    """Make AGENTS.md the one source and CLAUDE.md a one-line import of it."""
+    repo = _require_dir(args.path)
+    if repo is None:
+        return 2
     claude = repo / "CLAUDE.md"
     agents = repo / "AGENTS.md"
-    if not claude.is_file():
-        print(f"error: {claude} not found", file=sys.stderr)
+
+    if claude.is_file() and imports_agents(_read(claude)):
+        if not agents.is_file():
+            print("error: CLAUDE.md imports AGENTS.md, which does not exist", file=sys.stderr)
+            return 1
+        print("Already in sync: CLAUDE.md imports AGENTS.md.")
+        return 0
+    if not claude.is_file() and not agents.is_file():
+        print("error: neither CLAUDE.md nor AGENTS.md exists; run init", file=sys.stderr)
         return 1
-    agents.write_bytes(claude.read_bytes())
-    claude_hash = sha256_of(claude)
-    agents_hash = sha256_of(agents)
-    if claude_hash != agents_hash:  # pragma: no cover - a filesystem that lied to us
+    if claude.is_file() and agents.is_file() and sha256_of(claude) != sha256_of(agents):
         print(
-            f"error: copy did not verify: {claude_hash} != {agents_hash}",
+            "error: CLAUDE.md and AGENTS.md differ. Merge CLAUDE.md's rules into "
+            "AGENTS.md by hand, then run sync-agents again.",
             file=sys.stderr,
         )
         return 1
-    print("CLAUDE.md -> AGENTS.md")
-    print(f"sha256 {claude_hash} (identical)")
+    if claude.is_file() and not agents.is_file():
+        agents.write_bytes(claude.read_bytes())
+        print("moved    CLAUDE.md rules -> AGENTS.md")
+    claude.write_text(_read(TEMPLATES_DIR / CLAUDE_STUB_TEMPLATE), encoding="utf-8")
+    print("wrote    CLAUDE.md (one-line import of AGENTS.md)")
     return 0
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    repo = Path(args.path).resolve()
-    if not repo.is_dir():
-        print(f"error: {repo} is not a directory", file=sys.stderr)
+    repo = _require_dir(args.path)
+    if repo is None:
         return 2
-    findings: list[Finding] = [audit_agents_identical(repo)]
-    findings.extend(audit_sizes(repo))
-    findings.extend(audit_placeholders(repo))
-    findings.append(audit_codex_lead_config(repo))
-    findings.extend(audit_codex_role_metadata(repo))
-    findings.extend(audit_rule_evidence(repo))
-    return _print_report("JumpStarter check", findings, repo)
+    return _print_report("JumpStarter check", audit(repo), repo)
 
 
 # --------------------------------------------------------------------------- #
@@ -1164,34 +879,32 @@ def cmd_check(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="jumpstart",
-        description="Bootstrap, audit and enforce a project's agent control set.",
+        description="Set up, audit and enforce a project's AI-agent control files.",
     )
     sub = parser.add_subparsers(dest="command")
 
-    init = sub.add_parser("init", help="copy the templates into a repo and fill placeholders")
+    init = sub.add_parser("init", help="copy the templates into a repo and fill the blanks")
     init.add_argument("path")
     init.add_argument("--name", required=True, help="the project name")
+    init.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        default="lite",
+        help="lite (default): rules, plan, changelog. team: adds helper agents",
+    )
+    init.add_argument("--description", default=None, help="one line: what the project is")
     init.add_argument("--owner", default="the owner", help="how the docs address the owner")
+    init.add_argument("--stack", default=None, help="languages and main libraries")
     init.add_argument("--test-cmd", default=None, help="the command that runs the tests")
     init.add_argument("--lint-cmd", default=None, help="the command that runs the linter")
     init.add_argument("--run-cmd", default=None, help="the command that runs the project")
     init.add_argument("--main-branch", default="main")
-    init.add_argument("--branch-prefix", default="claude/")
+    init.add_argument("--branch-prefix", default="agent/", help="branch prefix for helpers")
+    init.add_argument("--codex-lead-model", default=None, help="Codex model for the lead")
     init.add_argument(
-        "--codex-lead-model",
-        default=None,
-        help="Codex model for the lead session configured in .codex/config.toml",
+        "--codex-strong-model", default=None, help="Codex model for tester, builder, reviewer"
     )
-    init.add_argument(
-        "--codex-strong-model",
-        default=None,
-        help="Codex model for tester, builder, and reviewer roles",
-    )
-    init.add_argument(
-        "--codex-cheap-model",
-        default=None,
-        help="Codex model for the read-only recon role",
-    )
+    init.add_argument("--codex-cheap-model", default=None, help="Codex model for recon")
     init.add_argument("--force", action="store_true", help="overwrite existing files")
     init.set_defaults(func=cmd_init)
 
@@ -1199,11 +912,11 @@ def build_parser() -> argparse.ArgumentParser:
     retrofit.add_argument("path")
     retrofit.set_defaults(func=cmd_retrofit)
 
-    sync = sub.add_parser("sync-agents", help="copy CLAUDE.md to AGENTS.md and verify sha256")
+    sync = sub.add_parser("sync-agents", help="make CLAUDE.md a one-line import of AGENTS.md")
     sync.add_argument("path")
     sync.set_defaults(func=cmd_sync_agents)
 
-    check = sub.add_parser("check", help="enforce size limits, CLAUDE == AGENTS, placeholders")
+    check = sub.add_parser("check", help="the audit as a gate: exit 1 on any gap")
     check.add_argument("path")
     check.set_defaults(func=cmd_check)
 
@@ -1211,10 +924,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    # A report is read by a human, and a report that prints as mojibake gets trusted
-    # less than one that prints plainly. The printed strings are ASCII on purpose; this
-    # is the belt to that pair of braces, so a stray character degrades rather than
-    # raising UnicodeEncodeError on a console in a legacy code page.
+    # The printed strings are ASCII on purpose; this makes a stray character degrade
+    # rather than raise UnicodeEncodeError on a console in a legacy code page.
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is not None:  # pragma: no cover - depends on the console

@@ -1,240 +1,73 @@
 # JumpStarter
 
-A reusable foundation for running software projects with AI agents — Claude Code and
-Codex — so that every project starts with the control files, the agent roles and the
-verification habits that a long-running project ends up needing anyway.
+Sets up any repo, brand new or years old, for AI coding with **Claude Code**,
+**Codex/ChatGPT** or a **local model**. It gives an agent a short rules file, a plan
+with a "where are we" block, and a changelog, so that every session starts from facts
+and spends little usage getting there.
 
-It does two jobs:
+## Use it
 
-1. **Bootstrap** a new project with the right control set from day one.
-2. **Retrofit** an existing repo that grew without one — by auditing it and adding
-   what is missing, archiving rather than deleting.
+Tell an AI agent working in your repo:
 
-Both Claude Code (`CLAUDE.md`, `.claude/agents/`, `.claude/settings.json`) and Codex
-(`AGENTS.md`, `.codex/agents/`) are first-class. `AGENTS.md` is a generated
-byte-identical copy of `CLAUDE.md`, and a checked rule keeps them from drifting.
+> Set this repo up with JumpStarter: https://github.com/Isidore94/JumpStarter (follow SETUP.md)
 
----
+The agent follows [`SETUP.md`](SETUP.md). It looks first, asks you a few questions one at
+a time, writes the files, and checks them.
 
-## Using it from another repo
-
-Nothing is installed into the other repo and nothing is vendored. Clone JumpStarter
-once, then point the CLI at the other repo's path:
+Or run the CLI yourself (Python 3.9+, no dependencies):
 
 ```
 git clone https://github.com/Isidore94/JumpStarter.git
-cd JumpStarter
-
-python tools/jumpstart.py retrofit C:\path\to\OtherRepo               # audit only; writes nothing; exit 1 = gaps
-python tools/jumpstart.py init C:\path\to\OtherRepo --name OtherRepo   # add what is missing; never overwrites
-python tools/jumpstart.py sync-agents C:\path\to\OtherRepo             # regenerate AGENTS.md from CLAUDE.md
-python tools/jumpstart.py check C:\path\to\OtherRepo                   # the gate to leave green
+python JumpStarter/tools/jumpstart.py retrofit /path/to/repo                 # audit only; writes nothing
+python JumpStarter/tools/jumpstart.py init /path/to/repo --name MyApp        # add what is missing
+python JumpStarter/tools/jumpstart.py check /path/to/repo                    # gate: exit 1 on any gap
+python JumpStarter/tools/jumpstart.py sync-agents /path/to/repo              # make CLAUDE.md import AGENTS.md
 ```
 
-Any Python 3.9+ works; there are no dependencies. On a machine with no `python` on
-`PATH`, name the interpreter (for example `uv run --python 3.9 python tools/jumpstart.py ...`).
+## What lands in your repo
 
-Or hand the job to an agent working in the other repo:
+**`lite`** (default, about 5 KB, works with every tool):
 
-> apply JumpStarter from `C:\Users\Aaron\JumpStarter` — follow `playbooks/retrofit.md`
-> for an existing repo, `playbooks/new-project.md` for an empty one.
+| File | Purpose |
+|---|---|
+| `AGENTS.md` | the rules: plain-language replies, read small, test before "done", save usage |
+| `CLAUDE.md` | one line, `@AGENTS.md`, so Claude Code reads the same rules |
+| `plan.md` | goal, `## Now` (the brief every task reads first), next steps, ideas |
+| `CHANGELOG.md` | what exists today (searched before building) and a short log |
+| `docs/decisions/0001-goals.md` | your goals in your own words: the tie-breaker |
+| `docs/LESSONS.md` | what broke and the rule it produced |
 
-What carries over: the control files, the four agent role files, the packet template,
-the playbooks and the checks. What does not: `.claude/settings.json`, the machine-local
-command allow-list, which each machine writes for itself from
-`templates/.claude/settings.json`.
+**`team`** (`--profile team`) adds helper agents for Claude Code and Codex: `recon` on a
+cheap model for lookups, plus `tester`, `builder` and `reviewer`. Each role has one
+instruction file in `docs/agents/`, shared by both tools, with thin wrappers in
+`.claude/agents/` and `.codex/agents/` that only pick the model. `docs/AGENT_TEAM.md`
+says which agent does which job, so the expensive model only does the thinking.
 
----
+Blanks the CLI was not told stay as `{{NAME}}`, and `check` lists them. A control file
+never ships with a made-up value.
 
-## The one instruction
+## What `check` enforces
 
-Hand this repo to a fresh Claude Code or Codex session in any project and say:
+`AGENTS.md` at most 200 lines; `CLAUDE.md` imports it; `## Now` at most 25 lines;
+`plan.md` at most 400; the changelog's `## Log` at most 400; a goals record; every rule
+that cites a lesson has one; no unfilled blanks; helper-agent files complete. Repos on
+the older JumpStarter layout keep their file names; those are advisories, not failures.
 
-> **apply JumpStarter here**
-
-That triggers these steps, in order:
-
-1. **Read** `PRINCIPLES.md` (the sixteen lessons) and this README's two workflows.
-2. **Decide which workflow applies.** No `CLAUDE.md`/`AGENTS.md` at the repo root →
-   *new project*. Anything already there → *retrofit*.
-3. **New project** → follow [`playbooks/new-project.md`](playbooks/new-project.md):
-   ask the owner the questionnaire in
-   `templates/docs/decisions/0001-owner-goals-and-priorities.md` one question at a
-   time, record the answers verbatim, run `tools/jumpstart.py init`, fill the
-   remaining placeholders, define the test and lint commands, write the first
-   checkpoint, commit.
-4. **Retrofit** → follow [`playbooks/retrofit.md`](playbooks/retrofit.md): run
-   `tools/jumpstart.py retrofit <path>` first and **report the gap report before
-   changing anything**. Then add only what is missing. Archive, never delete;
-   never rewrite history.
-5. **Then** run `tools/jumpstart.py check <path>` and leave it green.
-6. **Report short.** Ten lines: what exists now, what is owed, what the owner must
-   decide.
-
-An agent that cannot do step 3 or 4 without a decision from the owner asks for that
-one decision and stops — it does not guess the owner's priorities.
-
----
-
-## The two workflows
-
-### New project
+## This repo
 
 ```
-python tools/jumpstart.py init /path/to/repo --name MyProject \
-    --test-cmd "pytest -q" --lint-cmd "ruff check ." \
-    --codex-strong-model "gpt-5.6-terra" \
-    --codex-cheap-model "gpt-5.6-luna"
+SETUP.md              the guide an agent follows to set up another repo
+templates/lite/       the default files
+templates/team/       the helper-agent add-on
+tools/jumpstart.py    the CLI (standard library only)
+tests/                pytest for the CLI and the templates
+docs/PRINCIPLES.md    the sixteen lessons the templates come from
 ```
 
-Writes the control set: `CLAUDE.md`, `AGENTS.md`, `plan.md`,
-`CURRENT_CHECKPOINT.md`, `CHANGELOG.md`, `WISHLIST.md`, `docs/README.md`,
-`docs/INTERNALS.md`, `docs/AGENT_TEAM.md`, `docs/CODEX_NOTES.md`,
-`docs/decisions/{0000-template,0001-owner-goals-and-priorities}.md`,
-`.claude/agents/{tester,builder,reviewer,recon}.md`,
-`.codex/agents/{tester,builder,reviewer,recon}.toml`, `.claude/settings.json`,
-`.claude/packets/PACKET_TEMPLATE.md`, and the `.gitignore` lines that track
-`.claude/agents/` and `.codex/agents/` while ignoring the rest of `.claude/`.
-
-Anything the CLI was not told stays as a `{{PLACEHOLDER}}`, and `check` reports the
-unfilled ones — so the control set cannot quietly ship half-written.
-
-### Retrofit
-
-```
-python tools/jumpstart.py retrofit /path/to/repo      # report only, changes nothing
-```
-
-Audits the repo against the standard and prints a gap report: which control files are
-missing, whether `CLAUDE.md` and `AGENTS.md` have drifted, whether an active-state
-block and an implemented inventory exist, whether the docs are classified, whether
-rules carry evidence, whether the agent definitions are there, and which files are
-over their size limit. Exit code is non-zero when there are gaps, so it works in CI.
-
-`retrofit` never writes. The playbook then adds the missing pieces by hand, in the
-repo's own voice, keeping its history intact.
-
-### Keeping the two agent files identical
-
-```
-python tools/jumpstart.py sync-agents /path/to/repo   # CLAUDE.md -> AGENTS.md, verify sha256
-python tools/jumpstart.py check /path/to/repo         # size limits + CLAUDE==AGENTS + placeholders
-```
-
-Edit `CLAUDE.md`; never hand-edit `AGENTS.md`. Run `sync-agents` after any edit, and
-`check` in CI.
-
----
-
-## Using it with Claude Code
-
-- `CLAUDE.md` is loaded into every session — it stays short on purpose.
-- `.claude/agents/{tester,builder,reviewer,recon}.md` define the sub-agents. `.gitignore`
-  tracks that folder and ignores the rest of `.claude/`.
-- `.claude/settings.json` allow-lists the commands the agents run without a prompt:
-  tests, lint, `git worktree`, branch commits and pushes to the agent branch prefix.
-  Anything unlisted prompts — which is the point for destructive commands.
-- `.claude/packets/` holds the numbered build packets the lead writes.
-
-## Using it with Codex
-
-- Codex reads `AGENTS.md` at the repo root — the generated copy of `CLAUDE.md`, so
-  the operating rules are identical.
-- Codex loads the native `tester`, `builder`, `reviewer` and `recon` definitions from
-  `.codex/agents/`. The lead gives them the same packet path under `.claude/packets/`
-  that Claude uses, and their handoff formats are shared.
-- `.codex/config.toml` configures Astra/high for a new lead and Terra/high as the
-  fallback subagent. Strong Codex roles use Terra/high and read-only recon uses
-  Luna/medium; Claude keeps its existing Opus/Sonnet routing. Defaults never override a
-  running session or an explicit UI choice.
-- If a host lacks a native-role selector, the lead says so and runs an adapted role from
-  its tracked TOML: explicit model, effort, developer instructions, packet and isolated
-  worktree with `fork_turns="none"`. That is not evidence for the native-role gate.
-- `docs/CODEX_NOTES.md` (installed by `init`) says exactly what Codex reads, what it
-  cannot do, and how the packets are handed to it.
-
----
-
-## The sixteen lessons, in plain words
-
-Each was learned by something breaking. The incidents are in
-[`PRINCIPLES.md`](PRINCIPLES.md).
-
-1. **Docs must be readable in bounded time.** The mandatory read is a small named
-   block, not whole files. A file past its size limit gets archived with a pointer.
-   An agent that cannot read its brief skims it and then appends to it.
-2. **One active-state block is what the next agent trusts.** Refreshed on every
-   handoff, carrying measured numbers: test count, exit code, lint, the artifact the
-   app actually runs.
-3. **The implemented inventory is a contract to search before building**, so landed
-   work is never rebuilt.
-4. **Every rule carries its evidence.** A rule without the incident behind it gets
-   "fixed" by the next agent.
-5. **Build from packets whose premises were verified in the code first.** Two review
-   claims in one packet were refuted at code level by the builder.
-6. **Every fix ships with a test proven to fail on the un-fixed code**, and the
-   reviewer proves it again independently.
-7. **Review by reproduction, not by reading.** Green suites have passed a missing
-   number read as a category named "NAN", a link tag evicting real tags, and a card
-   printing 100% where the truth was 30%.
-8. **Know the eight traps.** Old rows have the key present and empty; fixtures are
-   pinned from the old code; a test asserting on source text proves nothing;
-   `assert x or True` is a tautology; a positional lookup breaks when a field is
-   prepended; and three more in `PRINCIPLES.md`.
-9. **One checkout, many agents.** Builders and reviewers work in worktrees; nobody
-   switches the main checkout's branch while the app runs from it; the lead merges in
-   a scratch worktree; restarts are the owner's call.
-10. **The owner's goals are written down in their own words** as a decision record,
-    and every prioritisation cites it.
-11. **Chat is short; detail lives in commits, docs and handoffs.** A handoff states
-    what was NOT built as plainly as what was.
-12. **Shadow first, fixtures before behaviour, floors on every statistic.**
-    Uncertainty never deletes.
-
-Four more came later, from the source project's session memory — notes written at the
-moment something broke. Each sharpens one above.
-
-13. **Capped instrumentation goes blind, and its silence reads as calm.** A stall log
-    with a per-session cap of 2,000 records spent it overnight on an idle machine and
-    stopped at 06:03; the worst freeze on record happened that morning and has no
-    evidence. Roll the cap on an hour.
-14. **A probe that RUNS the system writes to it.** A reviewer reproducing a claim by
-    running a build put thirteen unprovenanced rows into the live store. "Read-only" is
-    a property of the path you hand a process, not of your intention.
-15. **Assume another session is in the repository.** Verify the branch before staging
-    and before pushing; stage by path; never `git stash`; confirm your work landed.
-    Three collisions in one afternoon.
-16. **The control file itself goes stale.** A wrong line in `CLAUDE.md` survived a week
-    and became the premise of a design proposal. Correct it or tombstone it with a date
-    — never silently.
-
----
-
-## What is in here
-
-```
-README.md                 this file
-PRINCIPLES.md             the sixteen lessons with the incident behind each
-templates/                the control set, with {{PLACEHOLDER}} tokens
-playbooks/                new-project, retrofit, build-review loop, review, packets
-tools/jumpstart.py        init / retrofit / sync-agents / check  (Python 3.9+, no deps)
-tests/                    pytest for the CLI
-```
-
-JumpStarter runs its own control set on itself: see `CURRENT_CHECKPOINT.md`,
-`plan.md`, `CHANGELOG.md` and `docs/` at this repo's root.
+JumpStarter runs on its own rules: see `AGENTS.md`, `plan.md` and `CHANGELOG.md`.
 
 ## Requirements
 
-Python 3.9 or newer. No third-party dependencies. `pytest` only to run the tests, `ruff`
-only to lint them; both are pinned in `ruff.toml` / the commands below, not vendored.
-
-**Measured, not claimed.** On 2026-09-03 the floor was tested on a real CPython
-**3.9.25**: `python -m pytest tests/ -q` → 49 passed, process exit 0, and all four
-subcommands (`init`, `retrofit`, `sync-agents`, `check`) run and return the same exit
-codes they do on 3.12.13. Before that, everything had been measured on a newer
-interpreter and "3.9+" was a claim.
-
-If you change that floor, change `ruff.toml`'s `target-version` with it and re-measure —
-`from __future__ import annotations` is what keeps the modern annotation syntax legal on
-3.9, and a linter told to assume a newer Python will happily suggest code that is not.
+Python 3.9 or newer, standard library only. The floor was measured on CPython 3.9.25 on
+2026-09-03. `ruff.toml` pins `target-version = "py39"` to match. `pytest` and `ruff`
+are needed only to develop JumpStarter itself.

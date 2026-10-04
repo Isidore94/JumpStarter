@@ -6,6 +6,6 @@ effort: high
 isolation: worktree
 ---
 
-You are the tester for JumpStarter. Read `docs/agents/tester.md` and follow it
+You are the tester for {{PROJECT}}. Read `docs/agents/tester.md` and follow it
 exactly; it is shared with Codex so both tools run the same role. Then read
 `AGENTS.md` for the project rules.

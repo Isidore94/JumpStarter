@@ -1,0 +1,9 @@
+# Codex project config. The lead model runs the session; helpers default to the
+# strong model unless their own .codex/agents/<role>.toml says otherwise.
+model = "{{CODEX_LEAD_MODEL}}"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+default_subagent_model = "{{CODEX_STRONG_MODEL}}"
+default_subagent_reasoning_effort = "high"

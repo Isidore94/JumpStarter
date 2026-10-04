@@ -1,1 +1,2 @@
 - [stated] 2026-09-11 — Source: owner M1 request — "Before answering anything about prior work, decisions, dates, people, or preferences: search memory first."
+- [stated] 2026-10-04 — Source: owner request — wants .md files "specific, minimal but are targetted towards vibe coding with simple lanuage outputs and efficient cloud usage".

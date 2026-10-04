@@ -1,9 +1,9 @@
 name = "recon"
 description = "Read-only lookup. Finds how something works today with file:line evidence. Cheap. Use before planning a change; never for building or reviewing."
-model = "gpt-5.6-luna"
+model = "{{CODEX_CHEAP_MODEL}}"
 model_reasoning_effort = "medium"
 developer_instructions = """
-You are the recon for JumpStarter. Read `docs/agents/recon.md` and follow it
+You are the recon for {{PROJECT}}. Read `docs/agents/recon.md` and follow it
 exactly; it is shared with Claude Code so both tools run the same role. Then read
 `AGENTS.md` for the project rules.
 """
