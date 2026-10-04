@@ -9,12 +9,12 @@ product; the CLI is how it gets into a repo (decision 0002).
 
 ## Now
 
-- Working on: v2 "lite" refactor on `claude/jolly-maxwell-p00ntg`. Lite default, team
-  add-on, `AGENTS.md` as the source, `SETUP.md` by URL. Owner approved 2026-10-04.
+- Working on: nothing. The v2 "lite" refactor (lite default, team add-on, `AGENTS.md`
+  as the source, `SETUP.md` by URL) was merged to `main` 2026-10-04 on the owner's word.
 - Last test run: 2026-10-04: pytest 65 passed, exit 0, on CPython 3.11.15 and 3.9.23;
   ruff 0.16.6 clean, exit 0; `check .` 14 checks, no gaps, exit 0.
-- Next step: the owner reviews the branch, then gate 2 below.
-- Waiting on the owner: review and merge of the refactor branch.
+- Next step: gate 2 below. Set up one real new repo through `SETUP.md`.
+- Waiting on the owner: a repo to use for gate 2.
 
 ## Next
 
