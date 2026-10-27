@@ -31,7 +31,7 @@ rm -rf "$wt" && mkdir -p "$wt" || exit 1
 git -C "$repo" archive "$base" | tar -x -C "$wt" || { echo "setup: archive of $base failed" >&2; exit 1; }
 git -C "$wt" init -q && git -C "$wt" add -A && git -C "$wt" -c user.name=bench -c user.email=bench@local commit -qm baseline \
   || { echo "setup: baseline commit failed" >&2; exit 1; }
-rm -rf "$OUT/home" && mkdir -p "$OUT/home" || exit 1
+rm -rf "$OUT/home" && rm -f "$OUT/summary.json" && mkdir -p "$OUT/home" || exit 1
 
 # 2. Python for the repo under test.
 case "$repo" in
@@ -80,7 +80,7 @@ head -c 60000 "$OUT/diff.patch" > "$wt/.qo/diff-for-review.patch"
 cd "$wt" || exit 1
 "$PY" -m pytest -q > "$OUT/own-tests.txt" 2>&1; own_rc=$?
 "$PY" -m ruff check . > "$OUT/ruff.txt" 2>&1; ruff_rc=$?
-refs=()
+refs=(); mkdir -p "$wt/tests"
 while IFS= read -r p; do
   [ -n "$p" ] || continue
   n="tests/ref_$(basename "$p")"
@@ -113,7 +113,7 @@ fi
 
 # 10. Separate self-review pass, same environment, verdict JSON in review.txt.
 render "$HERE/prompts/self-review.md" "$OUT/review-prompt.md" "{{TASK}}" "$(cat "$brief")" \
-  && render "$OUT/review-prompt.md" "$OUT/review-prompt.md" "{{PY}}" "$PY" || exit 1
+  && render "$OUT/review-prompt.md" "$OUT/review-prompt.md" "{{PY}}" "$PY" || echo "review prompt render failed" > "$OUT/review-stderr.txt"
 cd "$wt" || exit 1
 timeout 900 claude -p "$(cat "$OUT/review-prompt.md")" --model "$MODEL" --allowedTools "Read,Bash,Glob,Grep" \
   --permission-mode acceptEdits --output-format json --max-turns 25 \
