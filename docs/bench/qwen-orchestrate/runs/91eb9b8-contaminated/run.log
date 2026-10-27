@@ -1,0 +1,2 @@
+91eb9b8 exit=0 turns=181 own=0 ref=0 ruff=0 leak=0 review=GO elapsed=852s
+# own/ref rerun with PYTHONPATH=src (runner's first pass imported the main checkout via the venv's editable install; see *-contaminated.txt): own 1089 passed, ref 11 passed

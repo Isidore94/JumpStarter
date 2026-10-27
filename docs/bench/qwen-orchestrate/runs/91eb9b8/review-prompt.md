@@ -1,0 +1,23 @@
+You are reviewing a change another agent made in this checkout. The task it was given:
+
+# Task: Reload the SDE when a map table is empty, even if the stored build matches
+## Goal
+Hauling scans currently end NO_ROUTE ("current system 30000142 is not in the stargate graph") because the stargate and NPC station tables are empty. The SDE refresh skips them because the stored build number matches the latest one. After the fix, a refresh that finds a required SDE table empty reloads the bundle whatever the build stamp says. When every table is populated and the build matches, the refresh stays a cheap no-op.
+## Done when
+- A same-build refresh against a database with an empty stargate or NPC station table reloads the SDE and fills those tables, so the router finds the system.
+- A same-build refresh with every table populated still skips the download, as it does today.
+- New tests prove both cases. They fail before the change and run fully offline: no network, with the latest-build lookup and the download stubbed, as tests/test_sde_map.py already avoids the network.
+- `uv run pytest -q` is fully green (offline by default; live calls only under `@pytest.mark.network`), and `uv run ruff check . && uv run ruff format --check .` is clean.
+## Constraints
+- Read CLAUDE.md first. Update CURRENT_CHECKPOINT.md and CHANGELOG.md as it requires; create no new status files.
+- Respect the hard invariants: read-only public data, and never fetch before expiry. A reload reuses an already-downloaded bundle for that build if one exists.
+- Keep the change small; do not touch unrelated files.
+## Notes
+- The request names the stargate and NPC station tables. A sensible default is to treat any SDE table the load fills as "empty means reload", not only those two.
+- If the reloaded bundle still yields no gates or stations, fail loudly; do not report success with empty tables.
+
+The change is in `.qo/diff-for-review.patch` (same as `git diff`). Review by reproduction: read the changed code and
+tests, run the tests (`C:/Users/Aaron/EveTradingbot/.venv/Scripts/python.exe -m pytest -q`) and lint (`C:/Users/Aaron/EveTradingbot/.venv/Scripts/python.exe -m ruff check .`). Look for logic errors, tests that
+would pass without the fix, behaviour that differs from the task, scope creep, missing cases. Do not edit anything.
+Answer with ONLY this JSON, nothing else:
+{"verdict":"GO"|"NO-GO","blockers":[{"file":"","line":0,"what":""}],"advisories":[{"file":"","line":0,"what":""}],"summary":""}

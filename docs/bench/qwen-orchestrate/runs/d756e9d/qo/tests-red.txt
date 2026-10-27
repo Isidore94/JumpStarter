@@ -1,0 +1,58 @@
+RED run (before any fix): new tests must fail
+command: python -m pytest tests/test_summary.py::test_pnl_before_commissions_and_commissions_on_closed tests/test_ui_smoke.py::test_main_window_refreshes -q
+
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____________ test_pnl_before_commissions_and_commissions_on_closed ____________
+
+ledger = <tradertax.db.Ledger object at 0x000002A994CD73E0>
+
+    def test_pnl_before_commissions_and_commissions_on_closed(ledger):
+        load_all(ledger)
+        rep = build_report(ledger, 2026, as_of=date(2026, 4, 1))
+        r = 1.37  # fixture FX rate: every USD figure converts at 1.37
+        # Taxable closes in 2026: AAPL bought 100@150 (comm 4.95, Questrade) + 50@152 (comm 1.00, IBKR),
+        # sold 100@160 (comm 4.95) + 50@161 (comm 1.00); TSLA short -20@200 (comm 1.00) covered +20@190 (comm 1.00).
+        # SHOP.TO and the open option buys never close, so they contribute nothing.
+        aapl_before = (16000 + 8050 - 15000 - 7600) * r  # 1450.00 USD gross proceeds minus gross cost
+        tsla_before = (4000 - 3800) * r  # 200.00 USD
+        aapl_comm = (4.95 + 1.00 + 4.95 + 1.00) * r  # buy commissions (in ACB) + sell commissions
+        tsla_comm = (1.00 + 1.00) * r  # short-open commission (in pool) + cover commission
+        # TFSA: NVDA 10@100 (comm 4.95) sold 10@130 (comm 4.95)
+        nvda_before = (1300 - 1000) * r  # 300.00 USD
+        nvda_comm = (4.95 + 4.95) * r
+>       assert rep.taxable_pnl_before_commissions == pytest.approx(aapl_before + tsla_before)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'YearReport' object has no attribute 'taxable_pnl_before_commissions'
+
+tests\test_summary.py:76: AttributeError
+_________________________ test_main_window_refreshes __________________________
+
+qapp = <PySide6.QtWidgets.QApplication(0x2a9964ce7c0) at 0x000002A996C95580>
+ledger = <tradertax.db.Ledger object at 0x000002A996C87CE0>
+
+    def test_main_window_refreshes(qapp, ledger):
+        from tradertax.ui.app import AppState, MainWindow
+    
+        qt = parse_rows(rows_from_bytes(questrade_csv(QT_MARGIN_ROWS).encode()), "qt.csv")
+        ledger.commit_import(qt, account_type="MARGIN", period_start=date(2026, 1, 1), period_end=date(2026, 3, 1))
+        ib = parse_rows(rows_from_bytes(IB_STATEMENT.encode()), "ib.csv")
+        ledger.commit_import(ib, account_type="MARGIN", period_start=ib.period_start, period_end=ib.period_end)
+        ledger.add_expense(Expense(2026, date(2026, 2, 1), "capital", "mini pc", 1500, kind="CAPITAL", cca_class="50"))
+        ledger.set_setting("tax_year", 2026)
+        state = AppState(ledger)
+        win = MainWindow(state)
+        state.rebuild()
+        assert state.report is not None and state.last_error == ""
+        summary = win.pages[0]
+        assert summary.ufile_model.rowCount() > 5
+        assert summary.cards["total_pnl"].value.text() != "-"
+>       assert summary.cards["before_commissions"].value.text() != "-"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'before_commissions'
+
+tests\test_ui_smoke.py:40: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_summary.py::test_pnl_before_commissions_and_commissions_on_closed
+FAILED tests/test_ui_smoke.py::test_main_window_refreshes - KeyError: 'before...
+2 failed in 0.55s

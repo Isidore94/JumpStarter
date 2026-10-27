@@ -1,0 +1,158 @@
+..........................F.FFF.........F.............                   [100%]
+================================== FAILURES ===================================
+________________ test_check_fails_on_a_missing_internals_entry ________________
+
+filled_repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13647/test_check_fails_on_a_missing_0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000002C8457F2ED0>
+
+    def test_check_fails_on_a_missing_internals_entry(filled_repo: Path, capsys) -> None:
+        """A rule that cites an INTERNALS entry with no matching heading is a gap.
+    
+        The entry is the evidence for the rule; a rule without it is a draft the next agent
+        will 'fix' and break. The check names the missing entry so the fix is one search away.
+        """
+        claude = filled_repo / "CLAUDE.md"
+        claude.write_text(
+            claude.read_text(encoding="utf-8")
+            + '\n*(INTERNALS: "a rule whose entry was never written")*\n',
+            encoding="utf-8",
+        )
+        # Keep CLAUDE == AGENTS so the only new gap is the citation, not a drift.
+        run("sync-agents", str(filled_repo))
+    
+>       assert run("check", str(filled_repo)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = run('check', 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13647\\test_check_fails_on_a_missing_0\\widget')
+E        +    where 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13647\\test_check_fails_on_a_missing_0\\widget' = str(WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13647/test_check_fails_on_a_missing_0/widget'))
+
+tests\test_jumpstart.py:364: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13647\test_check_fails_on_a_missing_0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13647\test_check_fails_on_a_missing_0\widget`.
+CLAUDE.md -> AGENTS.md
+sha256 51778a2f9203581bee3c92528c2e7fa3f848a92236149992fe47d9389d2da64a (identical)
+---------------------------- Captured stdout call -----------------------------
+CLAUDE.md -> AGENTS.md
+sha256 7ba3de9daca17aca658b4b98d4a282635f22d673bbb40b49818679085e5891f2 (identical)
+JumpStarter check: C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13647\test_check_fails_on_a_missing_0\widget
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (7ba3de9daca1...)
+  [OK      ] checkpoint size: 71 lines (limit 1500)
+  [OK      ] plan size: 144 lines (limit 1200)
+  [OK      ] changelog recent section: 10 lines (limit 800)
+  [OK      ] CLAUDE.md size: 167 lines (limit 400)
+  [OK      ] placeholders: no unfilled {{TOKEN}} in the control set
+------------------------------------------------------------------------------
+No gaps: 6 checks passed.
+________ test_find_internals_citations_handles_multi_line_and_comments ________
+
+    def test_find_internals_citations_handles_multi_line_and_comments() -> None:
+        """A citation may wrap across lines; one inside an HTML comment is not a citation.
+        Two spellings of the same name (wrapped and unwrapped) deduplicate to one."""
+        text = (
+            'one *(INTERNALS: "An unpinned linter is not a\n  gate")*\n'
+            '<!-- commented out *(INTERNALS: "not a real rule")* -->\n'
+            'two *(INTERNALS: "An unpinned linter is not a gate")*\n'
+        )
+>       assert jumpstart.find_internals_citations(text) == [
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            "an unpinned linter is not a gate",
+        ]
+E       AttributeError: module 'jumpstart' has no attribute 'find_internals_citations'
+
+tests\test_jumpstart.py:384: AttributeError
+__________ test_internals_heading_texts_strips_suffix_and_normalises __________
+
+    def test_internals_heading_texts_strips_suffix_and_normalises() -> None:
+        """A heading's trailing '(date, origin)' is stripped and its case normalised, so a
+        citation matches the entry's name, not its date. The file's H1 title is not an entry."""
+        text = (
+            "# Widget internals - the incident behind every rule\n"
+            "## Unfilled placeholders are visible (2026-09-03, first build)\n"
+            "## retrofit is report-only (2026-09-03, first build)\n"
+        )
+>       assert jumpstart.internals_heading_texts(text) == {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            "unfilled placeholders are visible",
+            "retrofit is report-only",
+        }
+E       AttributeError: module 'jumpstart' has no attribute 'internals_heading_texts'
+
+tests\test_jumpstart.py:397: AttributeError
+_______ test_citation_check_does_not_fire_when_internals_file_is_absent _______
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13647/test_citation_check_does_not_f0/widget')
+
+    def test_citation_check_does_not_fire_when_internals_file_is_absent(repo: Path) -> None:
+        """A missing docs/INTERNALS.md is the structure audit's job, not this check's: the
+        citation check stays silent so it does not double-report what retrofit already names."""
+        (repo / "CLAUDE.md").write_text(
+            '# W\n\n- **A rule.** text *(INTERNALS: "some entry")*\n', encoding="utf-8"
+        )
+    
+>       findings = jumpstart.audit_internals_citations(repo)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'jumpstart' has no attribute 'audit_internals_citations'
+
+tests\test_jumpstart.py:410: AttributeError
+____________________ test_jumpstarter_passes_its_own_check ____________________
+
+    def test_jumpstarter_passes_its_own_check() -> None:
+        """Eat the dog food: this repo runs its own control set."""
+>       assert run("check", str(REPO_ROOT)) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = run('check', 'C:\\Users\\Aaron\\llm-harness\\wt\\qo-677a5d2')
+E        +    where 'C:\\Users\\Aaron\\llm-harness\\wt\\qo-677a5d2' = str(WindowsPath('C:/Users/Aaron/llm-harness/wt/qo-677a5d2'))
+
+tests\test_jumpstart.py:469: AssertionError
+---------------------------- Captured stdout call -----------------------------
+JumpStarter check: C:\Users\Aaron\llm-harness\wt\qo-677a5d2
+==============================================================================
+  [DRIFT   ] CLAUDE == AGENTS: sha256 differs: 712af9a6fc5f... vs e94ba24d6d97...
+             -> The two tools are running on different rules. Merge by hand into CLAUDE.md (the divergence usually holds real rules), then `jumpstart.py sync-agents <path>`.
+  [OK      ] checkpoint size: 308 lines (limit 1500)
+  [OK      ] plan size: 170 lines (limit 1200)
+  [OK      ] changelog recent section: 37 lines (limit 800)
+  [OK      ] CLAUDE.md size: 190 lines (limit 400)
+  [UNFILLED] placeholders in .claude/agents/tester.md: 7 unfilled: CRITICAL_AREA, OWNER, PROJECT, BRANCH_PREFIX, MAIN_BRANCH, TOOLCHAIN, +1 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/builder.md: 11 unfilled: PROJECT, MAIN_BRANCH, OWNER, BRANCH_PREFIX, TOOLCHAIN, LIVE_STORES, +5 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/reviewer.md: 5 unfilled: PROJECT, OWNER, TOOLCHAIN, CRITICAL_AREA, LINT_CMD
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/recon.md: 3 unfilled: PROJECT, LIVE_STORES, TOOLCHAIN
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+------------------------------------------------------------------------------
+5 gap(s) of 9 checks.
+=========================== short test summary info ===========================
+FAILED tests/test_jumpstart.py::test_check_fails_on_a_missing_internals_entry
+FAILED tests/test_jumpstart.py::test_find_internals_citations_handles_multi_line_and_comments
+FAILED tests/test_jumpstart.py::test_internals_heading_texts_strips_suffix_and_normalises
+FAILED tests/test_jumpstart.py::test_citation_check_does_not_fire_when_internals_file_is_absent
+FAILED tests/test_jumpstart.py::test_jumpstarter_passes_its_own_check - Asser...
+5 failed, 49 passed in 2.46s

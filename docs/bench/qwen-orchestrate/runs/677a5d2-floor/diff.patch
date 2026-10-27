@@ -1,0 +1,98 @@
+diff --git a/tests/test_jumpstart.py b/tests/test_jumpstart.py
+index 6649182..0c3d5e9 100644
+--- a/tests/test_jumpstart.py
++++ b/tests/test_jumpstart.py
+@@ -341,6 +341,78 @@ def test_check_fails_on_an_oversized_claude(filled_repo: Path) -> None:
+     assert run("check", str(filled_repo)) == 1
+ 
+ 
++# --------------------------------------------------------------------------- #
++# INTERNALS citations - a rule's evidence entry must exist
++# --------------------------------------------------------------------------- #
++
++
++def test_check_fails_on_a_missing_internals_entry(filled_repo: Path, capsys) -> None:
++    """A rule that cites an INTERNALS entry with no matching heading is a gap.
++
++    The entry is the evidence for the rule; a rule without it is a draft the next agent
++    will 'fix' and break. The check names the missing entry so the fix is one search away.
++    """
++    claude = filled_repo / "CLAUDE.md"
++    claude.write_text(
++        claude.read_text(encoding="utf-8")
++        + '\n*(INTERNALS: "a rule whose entry was never written")*\n',
++        encoding="utf-8",
++    )
++    # Keep CLAUDE == AGENTS so the only new gap is the citation, not a drift.
++    run("sync-agents", str(filled_repo))
++
++    assert run("check", str(filled_repo)) == 1
++    out = capsys.readouterr().out
++    assert "a rule whose entry was never written" in out
++    assert "MISSING" in out
++
++
++def test_check_is_green_when_all_citations_resolve(filled_repo: Path) -> None:
++    """Every citation in a properly set-up repo resolves to a heading, so the check adds
++    no gap and the repo stays green exactly as before the check existed."""
++    assert run("check", str(filled_repo)) == 0
++
++
++def test_find_internals_citations_handles_multi_line_and_comments() -> None:
++    """A citation may wrap across lines; one inside an HTML comment is not a citation.
++    Two spellings of the same name (wrapped and unwrapped) deduplicate to one."""
++    text = (
++        'one *(INTERNALS: "An unpinned linter is not a\n  gate")*\n'
++        '<!-- commented out *(INTERNALS: "not a real rule")* -->\n'
++        'two *(INTERNALS: "An unpinned linter is not a gate")*\n'
++    )
++    assert jumpstart.find_internals_citations(text) == [
++        "an unpinned linter is not a gate",
++    ]
++
++
++def test_internals_heading_texts_strips_suffix_and_normalises() -> None:
++    """A heading's trailing '(date, origin)' is stripped and its case normalised, so a
++    citation matches the entry's name, not its date. The file's H1 title is not an entry."""
++    text = (
++        "# Widget internals - the incident behind every rule\n"
++        "## Unfilled placeholders are visible (2026-09-03, first build)\n"
++        "## retrofit is report-only (2026-09-03, first build)\n"
++    )
++    assert jumpstart.internals_heading_texts(text) == {
++        "unfilled placeholders are visible",
++        "retrofit is report-only",
++    }
++
++
++def test_citation_check_does_not_fire_when_internals_file_is_absent(repo: Path) -> None:
++    """A missing docs/INTERNALS.md is the structure audit's job, not this check's: the
++    citation check stays silent so it does not double-report what retrofit already names."""
++    (repo / "CLAUDE.md").write_text(
++        '# W\n\n- **A rule.** text *(INTERNALS: "some entry")*\n', encoding="utf-8"
++    )
++
++    findings = jumpstart.audit_internals_citations(repo)
++
++    assert findings, "the check must still report, even when silent"
++    assert all(f.ok for f in findings), "a missing file must not be a gap here"
++
++
+ # --------------------------------------------------------------------------- #
+ # Units behind the checks
+ # --------------------------------------------------------------------------- #
+diff --git a/tools/jumpstart.py b/tools/jumpstart.py
+index 9c216cb..dec12b8 100644
+--- a/tools/jumpstart.py
++++ b/tools/jumpstart.py
+@@ -129,6 +129,10 @@ RECENT_CHANGES_MARKER = "Recent changes"
+ 
+ PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
+ 
++#: A citation to a rule's evidence entry: *(INTERNALS: "name")*. The surrounding
++#: emphasis is not required to match, and the quoted name may wrap across lines.
++INTERNALS_CITATION_RE = re.compile(r'\(INTERNALS: "([^"]*)"\)')
++
+ 
+ # --------------------------------------------------------------------------- #
+ # Helpers

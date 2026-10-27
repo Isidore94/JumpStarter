@@ -1,0 +1,18 @@
+{
+  "sha7": "d756e9d",
+  "repo": "C:/Users/Aaron/TraderTaxHelper",
+  "base": "56c399a",
+  "ref": "d756e9d",
+  "seed": null,
+  "seed_applied": null,
+  "exit_code": 0,
+  "elapsed_s": 438,
+  "turns": 93,
+  "own_tests_rc": 0,
+  "ruff_rc": 0,
+  "ref_tests_rc": 1,
+  "leak_count": 0,
+  "review_verdict": "GO",
+  "key_before": "OpenRouter key: <key> | used $14.836787115 | today (usage_daily) $1.005270446 | limit 50 | remaining 35.163212885\r\n\r\n[qwen/qwen3.8-27b: 59 in, 106 out, via DeepInfra]\r\n\r\n\r\nready",
+  "key_after": "OpenRouter key: <key> | used $15.11811589 | today (usage_daily) $1.286599221 | limit 50 | remaining 34.88188411\r\n\r\n[qwen/qwen3.8-27b: 59 in, 17 out, via DeepInfra]\r\n\r\n\r\nready"
+}

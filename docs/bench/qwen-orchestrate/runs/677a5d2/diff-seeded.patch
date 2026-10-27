@@ -1,0 +1,487 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 3f13a23..3309eaf 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,3 +1,30 @@
++# Orchestration rules for this job (read first; the project's own CLAUDE.md follows below)
++
++You are the lead of a small agent team working in this checkout. Finish the TASK you were given end to end, in this
++order, writing each stage's output into the `.qo/` folder:
++
++1. Recon (read-only): `.qo/recon.md`: the files, functions and tests the task touches, with file:line evidence.
++   Use the `recon` agent or do it yourself.
++2. Plan: `.qo/plan.md`: numbered steps, the files you will change, the tests you will write, what "done" means.
++   Say what is unclear or wrong in the task and how you resolved it.
++3. Tests first: write the failing tests before any fix, run them and save the failing output to `.qo/tests-red.txt`.
++   Use the `tester` agent or do it yourself.
++4. Build: the smallest change that makes the tests pass without weakening them. Run the whole suite and lint and
++   save the output to `.qo/build.txt`.
++5. Self-review: review your own diff (`git diff`) like a sceptical reviewer: does it do what the task asks, are
++   the tests real, what did you skip. Use the `reviewer` agent or do it yourself. Write `.qo/review.json` as
++   `{"verdict":"GO"|"NO-GO","blockers":[...],"advisories":[...],"summary":"..."}`. Fix blockers and review again
++   (at most twice).
++6. Finish: `.qo/report.md`: what changed, test results, what you skipped, open doubts. Then stop.
++
++Commands: Python is `C:/Users/Aaron/TraderTaxHelper/.venv/Scripts/python.exe`. Tests: `C:/Users/Aaron/TraderTaxHelper/.venv/Scripts/python.exe -m pytest -q`. Lint: `C:/Users/Aaron/TraderTaxHelper/.venv/Scripts/python.exe -m ruff check .`.
++Rules: stay inside this directory. Do not run any git command that reads history (log, show, reflog), stashes,
++checks out or commits, and no network command. Do not edit files under `.claude/`. Do not ask the user anything: decide, and record the
++decision in `.qo/plan.md`.
++
++---
++
++
+ # JumpStarter — AI context index
+ 
+ JumpStarter is a reusable foundation for running software projects with AI agents: a set
+@@ -99,6 +126,13 @@ changing the behaviour a rule governs.**
+   is a check that gets ignored. *(INTERNALS: "A placeholder name is an identifier")*
+ - **Templates stay short enough to read in one sitting.** The whole point is bounded
+   reads; a template nobody finishes is a template that gets skimmed and appended to.
++- **An INTERNALS citation must resolve.** Each rule carries a quoted INTERNALS
++  citation pointing at its evidence entry; `check` matches the cited name against the
++  `##` headings of `docs/INTERNALS.md` — the heading's leading text, its
++  `(date, reason)` suffix stripped, case-insensitively — and names every citation with
++  no matching heading as a gap. A citation inside an HTML comment is an example, not a
++  rule, and is skipped; a missing `docs/INTERNALS.md` is the structure audit's finding,
++  not the check's. *(INTERNALS: "a citation must resolve")*
+ 
+ ## Hard invariants (plan.md sec 5 — never violate)
+ - No third-party dependency in `tools/`. It must run on a bare Python 3.9+.
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 7a90c1b..74b76ef 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,6 +1,6 @@
+ # JumpStarter implemented history
+ 
+-Last reconciled: **2026-09-03** (second pass)
++Last reconciled: **2026-10-26** (INTERNALS citation check)
+ 
+ Authoritative for: **what exists, and the historical sequence of revisions.**
+ Remaining work: [`plan.md`](plan.md). Where we are now:
+@@ -58,8 +58,11 @@ do not rebuild landed work.**
+   `AGENTS.md` from `CLAUDE.md`, and appends the `.gitignore` block idempotently. It
+   skips files that exist unless `--force`.
+ - **`retrofit`** audits **25 checks** and **writes nothing**.
+-- **`check`** enforces `CLAUDE == AGENTS` (sha256), the four size limits, and unfilled
+-  placeholders.
++- **`check`** enforces `CLAUDE == AGENTS` (sha256), the four size limits, unfilled
++  placeholders, and that every INTERNALS citation in `CLAUDE.md` resolves to a
++  `docs/INTERNALS.md` heading (leading text, `(date, reason)` suffix stripped,
++  case-insensitive; commented-out citations skipped; a missing `docs/INTERNALS.md` is
++  the structure audit's finding, not a citation gap).
+ - **`ADVISORY` findings** — reported, named, and **not** a gap: `Finding.ok` is true for
+   them and they do not change the exit code. Three exist: a machine-local (gitignored)
+   allow-list, an active-state block under a heading other than the standard one, and
+@@ -69,6 +72,12 @@ do not rebuild landed work.**
+ - **`audit_active_state`, `audit_allow_list`, `audit_stray_ledgers`** — the three
+   functions behind those advisories. `_claude_dir_is_gitignored` reads `.gitignore` as
+   text rather than shelling out to git, so the tool keeps its no-dependency invariant.
++- **`audit_internals_citations`, `find_internals_citations`, `internals_headings`** —
++  the citation check. `INTERNALS_CITATION_RE` matches only the full quoted pointer form,
++  so prose about citations does not count as one (the same discipline as
++  "a placeholder name is an identifier"); cited names are whitespace-folded because one
++  wraps across two lines in this repo's own `CLAUDE.md`. One `MISSING` finding per
++  dangling citation, each naming the entry; one `OK` when every citation resolves.
+ - **The limits** — `CHECKPOINT_MAX_LINES` 1500, `PLAN_MAX_LINES` 1200,
+   `CHANGELOG_RECENT_MAX_LINES` 800, `CLAUDE_MAX_LINES` 400. Two traps: the changelog
+   limit measures the "Recent changes" *section*, via `section_line_count`, not the file
+@@ -83,8 +92,11 @@ do not rebuild landed work.**
+ 
+ - Covers `init` (control set, placeholders, gitignore ordering and idempotency, overwrite
+   refusal), `retrofit` (gaps on a bare repo, writes-nothing, clean after init, drift),
+-  `sync-agents`, `check` (each limit, drift, the section-not-file rule), the unit
+-  functions, and JumpStarter's own `check`.
++  `sync-agents`, `check` (each limit, drift, the section-not-file rule, a dangling
++  INTERNALS citation failing and naming the entry, and the citation check passing on a
++  filled repo), the unit functions (citation folding, comment skipping,
++  case-insensitive suffix-stripped matching, missing-entry gap, missing-file silence),
++  and JumpStarter's own `check`.
+ - A block at the end pins **what the audit got wrong on a real repository**: each of the
+   two false positives and four misses of 2026-09-03 has a test built from the shape that
+   produced it. Delete one of those and the false positive comes back.
+@@ -105,6 +117,23 @@ do not rebuild landed work.**
+ The last two build days only. When this section passes ~800 lines, archive the older
+ entries under `docs/` and leave a pointer.
+ 
++### 2026-10-26 — `check` gains the INTERNALS citation check
++
++- **The invariant "every rule in `CLAUDE.md` has an entry in `docs/INTERNALS.md`" is now
++  enforced by `check` instead of written down and trusted.** `audit_internals_citations`
++  joins `cmd_check`: every `*(INTERNALS: "...")*` pointer in `CLAUDE.md` is matched,
++  case-insensitively, against the leading text of a `##` heading in `docs/INTERNALS.md`
++  (its `(date, reason)` suffix stripped, the cited name folded back to one line when it
++  wraps). A dangling citation is a `MISSING` finding that names the entry; all resolved
++  is one `OK`.
++- **Three misses, each decided:** commented-out citations are skipped (the shipped
++  template's example cites an entry that never exists); a missing `docs/INTERNALS.md` is
++  the structure audit's finding, not a second citation gap; prose about citations is
++  not a citation (the identifier-only placeholder rule, third use).
++- **This repo's own `CLAUDE.md`** gains the new rule with its citation; `docs/INTERNALS.md`
++  gains `A citation must resolve`; `AGENTS.md` re-synced. No template or limit constant
++  changed.
++
+ ### 2026-09-03 — Second pass: the four unreadable sources, and gates 1 and 3
+ 
+ - **Read the four sources the first build could not**: the source project's real packets,
+diff --git a/CURRENT_CHECKPOINT.md b/CURRENT_CHECKPOINT.md
+index 5cc7159..6035804 100644
+--- a/CURRENT_CHECKPOINT.md
++++ b/CURRENT_CHECKPOINT.md
+@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
+ 
+ | | |
+ |---|---|
+-| Working branch | **`claude/jumpstarter-repo-setup-dn3rof`**. Nothing has been merged to `main`; `main` does not exist yet |
++| Working branch | **`main`** (harness worktree `qo-677a5d2`; working-tree changes not committed — no git history commands or commits in this session) |
+ | Also in flight | **NOTHING unmerged.** No other branch, no worktree |
+-| Active items | `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates. Not started. Phase 0 is done, and the questionnaire is now answered (record 0002) |
+-| Last verified baseline | Measured 2026-09-03 on **CPython 3.9.25**: `python -m pytest tests/ -q` **49 passed, process exit 0, 2.0 s**; `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **6 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory**. The same four re-run identically on 3.12.13 |
++| Active items | The **INTERNALS citation check for `check`** — a task-driven build, not a `plan.md` item (its sec 5 invariant, "every rule in `CLAUDE.md` has an entry in `docs/INTERNALS.md`", is what it now enforces). `plan.md` **Phase 1 item 1** — bootstrap one real new project from the templates — remains not started and is the only open roadmap item |
++| Last verified baseline | Measured 2026-10-26 on **CPython 3.12.13** (harness venv): `python -m pytest tests/ -q` **54 passed, 1 failed, process exit 1** — the one failure, `test_jumpstarter_passes_its_own_check`, was already red before this work, for pre-existing reasons (see the dated entry below); `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **exit 1, 4 gaps of 10 checks** — all four pre-existing `UNFILLED` placeholders in `.claude/agents/*.md`, which this session was not permitted to edit; the new citation check reports **all 10 citations resolve** on this repo and **all 3 resolve** on a freshly initialised-and-filled repo (exit 0) |
+ | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
+ | Restart owed | **No.** Nothing runs continuously from this checkout |
+ 
+@@ -51,6 +51,41 @@ deleting the row.
+ 
+ ---
+ 
++### 2026-10-26 — `check` enforces the INTERNALS citations
++
++**The work.** The invariant "every rule in `CLAUDE.md` has an entry in
++`docs/INTERNALS.md`" sat in the hard invariants and was written down, not enforced:
++`check` never read `docs/INTERNALS.md`. It now does — `audit_internals_citations`
++joins `cmd_check` (with `find_internals_citations` and `internals_headings` behind
++it), matching each cited name case-insensitively against the leading text of a `##`
++heading, `(date, reason)` suffix stripped, wrapped names folded back to one line.
++Commented-out citations are skipped; a missing `docs/INTERNALS.md` stays the
++structure audit's finding. Six new tests, red first (`.qo/tests-red.txt` in the
++harness worktree), then green. This repo's `CLAUDE.md` carries the new rule,
++`docs/INTERNALS.md` carries `A citation must resolve`, `AGENTS.md` re-synced,
++`CHANGELOG.md` reconciled.
++
++**Measured, 2026-10-26.** `pytest tests/ -q` 54 passed, 1 failed, exit 1;
++`ruff check .` clean, exit 0; `check .` exit 1 with 4 gaps of 10 checks; a freshly
++initialised-and-filled repo, `check` exit 0, "all 3 citations resolve".
++
++**What is red, and why it stays red.** The one test failure,
++`test_jumpstarter_passes_its_own_check`, and the four `check .` gaps are pre-existing
++and out of scope for this session: the harness that prepared this worktree prepended a
++27-line block to `CLAUDE.md` and rewrote `.claude/agents/{tester,builder,reviewer,recon}.md`
++back to their template shape with live `{{...}}` tokens, and this session was forbidden
++from editing under `.claude/`. The prepended block alone produced a `CLAUDE == AGENTS`
++drift, now cleared by the sanctioned `sync-agents` (byte-identical, sha256 verified);
++the four `UNFILLED` gaps cannot be cleared without either editing those files or
++weakening the placeholder check, both off the table. No test was weakened, skipped or
++deleted; nothing this work did is red.
++
++**What this did not touch.** No template, no limit constant, `plan.md`, `WISHLIST.md`,
++`docs/README.md`. No gate closed: gate 2 (one real project bootstrapped from the
++templates) remains the only open gate; this build did not bootstrap a project.
++
++---
++
+ ### 2026-09-03 — The questionnaire, asked properly this time
+ 
+ All twelve questions put to the owner **one at a time**, answers recorded verbatim in
+diff --git a/docs/INTERNALS.md b/docs/INTERNALS.md
+index 151b3e9..444a851 100644
+--- a/docs/INTERNALS.md
++++ b/docs/INTERNALS.md
+@@ -239,3 +239,39 @@ suppression, it is a statement of what the gate *is*.
+ 
+ **Reopen trigger.** A ruff release that changes the meaning of a selected rule set, or a
+ change to the Python floor.
++
++---
++
++## A citation must resolve (2026-10-26, check gains the citation check)
++
++**The rule, as it appears in `CLAUDE.md`:** *An INTERNALS citation must resolve. `check`
++matches each cited name against the `##` headings of `docs/INTERNALS.md` and names every
++citation with no matching heading as a gap.*
++
++**What happened.** The invariant "every rule in `CLAUDE.md` has an entry in
++`docs/INTERNALS.md`" sits in the hard invariants of `plan.md` section 5, and this file
++says a rule with no entry here is a draft. But nothing enforced it: `check` never read
++`docs/INTERNALS.md` at all. A citation could point at an entry that does not exist and
++the build stayed green - the citation was documentation, not a gate.
++
++**What was measured.** The repo's own `CLAUDE.md` carried nine live citations when this
++was built; all nine resolved, and resolving them required exactly what the check does:
++case-insensitive comparison against the heading's leading text, because two of the nine
++differ from their headings in case; the heading's `(date, reason)` suffix stripped,
++because no citation repeats it; and the cited name folded back to one line, because one
++citation wraps across two lines.
++
++**What is deliberately NOT done, and why.** Three misses, each decided:
++
++- A citation inside an HTML comment is skipped. The shipped template's `CLAUDE.md`
++  carries a commented-out example citation naming an entry that never exists; a check
++  that reads comments would be red in every correctly initialised project.
++- A missing `docs/INTERNALS.md` is not a citation gap. The structure audit already
++  reports the missing file; naming the same gap twice makes the report unreadable.
++- Only the full quoted pointer form counts as a citation. Prose that mentions the
++  pointer without the full form is documentation about the check, not a rule - the
++  identifier-only placeholder rule in use here, third time the same discipline: a check
++  that fires on correct documentation is a check that gets ignored.
++
++**Reopen trigger.** The citation form changes, or a project keeps its rules somewhere
++other than `CLAUDE.md`.
+diff --git a/tests/test_jumpstart.py b/tests/test_jumpstart.py
+index 6649182..f1294ee 100644
+--- a/tests/test_jumpstart.py
++++ b/tests/test_jumpstart.py
+@@ -341,6 +341,41 @@ def test_check_fails_on_an_oversized_claude(filled_repo: Path) -> None:
+     assert run("check", str(filled_repo)) == 1
+ 
+ 
++def test_check_fails_and_names_a_dangling_internals_citation(
++    filled_repo: Path, capsys
++) -> None:
++    """A rule whose INTERNALS citation has no matching entry must fail `check` and be
++    named: a report that says citations are wrong without saying which is one the next
++    agent has to re-derive."""
++    claude = filled_repo / "CLAUDE.md"
++    text = claude.read_text(encoding="utf-8")
++    text += (
++        '\n- **A new rule.** Something that must be done. '
++        '*(INTERNALS: "a rule with no entry yet")*\n'
++    )
++    claude.write_text(text, encoding="utf-8")
++    run("sync-agents", str(filled_repo))
++
++    assert run("check", str(filled_repo)) == 1
++    out = capsys.readouterr().out
++    assert "INTERNALS citations" in out
++    assert "a rule with no entry yet" in out
++    assert "MISSING" in out
++
++
++def test_check_passes_when_every_internals_citation_resolves(
++    filled_repo: Path, capsys
++) -> None:
++    """The shipped template's citations all resolve to template entries, and the
++    commented-out example cites an entry that never exists — it must be skipped, and a
++    green run must say the check ran rather than stay silent."""
++    assert run("check", str(filled_repo)) == 0
++    out = capsys.readouterr().out
++    lines = [line for line in out.splitlines() if "INTERNALS citations" in line]
++    assert len(lines) == 1
++    assert lines[0].startswith("  [OK")
++
++
+ # --------------------------------------------------------------------------- #
+ # Units behind the checks
+ # --------------------------------------------------------------------------- #
+@@ -374,6 +409,70 @@ def test_fill_leaves_unknown_tokens_in_place() -> None:
+     assert jumpstart.fill("{{A}} {{B}}", {"A": "x"}) == "x {{B}}"
+ 
+ 
++def test_internals_citations_fold_wrapped_names_and_skip_comments() -> None:
++    """A citation may wrap across lines (the repo's own CLAUDE.md does), and a
++    commented-out citation is an example, not a rule — the shipped template ships one."""
++    text = (
++        '<!--\n*(INTERNALS: "commented out")*\n-->\n'
++        "rule\n"
++        '*(INTERNALS: "a name that\n  wraps on the next line")*\n'
++    )
++    found = jumpstart.find_internals_citations(text)
++    assert found == ["a name that wraps on the next line"]
++
++
++def test_internals_citation_matches_ignore_case_and_the_heading_suffix(tmp_path: Path) -> None:
++    """Headings carry a `(date, reason)` suffix no citation repeats and differ in case
++    from their citations in the shipped repo; both must be ignored by the match."""
++    repo = tmp_path / "repo"
++    (repo / "docs").mkdir(parents=True)
++    (repo / "CLAUDE.md").write_text(
++        'rule\n*(INTERNALS: "retrofit is report-only")*\n',
++        encoding="utf-8",
++    )
++    (repo / "docs" / "INTERNALS.md").write_text(
++        "# Internals\n\n## Retrofit is Report-Only (2026-01-01, first build)\n\nbody\n",
++        encoding="utf-8",
++    )
++
++    findings = jumpstart.audit_internals_citations(repo)
++    assert [f.status for f in findings] == [jumpstart.OK]
++
++
++def test_a_citation_with_no_heading_is_a_named_gap(tmp_path: Path) -> None:
++    repo = tmp_path / "repo"
++    (repo / "docs").mkdir(parents=True)
++    (repo / "CLAUDE.md").write_text(
++        'rule\n*(INTERNALS: "a rule with no entry yet")*\n',
++        encoding="utf-8",
++    )
++    (repo / "docs" / "INTERNALS.md").write_text(
++        "# Internals\n\n## A different rule (2026-01-01, first build)\n\nbody\n",
++        encoding="utf-8",
++    )
++
++    findings = jumpstart.audit_internals_citations(repo)
++    assert len(findings) == 1
++    gap = findings[0]
++    assert gap.status == jumpstart.MISSING
++    assert not gap.ok
++    assert "a rule with no entry yet" in gap.detail
++
++
++def test_a_missing_internals_file_is_not_a_citation_gap(tmp_path: Path) -> None:
++    """A repo with citations but no docs/INTERNALS.md at all: the structure audit owns
++    the file's absence; the citation check has nothing to resolve against and says
++    nothing, so the report does not name one gap twice."""
++    repo = tmp_path / "repo"
++    repo.mkdir()
++    (repo / "CLAUDE.md").write_text(
++        'rule\n*(INTERNALS: "a rule with no entry yet")*\n',
++        encoding="utf-8",
++    )
++
++    assert jumpstart.audit_internals_citations(repo) == []
++
++
+ def test_no_subcommand_is_a_usage_error() -> None:
+     assert jumpstart.main([]) == 2
+ 
+diff --git a/tools/jumpstart.py b/tools/jumpstart.py
+index 9c216cb..3ec4483 100644
+--- a/tools/jumpstart.py
++++ b/tools/jumpstart.py
+@@ -6,8 +6,8 @@ Four commands:
+     init <path> --name X    copy the templates in and fill the placeholders
+     retrofit <path>         audit an existing repo and print a gap report (writes nothing)
+     sync-agents <path>      copy CLAUDE.md to AGENTS.md and verify sha256 equality
+-    check <path>            enforce the size limits, CLAUDE == AGENTS, and no unfilled
+-                            placeholders
++    check <path>            enforce the size limits, CLAUDE == AGENTS, no unfilled
++                            placeholders, and that INTERNALS citations resolve
+ 
+ Pure standard library, Python 3.9+.
+ 
+@@ -129,6 +129,16 @@ RECENT_CHANGES_MARKER = "Recent changes"
+ 
+ PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
+ 
++#: The only citation form the INTERNALS check looks for: the full quoted pointer.
++#: Prose that merely mentions INTERNALS: is not a citation - the same discipline as
++#: "a placeholder name is an identifier", so the rule documenting this check does not
++#: self-trip it.
++INTERNALS_CITATION_RE = re.compile(r'\*\(INTERNALS:\s*"([^"]+)"\)\*')
++
++#: Citations inside an HTML comment are examples, not rules (the shipped template
++#: carries one), so comments are stripped before anything is matched.
++HTML_COMMENT_RE = re.compile(r"<!--.*-->", re.DOTALL)
++
+ 
+ # --------------------------------------------------------------------------- #
+ # Helpers
+@@ -191,6 +201,40 @@ def find_placeholders(text: str) -> list[str]:
+     return seen
+ 
+ 
++def _strip_html_comments(text: str) -> str:
++    return HTML_COMMENT_RE.sub("", text)
++
++
++def find_internals_citations(text: str) -> list[str]:
++    """INTERNALS entry names cited in ``CLAUDE.md``, first-seen order, deduplicated.
++
++    Citations inside HTML comments are examples, not rules, and a cited name may wrap
++    onto the next line - it is folded back to one line before matching.
++    """
++    seen: list[str] = []
++    for match in INTERNALS_CITATION_RE.finditer(_strip_html_comments(text)):
++        name = re.sub(r"\s+", " ", match.group(1)).strip()
++        if name and name not in seen:
++            seen.append(name)
++    return seen
++
++
++def internals_headings(text: str) -> list[str]:
++    """Leading text of each ``##`` heading with its trailing ``(date, reason)`` suffix
++    removed: the text a citation is matched against. ``###`` sub-headings are not
++    entries and are not matched."""
++    names: list[str] = []
++    for line in text.splitlines():
++        stripped = line.strip()
++        if not stripped.startswith("##") or stripped.startswith("###"):
++            continue
++        title = stripped.lstrip("#").strip()
++        title = re.sub(r"\s*\([^()]*\)\s*$", "", title).strip()
++        if title:
++            names.append(title)
++    return names
++
++
+ def _today() -> str:
+     # DTZ011 suppressed deliberately: this stamps a template with the date the human
+     # filling it in reads off their own wall clock. A UTC date would be wrong for
+@@ -474,6 +518,46 @@ def audit_placeholders(repo: Path) -> list[Finding]:
+     return findings
+ 
+ 
++def audit_internals_citations(repo: Path) -> list[Finding]:
++    """Every INTERNALS citation in CLAUDE.md resolves to a docs/INTERNALS.md entry.
++
++    A rule without the entry behind it is a draft (docs/INTERNALS.md says so), and
++    nothing used to check that the citation named an entry that exists. A missing
++    docs/INTERNALS.md stays the structure audit's finding: with the file gone there is
++    nothing to resolve against, and one gap is named once.
++    """
++    claude = repo / "CLAUDE.md"
++    if not claude.is_file():
++        return []
++    citations = find_internals_citations(_read(claude))
++    if not citations:
++        return [Finding("INTERNALS citations", OK, "no INTERNALS citations in CLAUDE.md")]
++    internals = repo / "docs" / "INTERNALS.md"
++    if not internals.is_file():
++        return []
++    headings = {heading.casefold() for heading in internals_headings(_read(internals))}
++    missing = [name for name in citations if name.casefold() not in headings]
++    if missing:
++        return [
++            Finding(
++                "INTERNALS citations",
++                MISSING,
++                f'cited entry "{name}" has no heading in docs/INTERNALS.md',
++                "Add the entry to docs/INTERNALS.md with the incident behind the rule, "
++                "or drop the citation. A rule without the incident behind it gets "
++                "'fixed' by the next agent.",
++            )
++            for name in missing
++        ]
++    return [
++        Finding(
++            "INTERNALS citations",
++            OK,
++            f"all {len(citations)} citations resolve to docs/INTERNALS.md headings",
++        )
++    ]
++
++
+ def audit_active_state(repo: Path) -> Finding:
+     """One block answers "where are we?".
+ 
+@@ -934,6 +1018,7 @@ def cmd_check(args: argparse.Namespace) -> int:
+     findings: list[Finding] = [audit_agents_identical(repo)]
+     findings.extend(audit_sizes(repo))
+     findings.extend(audit_placeholders(repo))
++    findings.extend(audit_internals_citations(repo))
+     return _print_report("JumpStarter check", findings, repo)
+ 
+ 
+@@ -969,7 +1054,10 @@ def build_parser() -> argparse.ArgumentParser:
+     sync.add_argument("path")
+     sync.set_defaults(func=cmd_sync_agents)
+ 
+-    check = sub.add_parser("check", help="enforce size limits, CLAUDE == AGENTS, placeholders")
++    check = sub.add_parser(
++        "check",
++        help="enforce size limits, CLAUDE == AGENTS, placeholders, INTERNALS citations",
++    )
+     check.add_argument("path")
+     check.set_defaults(func=cmd_check)
+ 

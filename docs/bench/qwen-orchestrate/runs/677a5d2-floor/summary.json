@@ -1,0 +1,18 @@
+{
+  "sha7": "677a5d2",
+  "repo": "C:/Users/Aaron/JumpStarter",
+  "base": "85b8474",
+  "ref": "677a5d2",
+  "seed": null,
+  "seed_applied": null,
+  "exit_code": 124,
+  "elapsed_s": 2700,
+  "turns": 56,
+  "own_tests_rc": 1,
+  "ruff_rc": 0,
+  "ref_tests_rc": 1,
+  "leak_count": 1,
+  "review_verdict": "NO-GO",
+  "key_before": "OpenRouter key: <key> | used $13.833671179 | today (usage_daily) $0.00215451 | limit 50 | remaining 36.166328821\r\n\r\n[qwen/qwen3.8-27b: 59 in, 113 out, via DeepInfra]\r\n\r\n\r\nready",
+  "key_after": "OpenRouter key: <key> | used $14.127210906 | today (usage_daily) $0.295694237 | limit 50 | remaining 35.872789094\r\n\r\n[qwen/qwen3.8-27b: 59 in, 146 out, via DeepInfra]\r\n\r\n\r\nready"
+}

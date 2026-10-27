@@ -1,0 +1,18 @@
+{
+  "sha7": "91eb9b8",
+  "repo": "C:/Users/Aaron/EveTradingbot",
+  "base": "20be217",
+  "ref": "91eb9b8",
+  "seed": null,
+  "seed_applied": null,
+  "exit_code": 0,
+  "elapsed_s": 852,
+  "turns": 181,
+  "own_tests_rc": 0,
+  "ruff_rc": 0,
+  "ref_tests_rc": 0,
+  "leak_count": 0,
+  "review_verdict": "GO",
+  "key_before": "OpenRouter key: <key> | used $15.250796795 | today (usage_daily) $1.419280126 | limit 50 | remaining 34.749203205\r\n\r\n[qwen/qwen3.8-27b: 59 in, 25 out, via DeepInfra]\r\n\r\n\r\nready",
+  "key_after": "OpenRouter key: <key> | used $15.991880295 | today (usage_daily) $2.160363626 | limit 50 | remaining 34.008119705\r\n\r\n[qwen/qwen3.8-27b: 59 in, 29 out, via DeepInfra]\r\n\r\n\r\nready"
+}

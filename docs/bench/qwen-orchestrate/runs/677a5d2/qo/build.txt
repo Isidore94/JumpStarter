@@ -1,0 +1,105 @@
+=== 1. pytest tests/ -q (final) ===
+.........................................F.............                  [100%]
+================================== FAILURES ===================================
+____________________ test_jumpstarter_passes_its_own_check ____________________
+
+    def test_jumpstarter_passes_its_own_check() -> None:
+        """Eat the dog food: this repo runs its own control set."""
+>       assert run("check", str(REPO_ROOT)) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = run('check', 'C:\\Users\\Aaron\\llm-harness\\wt\\qo-677a5d2')
+E        +    where 'C:\\Users\\Aaron\\llm-harness\\wt\\qo-677a5d2' = str(WindowsPath('C:/Users/Aaron/llm-harness/wt/qo-677a5d2'))
+
+tests\test_jumpstart.py:496: AssertionError
+---------------------------- Captured stdout call -----------------------------
+JumpStarter check: C:\Users\Aaron\llm-harness\wt\qo-677a5d2
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (0d5639502d45...)
+  [OK      ] checkpoint size: 343 lines (limit 1500)
+  [OK      ] plan size: 170 lines (limit 1200)
+  [OK      ] changelog recent section: 54 lines (limit 800)
+  [OK      ] CLAUDE.md size: 197 lines (limit 400)
+  [UNFILLED] placeholders in .claude/agents/tester.md: 7 unfilled: CRITICAL_AREA, OWNER, PROJECT, BRANCH_PREFIX, MAIN_BRANCH, TOOLCHAIN, +1 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/builder.md: 11 unfilled: PROJECT, MAIN_BRANCH, OWNER, BRANCH_PREFIX, TOOLCHAIN, LIVE_STORES, +5 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/reviewer.md: 5 unfilled: PROJECT, OWNER, TOOLCHAIN, CRITICAL_AREA, LINT_CMD
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/recon.md: 3 unfilled: PROJECT, LIVE_STORES, TOOLCHAIN
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [OK      ] INTERNALS citations: all 10 citations resolve to docs/INTERNALS.md headings
+------------------------------------------------------------------------------
+4 gap(s) of 10 checks.
+=========================== short test summary info ===========================
+FAILED tests/test_jumpstart.py::test_jumpstarter_passes_its_own_check - Asser...
+1 failed, 54 passed in 2.52s
+pytest exit=1
+
+=== 2. ruff check . ===
+All checks passed!
+ruff exit=0
+
+=== 3. check . (this repo) ===
+JumpStarter check: C:\Users\Aaron\llm-harness\wt\qo-677a5d2
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (0d5639502d45...)
+  [OK      ] checkpoint size: 343 lines (limit 1500)
+  [OK      ] plan size: 170 lines (limit 1200)
+  [OK      ] changelog recent section: 54 lines (limit 800)
+  [OK      ] CLAUDE.md size: 197 lines (limit 400)
+  [UNFILLED] placeholders in .claude/agents/tester.md: 7 unfilled: CRITICAL_AREA, OWNER, PROJECT, BRANCH_PREFIX, MAIN_BRANCH, TOOLCHAIN, +1 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/builder.md: 11 unfilled: PROJECT, MAIN_BRANCH, OWNER, BRANCH_PREFIX, TOOLCHAIN, LIVE_STORES, +5 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/reviewer.md: 5 unfilled: PROJECT, OWNER, TOOLCHAIN, CRITICAL_AREA, LINT_CMD
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/recon.md: 3 unfilled: PROJECT, LIVE_STORES, TOOLCHAIN
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [OK      ] INTERNALS citations: all 10 citations resolve to docs/INTERNALS.md headings
+------------------------------------------------------------------------------
+4 gap(s) of 10 checks.
+check exit=1
+
+=== 4. check on a freshly initialised + filled repo ===
+Initialised Fresh in C:\Users\Aaron\AppData\Local\Temp\jsfreshxaluotls\fresh
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\jsfreshxaluotls\fresh`.
+CLAUDE.md -> AGENTS.md
+sha256 1a395166b11f4d4a930067e0ccee909170df31bea5bb12389cef60cc13b9079b (identical)
+JumpStarter check: C:\Users\Aaron\AppData\Local\Temp\jsfreshxaluotls\fresh
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (1a395166b11f...)
+  [OK      ] checkpoint size: 71 lines (limit 1500)
+  [OK      ] plan size: 144 lines (limit 1200)
+  [OK      ] changelog recent section: 10 lines (limit 800)
+  [OK      ] CLAUDE.md size: 165 lines (limit 400)
+  [OK      ] placeholders: no unfilled {{TOKEN}} in the control set
+  [OK      ] INTERNALS citations: all 3 citations resolve to docs/INTERNALS.md headings
+------------------------------------------------------------------------------
+No gaps: 7 checks passed.
+fresh-repo check exit = 0
+fresh-repo exit=0

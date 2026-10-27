@@ -1,0 +1,12 @@
+diff --git a/tradertax/gains.py b/tradertax/gains.py
+--- a/tradertax/gains.py
++++ b/tradertax/gains.py
+@@ -203,7 +203,7 @@
+                 cost_cad = (-gross_cad) * (cover / qty) + comm_cad * (cover / qty)
+                 gain = proceeds - cost_cad
+                 events.append(
+-                    _event(t, "SHORT", cover, proceeds, 0.0, cost_cad, gain, rate, source, group, pool.comm * frac + comm_cad * (cover / qty))
++                    _event(t, "SHORT", cover, proceeds, 0.0, cost_cad, gain, rate, source, group, pool.comm + comm_cad * (cover / qty))
+                 )
+                 pool.cost -= proceeds
+                 pool.comm -= pool.comm * frac

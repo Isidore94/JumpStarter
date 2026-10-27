@@ -1,0 +1,1 @@
+CONTAMINATED: recon followed the venv editable install into C:/Users/Aaron/EveTradingbot (main checkout, holds the reference fix 91eb9b8); _tables_populated docstring near-verbatim the reference. Found by the Opus grader; leak audit (git history / ../.. only) missed it. Kept for the record; not evidence. Rerun in runs/91eb9b8 with PYTHONPATH=src and the extended leak audit.

@@ -1,0 +1,259 @@
+FFF.F                                                                    [100%]
+================================== FAILURES ===================================
+_____________ test_a_cited_rule_with_no_internals_entry_is_a_gap ______________
+
+filled_repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13656/test_a_cited_rule_with_no_inte0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x00000229EAB39160>
+
+    def test_a_cited_rule_with_no_internals_entry_is_a_gap(
+        filled_repo: Path, capsys
+    ) -> None:
+        """A rule that cites evidence which does not exist must fail the build.
+    
+        Citing `*(INTERNALS: "...")*` is a promise that the incident is written down.
+        An unkept promise is worse than no citation: the next agent reads the citation,
+        does not go looking, and treats the rule as settled.
+        """
+        assert run("check", str(filled_repo)) == 0, "the fixture must be green to start"
+        capsys.readouterr()
+    
+        append(
+            filled_repo / "CLAUDE.md",
+            '\n- **A rule nobody wrote down.** It cites an incident that was never '
+            'recorded.\n  *(INTERNALS: "A rule nobody wrote down")*\n',
+        )
+        assert run("sync-agents", str(filled_repo)) == 0
+        capsys.readouterr()
+    
+        assert run("check", str(filled_repo)) == 1
+        out = capsys.readouterr().out
+>       assert "rules carry evidence" in out
+E       AssertionError: assert 'rules carry evidence' in 'JumpStarter check: C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13656\\test_a_cited_rule_with_no_i...e next agent.\n------------------------------------------------------------------------------\n1 gap(s) of 7 checks.\n'
+
+tests\ref_test_i1_rules_carry_evidence.py:125: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_a_cited_rule_with_no_inte0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_a_cited_rule_with_no_inte0\widget`.
+CLAUDE.md -> AGENTS.md
+sha256 51778a2f9203581bee3c92528c2e7fa3f848a92236149992fe47d9389d2da64a (identical)
+_________ test_matching_survives_line_wrapping_case_and_html_comments _________
+
+filled_repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13656/test_matching_survives_line_wr0/widget')
+
+    def test_matching_survives_line_wrapping_case_and_html_comments(
+        filled_repo: Path,
+    ) -> None:
+        """The three shapes this repo's own CLAUDE.md actually contains.
+    
+        `CLAUDE.md:122-123` wraps a citation across a line break; `CLAUDE.md:88` cites
+        `"unfilled placeholders are visible"` against the heading
+        `## Unfilled placeholders are visible`; and `templates/CLAUDE.md:90` puts a
+        citation inside an HTML comment as the example shape. A check that misreads any
+        of the three fires on correct work, and a check that fires on correct work gets
+        ignored - taking the real findings with it.
+        """
+        claude = filled_repo / "CLAUDE.md"
+        internals = filled_repo / "docs/INTERNALS.md"
+    
+        shipped = claude.read_text(encoding="utf-8").count(CITATION_MARK)
+        assert shipped == TEMPLATE_CITATIONS_IN_TEXT, (
+            "premise moved: templates/CLAUDE.md no longer ships "
+            f"{TEMPLATE_CITATIONS_IN_TEXT} citations, it ships {shipped}"
+        )
+    
+        append(
+            claude,
+            '\n- **Bound the section.** The rule is about a section, not a file.\n'
+            '  *(INTERNALS: "Bound the\n  section")*\n'
+            '- **Case differs.** The heading is capitalised differently.\n'
+            '  *(INTERNALS: "case differs")*\n'
+            '- <!-- Example shape, not a rule:\n'
+            '  **Not a real rule.** *(INTERNALS: "Not a real rule")* -->\n',
+        )
+        append(
+            internals,
+            "\n## Bound The Section (2026-09-03, packet I1)\n\nThe incident.\n"
+            "\n## Case Differs (2026-09-03, packet I1)\n\nThe incident.\n"
+            "\n### Not a real rule\n\nA sub-heading is not a rule heading.\n",
+        )
+        assert run("sync-agents", str(filled_repo)) == 0
+    
+>       findings = jumpstart.audit_rule_evidence(filled_repo)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'jumpstart' has no attribute 'audit_rule_evidence'
+
+tests\ref_test_i1_rules_carry_evidence.py:181: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_matching_survives_line_wr0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_matching_survives_line_wr0\widget`.
+CLAUDE.md -> AGENTS.md
+sha256 51778a2f9203581bee3c92528c2e7fa3f848a92236149992fe47d9389d2da64a (identical)
+---------------------------- Captured stdout call -----------------------------
+CLAUDE.md -> AGENTS.md
+sha256 d153cabbaba8f7b22bb58945580a443e87ecb02f0c6df178f3a6363bf8ac8757 (identical)
+___ test_no_internals_file_yields_no_finding_and_no_citations_is_not_a_gap ____
+
+filled_repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13656/test_no_internals_file_yields_0/widget')
+
+    def test_no_internals_file_yields_no_finding_and_no_citations_is_not_a_gap(
+        filled_repo: Path,
+    ) -> None:
+        """`check` must not fire on a repo that has no rulebook yet.
+    
+        `retrofit` already reports a missing `docs/INTERNALS.md` as its own gap. If
+        `check` reported it a second time, every pre-retrofit repo would be red for a
+        reason it has already been told, and `check` would stop being the green-means-go
+        gate the three-gate rule relies on.
+        """
+        internals = filled_repo / "docs/INTERNALS.md"
+        saved = internals.read_text(encoding="utf-8")
+        internals.unlink()
+    
+>       assert jumpstart.audit_rule_evidence(filled_repo) == []
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'jumpstart' has no attribute 'audit_rule_evidence'
+
+tests\ref_test_i1_rules_carry_evidence.py:217: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_no_internals_file_yields_0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_no_internals_file_yields_0\widget`.
+CLAUDE.md -> AGENTS.md
+sha256 51778a2f9203581bee3c92528c2e7fa3f848a92236149992fe47d9389d2da64a (identical)
+_________________ test_the_same_rule_cited_twice_counts_once __________________
+
+filled_repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13656/test_the_same_rule_cited_twice0/widget')
+
+    def test_the_same_rule_cited_twice_counts_once(filled_repo: Path) -> None:
+        """The detail says "N cited rule(s)", so N counts rules and not citations.
+    
+        The packet fixed the wording and not this case. Pinning it means the next change
+        to the audit decides on purpose rather than by accident: a rule referred to twice
+        in CLAUDE.md is one rule with one incident behind it, and a gap report that named
+        it twice would read like two rules were undocumented.
+        """
+        append(
+            filled_repo / "CLAUDE.md",
+            '\n- **Said twice.** *(INTERNALS: "Said twice")*\n'
+            '- **Said twice, elsewhere.** *(INTERNALS: "said\n  TWICE")*\n',
+        )
+        assert run("sync-agents", str(filled_repo)) == 0
+    
+>       findings = jumpstart.audit_rule_evidence(filled_repo)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'jumpstart' has no attribute 'audit_rule_evidence'
+
+tests\ref_test_i1_rules_carry_evidence.py:287: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_the_same_rule_cited_twice0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13656\test_the_same_rule_cited_twice0\widget`.
+CLAUDE.md -> AGENTS.md
+sha256 51778a2f9203581bee3c92528c2e7fa3f848a92236149992fe47d9389d2da64a (identical)
+---------------------------- Captured stdout call -----------------------------
+CLAUDE.md -> AGENTS.md
+sha256 7e460f695a9fa1c07753cc6d4ac7095f5c47575f1fe44e19005bc4a1e2e5599c (identical)
+=========================== short test summary info ===========================
+FAILED tests/ref_test_i1_rules_carry_evidence.py::test_a_cited_rule_with_no_internals_entry_is_a_gap
+FAILED tests/ref_test_i1_rules_carry_evidence.py::test_matching_survives_line_wrapping_case_and_html_comments
+FAILED tests/ref_test_i1_rules_carry_evidence.py::test_no_internals_file_yields_no_finding_and_no_citations_is_not_a_gap
+FAILED tests/ref_test_i1_rules_carry_evidence.py::test_the_same_rule_cited_twice_counts_once
+4 failed, 1 passed in 0.73s

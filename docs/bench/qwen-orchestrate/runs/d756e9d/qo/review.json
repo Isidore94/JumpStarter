@@ -1,0 +1,9 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "The identity assertions in tests/test_summary.py (before-commissions minus commissions equals after-commission P&L, total and taxable) are algebraic tautologies given how summary.py defines all four fields from the same events - they can never fail even if commission attribution were wrong. The absolute-value assertions (1650/13.90/1950/23.80 x 1.37) are what genuinely pin the behavior, and they are correct. The identities were requested by the task's 'done when', so this is a note, not a defect.",
+    "The new KpiCard sub-line (tradertax/ui/pages.py) is long and uses a bare ' - ' separator; purely cosmetic."
+  ],
+  "summary": "Reviewer (agent, by reproduction) verified: exactly the 5 expected files changed; hand-derived fixture numbers at the 1.37 fixture rate independently and matched the test constants (taxable before 1650*1.37, taxable comm 13.90*1.37, total before 1950*1.37, total comm 23.80*1.37; IBKR's own Realized P/L column cross-checks the TSLA short math); all four pool paths in gains.py keep pool.comm consistent with pool.cost with the same pro-rata fractions as cost, including full-close resets; the tax side (gain/ACB/outlays/proceeds, ufile_sheet, export.py, expenses) is untouched and the diff to gains.py is purely additive; full suite 48 passed and ruff clean in the changed checkout; red-before-fix reproduced in a baseline sandbox (2 failed / 46 passed, both failures on the new assertion lines); the 'before_commissions' card is registered in build() and populated in refresh() with the required 'do not add them again as an expense' wording. No blockers."
+}

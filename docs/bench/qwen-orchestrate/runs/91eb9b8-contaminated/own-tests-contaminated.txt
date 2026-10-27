@@ -1,0 +1,66 @@
+........................................................................ [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 19%]
+........................................................................ [ 26%]
+........................................................................ [ 33%]
+........................................................................ [ 39%]
+........................................................................ [ 46%]
+........................................................................ [ 52%]
+........................................................................ [ 59%]
+........................................................................ [ 66%]
+........................................................................ [ 72%]
+........................................................................ [ 79%]
+........................................................................ [ 85%]
+.....................FF................................................. [ 92%]
+........................................................................ [ 99%]
+.........                                                                [100%]
+================================== FAILURES ===================================
+______________ test_a_reloaded_bundle_with_no_gates_fails_loudly ______________
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13686/test_a_reloaded_bundle_with_no0')
+config = Config(app=AppConfig(contact='aaron.siano@gmail.com', project_url='https://github.com/Isidore94/EveTradingbot', compat...p_names=('Haulers', 'Transport Ships', 'Freighters', 'Jump Freighters', 'Industrial Command Ships')), source_path=None)
+db = <evescreener.store.db.Database object at 0x0000024F104FE4B0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024F104FFA40>
+
+    def test_a_reloaded_bundle_with_no_gates_fails_loudly(tmp_path, config, db, monkeypatch):
+        """Success over an empty map table would stamp the build and hide the failure for good."""
+        from evescreener import sde as sde_module
+    
+        load_sde(config, db, bundle_path=_bundle(tmp_path))
+        db.conn.execute("DELETE FROM sde_stargates")
+        gateless = _bundle(tmp_path, stargates=[], name="sde-3478781-gateless.zip")
+    
+        monkeypatch.setattr(sde_module, "latest_build", lambda *a, **k: 3478781)
+        monkeypatch.setattr(sde_module, "download_bundle", lambda *a, **k: gateless)
+    
+>       with pytest.raises(SdeError, match="no stargates"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE SdeError
+
+tests\test_sde_map.py:296: Failed
+__________ test_a_reloaded_bundle_with_no_npc_stations_fails_loudly ___________
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13686/test_a_reloaded_bundle_with_no1')
+config = Config(app=AppConfig(contact='aaron.siano@gmail.com', project_url='https://github.com/Isidore94/EveTradingbot', compat...p_names=('Haulers', 'Transport Ships', 'Freighters', 'Jump Freighters', 'Industrial Command Ships')), source_path=None)
+db = <evescreener.store.db.Database object at 0x0000024F104FFE00>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024F104FC530>
+
+    def test_a_reloaded_bundle_with_no_npc_stations_fails_loudly(tmp_path, config, db, monkeypatch):
+        from evescreener import sde as sde_module
+    
+        load_sde(config, db, bundle_path=_bundle(tmp_path))
+        db.conn.execute("DELETE FROM sde_npc_stations")
+        stationless = _bundle(tmp_path, stations=[], name="sde-3478781-stationless.zip")
+    
+        monkeypatch.setattr(sde_module, "latest_build", lambda *a, **k: 3478781)
+        monkeypatch.setattr(sde_module, "download_bundle", lambda *a, **k: stationless)
+    
+>       with pytest.raises(SdeError, match="no NPC stations"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE SdeError
+
+tests\test_sde_map.py:312: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_sde_map.py::test_a_reloaded_bundle_with_no_gates_fails_loudly
+FAILED tests/test_sde_map.py::test_a_reloaded_bundle_with_no_npc_stations_fails_loudly
+2 failed, 1087 passed, 7 deselected in 42.63s

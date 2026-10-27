@@ -1,0 +1,18 @@
+................F                                                        [100%]
+================================== FAILURES ===================================
+________ test_commissions_tracked_through_cost_long_partial_and_short _________
+
+fx = <tradertax.fx.FxTable object at 0x0000014F6DC80110>
+
+    def test_commissions_tracked_through_cost_long_partial_and_short(fx):
+        # Long: buy 10 @100 (comm 1), sell 5 @110 (comm 1): half the buy commission rides into this sale.
+        res = run([tx(date(2026, 1, 5), 10, 100.0), tx(date(2026, 1, 6), -5, 110.0)], fx)
+        (ev,) = res.events
+>       assert ev.commission_cad == pytest.approx((0.5 + 1) * 2.0)
+               ^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Realized' object has no attribute 'commission_cad'. Did you mean: 'commissions_cad'?
+
+tests\ref_test_gains.py:230: AttributeError
+=========================== short test summary info ===========================
+FAILED tests/ref_test_gains.py::test_commissions_tracked_through_cost_long_partial_and_short
+1 failed, 16 passed in 0.14s

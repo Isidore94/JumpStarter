@@ -1,0 +1,18 @@
+Build output, post-change (final state of the diff).
+
+== Red record (pre-change tests, see .qo/tests-red.txt): 4 failed, 10 passed ==
+
+== Full suite: C:/Users/Aaron/EveTradingbot/.venv/Scripts/python.exe -m pytest -q ==
+........................................................................ [ 99%]
+.........                                                                [100%]
+1089 passed, 7 deselected in 45.12s
+pytest exit: 0
+
+== Lint: ruff check . ==
+All checks passed!
+
+== Lint: ruff format --check . ==
+165 files already formatted
+
+== Targeted: pytest tests/test_sde_map.py -q ==
+14 passed in 0.48s

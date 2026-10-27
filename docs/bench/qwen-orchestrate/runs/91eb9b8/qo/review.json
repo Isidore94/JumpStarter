@@ -1,0 +1,11 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "Pre-existing doc drift left alone to keep the diff small: the sde.py module docstring still says the loader reads 'exactly two members' of the bundle; it has read five since H1a added the map members. Not introduced or worsened by this change.",
+    "An empty sde_solar_systems triggers the reload (per the task's 'any table the load fills' note), but a bundle with zero solar systems does not fail loudly: the task's loud-fail note names gates and stations only. Recorded as an accepted scope line in .qo/plan.md.",
+    "The `downloaded` result flag keeps its pre-existing meaning ('went through the download path', which includes reusing an on-disk zip); a same-build reload that reuses the bundle reports downloaded=True. Unchanged semantics.",
+    "route_cache invalidation (DELETE for the loaded build) also runs on `sde --bundle <local.zip>` loads; that is correct (the map was rewritten under that build) but means a local-bundle load clears that build's cached routes."
+  ],
+  "summary": "Skeptical review of the diff: the reload trigger checks all five SDE tables the load fills and only breaks the no-op when one is empty, so the cheap path is byte-for-byte the old behaviour plus five COUNT(*)s (the old code ran the same five queries inline). The loud-fail check runs before any table write, so a broken bundle leaves the stamp and every table untouched and the next refresh retries — verified by tests asserting the DB state after the raise. The route_cache delete upholds the db.py invariant that a cached route must never outlive the map it was computed on, which the same-build reload would otherwise break; the no-op path provably touches no cache rows. Tests are offline (latest_build and download_bundle monkeypatched, tmp config/db), and four of the five new tests fail on the pre-change code (.qo/tests-red.txt: 4 failed, 10 passed). No trading logic, no formula, no schema, no CLI surface touched; only sde.py, test_sde_map.py and the two control files. Verdict GO, contingent on the full-suite result in .qo/build.txt (recorded green before this file was finalized)."
+}

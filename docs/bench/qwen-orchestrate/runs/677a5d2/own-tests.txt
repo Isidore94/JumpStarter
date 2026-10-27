@@ -1,0 +1,34 @@
+.........................................F.............                  [100%]
+================================== FAILURES ===================================
+____________________ test_jumpstarter_passes_its_own_check ____________________
+
+    def test_jumpstarter_passes_its_own_check() -> None:
+        """Eat the dog food: this repo runs its own control set."""
+>       assert run("check", str(REPO_ROOT)) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = run('check', 'C:\\Users\\Aaron\\llm-harness\\wt\\qo-677a5d2')
+E        +    where 'C:\\Users\\Aaron\\llm-harness\\wt\\qo-677a5d2' = str(WindowsPath('C:/Users/Aaron/llm-harness/wt/qo-677a5d2'))
+
+tests\test_jumpstart.py:496: AssertionError
+---------------------------- Captured stdout call -----------------------------
+JumpStarter check: C:\Users\Aaron\llm-harness\wt\qo-677a5d2
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (0d5639502d45...)
+  [OK      ] checkpoint size: 343 lines (limit 1500)
+  [OK      ] plan size: 170 lines (limit 1200)
+  [OK      ] changelog recent section: 54 lines (limit 800)
+  [OK      ] CLAUDE.md size: 197 lines (limit 400)
+  [UNFILLED] placeholders in .claude/agents/tester.md: 7 unfilled: CRITICAL_AREA, OWNER, PROJECT, BRANCH_PREFIX, MAIN_BRANCH, TOOLCHAIN, +1 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/builder.md: 11 unfilled: PROJECT, MAIN_BRANCH, OWNER, BRANCH_PREFIX, TOOLCHAIN, LIVE_STORES, +5 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/reviewer.md: 5 unfilled: PROJECT, OWNER, TOOLCHAIN, CRITICAL_AREA, LINT_CMD
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/recon.md: 3 unfilled: PROJECT, LIVE_STORES, TOOLCHAIN
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [OK      ] INTERNALS citations: all 10 citations resolve to docs/INTERNALS.md headings
+------------------------------------------------------------------------------
+4 gap(s) of 10 checks.
+=========================== short test summary info ===========================
+FAILED tests/test_jumpstart.py::test_jumpstarter_passes_its_own_check - Asser...
+1 failed, 54 passed in 2.59s

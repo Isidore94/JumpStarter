@@ -1,0 +1,31 @@
+Failing output, pre-change (tests written first, no fix in place).
+Command: pytest tests/test_sde_map.py -q --tb=short
+
+.........FF.FF                                                           [100%]
+================================== FAILURES ===================================
+_ test_a_same_build_refresh_reloads_when_a_map_table_is_empty[sde_stargates] __
+tests\test_sde_map.py:289: in test_a_same_build_refresh_reloads_when_a_map_table_is_empty
+    assert calls["downloads"] == 1, "the empty table must force the reload"
+E   AssertionError: the empty table must force the reload
+E   assert 0 == 1
+_ test_a_same_build_refresh_reloads_when_a_map_table_is_empty[sde_npc_stations] _
+tests\test_sde_map.py:289: in test_a_same_build_refresh_reloads_when_a_map_table_is_empty
+    assert calls["downloads"] == 1, "the empty table must force the reload"
+E   AssertionError: the empty table must force the reload
+E   assert 0 == 1
+____________ test_a_reloaded_bundle_with_no_stargates_fails_loudly ____________
+tests\test_sde_map.py:330: in test_a_reloaded_bundle_with_no_stargates_fails_loudly
+    with pytest.raises(SdeError, match="no stargates"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE SdeError
+__________ test_a_reloaded_bundle_with_no_npc_stations_fails_loudly ___________
+tests\test_sde_map.py:342: in test_a_reloaded_bundle_with_no_npc_stations_fails_loudly
+    with pytest.raises(SdeError, match="no NPC stations"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE SdeError
+=========================== short test summary info ===========================
+FAILED tests/test_sde_map.py::test_a_same_build_refresh_reloads_when_a_map_table_is_empty[sde_stargates]
+FAILED tests/test_sde_map.py::test_a_same_build_refresh_reloads_when_a_map_table_is_empty[sde_npc_stations]
+FAILED tests/test_sde_map.py::test_a_reloaded_bundle_with_no_stargates_fails_loudly
+FAILED tests/test_sde_map.py::test_a_reloaded_bundle_with_no_npc_stations_fails_loudly
+4 failed, 10 passed in 0.52s

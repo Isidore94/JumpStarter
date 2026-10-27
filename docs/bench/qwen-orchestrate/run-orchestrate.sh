@@ -4,7 +4,8 @@
 # usage: run-orchestrate.sh <repo> <base> <ref> <brief.md> <outdir> [seed.patch]
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
-MODEL=qwen/qwen3.8-27b:floor
+# :nitro (fastest provider): the :floor route served ~14 tok/s and Qwen thinks ~120k tokens a run, so the first run timed out.
+MODEL=qwen/qwen3.8-27b:nitro
 if [ $# -lt 5 ]; then echo "usage: $0 <repo> <base> <ref> <brief.md> <outdir> [seed.patch]" >&2; exit 2; fi
 repo=$1; base=$2; ref=$3
 [ -f "$4" ] || { echo "setup: no brief at $4" >&2; exit 1; }
@@ -59,8 +60,9 @@ ANTHROPIC_AUTH_TOKEN=$(tr -d '\r\n ' < "$key")
 export ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL=$MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL=$MODEL \
   ANTHROPIC_DEFAULT_SONNET_MODEL=$MODEL ANTHROPIC_DEFAULT_OPUS_MODEL=$MODEL \
   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1
+export PYTHONPATH=src  # an editable install (EveTradingbot) would otherwise import the main checkout, not this worktree
 unset ANTHROPIC_API_KEY
-llm key > "$OUT/key-before.txt" 2>&1
+llm key 2>&1 | sed "s/sk-or[^ ]*/<key>/" > "$OUT/key-before.txt"
 cd "$wt" || exit 1
 t0=$(date +%s)
 timeout 2700 claude -p "$(cat "$OUT/prompt.md")" --model "$MODEL" --allowedTools "Read,Edit,Write,Bash,Glob,Grep,Agent" \
@@ -68,7 +70,7 @@ timeout 2700 claude -p "$(cat "$OUT/prompt.md")" --model "$MODEL" --allowedTools
   > "$OUT/transcript.jsonl" 2> "$OUT/stderr.txt"
 exit_code=$?
 elapsed_s=$(( $(date +%s) - t0 ))
-llm key > "$OUT/key-after.txt" 2>&1
+llm key 2>&1 | sed "s/sk-or[^ ]*/<key>/" > "$OUT/key-after.txt"
 
 # 6. Diff of the orchestrator's work, and a copy of its .qo/ stages.
 git -C "$wt" add -A -N -- "${EXCL[@]}"
@@ -93,9 +95,13 @@ else
   echo "no reference test files in $base..$ref" > "$OUT/ref-tests.txt"; ref_rc=none
 fi
 
-# 8. Leak audit: the orchestrator should never have read git history or climbed out of the checkout.
+# 8. Leak audit: the orchestrator should never have read git history, climbed out of the checkout, or touched the
+# source repo (an editable install once led it straight to the reference fix; venv paths are excluded).
 if [ -f "$OUT/transcript.jsonl" ]; then
-  grep -c -E 'git (log|show|reflog)|\.\./\.\.' "$OUT/transcript.jsonl" > "$OUT/leak.txt"
+  rp=$(basename "$repo")
+  a=$(grep -c -E 'git (log|show|reflog)|\.\./\.\.' "$OUT/transcript.jsonl")
+  b=$(grep -v -E '\.venv|qwen-orchestrate.{1,2}runs' "$OUT/transcript.jsonl" | grep -c -E "Users.{1,2}Aaron.{1,2}$rp")
+  echo $((a + b)) > "$OUT/leak.txt"
 else
   echo missing > "$OUT/leak.txt"
 fi

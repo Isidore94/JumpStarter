@@ -1,0 +1,427 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 325a252..792787b 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -5,6 +5,48 @@ Authoritative for what exists and the sequence of revisions. Remaining work:
+ `GREEN` = deterministic tests pass, `LIVE_VALIDATED` = real-market evidence
+ recorded, `PROMOTED` = explicit operator decision.
+ 
++## 2026-10-26 — the SDE refresh reloads the map when a table is empty
++
++**Status: IMPLEMENTED + GREEN.** `uv run pytest -q` → **1,089 passed, 7
++deselected**, ruff check + format clean.
++
++Hauling scans were ending `NO_ROUTE` ("current system 30000142 is not in the
++stargate graph") because the SDE map tables could sit empty while `sde_build`
++matched the latest build: an older load stamps a *build*, not a *completed
++load* — an older schema's `CREATE TABLE IF NOT EXISTS` creates
++`sde_stargates` / `sde_npc_stations` empty on a pre-existing lake, and the
++same-build refresh then skipped forever, so the map could never fill.
++
++- **A same-build refresh that finds any SDE table the load fills empty —
++  types, market groups, solar systems, stargates, NPC stations — reloads the
++  bundle whatever the stored build says.** The reload routes through
++  `download_bundle`, so it reuses the already-downloaded
++  `sde-<build>-jsonl.zip` when it is on disk and never fetches before expiry.
++- **A same-build refresh with every table populated still skips the
++  download**, exactly as before; the no-op now costs the same five COUNT(*)s
++  it already ran inline.
++- **A reload that still lands on no stargates or no NPC stations is a loud
++  `SdeError` before any table write**, rather than a "successful" load of an
++  empty map — the next refresh retries the same reload. This closes the
++  empty-member half of `parse_stargates`'s existing no-resolvable-edges guard.
++- **The reload takes the build's cached routes with it.** `route_cache` is
++  keyed by build (plan.md §23.8: a cached route must never outlive the map it
++  was computed on), so a cached `NO_ROUTE` from the broken map would otherwise
++  survive the reload; a load that rewrites the map now deletes that build's
++  cache rows. The no-op touches nothing, cache included.
++
++Five new tests in `tests/test_sde_map.py`, fully offline (the build lookup and
++the download are stubbed, as the file's existing tests avoid the network):
++reload on an empty stargate table (and the router finding the system again
++afterward), reload on an empty station table, the unchanged no-op, and the two
++loud failures. The four behaviour tests fail on the previous head; the no-op
++test pins the cheap path and passed throughout.
++
++**227 insertions / 22 deletions across the two files** (86 changed lines in
++`sde.py`, 161 in the test file). No schema, formula, CLI or trading-logic
++change; no live gate owed — the next operator `sde` run fills the tables from
++the bundle already on disk.
++
+ ## 2026-08-26 — §23 operator audit remediation: pickup, maker caps, freight endpoints
+ 
+ **Status: IMPLEMENTED + GREEN.** `uv run pytest -q` → **1,084 passed, 7
+diff --git a/CURRENT_CHECKPOINT.md b/CURRENT_CHECKPOINT.md
+index 4d31d14..3f79f35 100644
+--- a/CURRENT_CHECKPOINT.md
++++ b/CURRENT_CHECKPOINT.md
+@@ -3,7 +3,41 @@
+ This file names the one active item, its working state, and the last
+ verification stamp. `plan.md` owns the roadmap; `CHANGELOG.md` owns history.
+ 
+-## Active item
++## Active item — the SDE refresh reloads the map when a table is empty (2026-10-26)
++
++**State: IMPLEMENTED + GREEN.** `uv run pytest -q` → **1,089 passed, 7
++deselected**, ruff check + format clean. **No live gate is owed by this
++item**: the reload re-parses the bundle the operator already has on disk —
++nothing is fetched before expiry, and an on-disk `sde-<build>-jsonl.zip` is
++reused without a request.
++
++Hauling scans were ending `NO_ROUTE` ("current system 30000142 is not in the
++stargate graph") because the SDE map tables could sit empty while `sde_build`
++matched the latest build: the stamp records a build, not a completed load, and
++an older load (on an older schema) stamps the build while leaving
++`sde_stargates` / `sde_npc_stations` empty, so every later refresh no-opped
++over the broken map forever.
++
++What changed, in `sde.py` only:
++
++- A same-build refresh that finds **any** SDE table the load fills (types,
++  market groups, solar systems, stargates, NPC stations) empty reloads the
++  bundle whatever the build stamp says.
++- A same-build refresh with every table populated still skips the download —
++  the cheap path is preserved.
++- A reloaded bundle that still yields no stargates **or** no NPC stations is a
++  loud `SdeError` before any table write, not a "successful" load of an empty
++  map.
++- The reload deletes that build's `route_cache` rows, so a cached `NO_ROUTE`
++  from the broken map cannot outlive the map it was computed on (plan.md
++  §23.8's cache invariant); the no-op touches nothing, cache included.
++
++Five new offline tests in `tests/test_sde_map.py` (build lookup and download
++stubbed); four of them fail on the previous head. The operator's follow-up is
++one `sde` run: the tables fill from the bundle already in `data/sde/`, and the
++scan's `NO_ROUTE` clears.
++
++## Previous item — the personalized HAULING tab (plan.md §23, H1–H4)
+ 
+ **plan.md §23 — the personalized HAULING tab, phases H1–H4** (operator
+ authorization 2026-08-25, recorded as §17 D-33: *"build first, evaluate against
+diff --git a/src/evescreener/sde.py b/src/evescreener/sde.py
+index 0b45e25..21a6e14 100644
+--- a/src/evescreener/sde.py
++++ b/src/evescreener/sde.py
+@@ -4,7 +4,9 @@ CCP's reworked static data ships as one jsonl bundle per build. We read
+ exactly two members out of it — `types.jsonl` (type_id, English name, market
+ group, packaged volume for freight) and `marketGroups.jsonl` (the parent
+ chain) — and drop the rest on the floor. The build number is the cache key:
+-re-running against the same build is a no-op.
++re-running against the same build with every SDE table populated is a no-op;
++an empty table forces the reload, because the stamp records a build, not a
++completed load.
+ 
+ The market-group tree is what replaces the equity sector/industry ETF map: an
+ N-level walk to the nearest ancestor with enough tracked members (plan.md §6).
+@@ -255,6 +257,29 @@ def parse_npc_stations(bundle: Path) -> list[tuple]:
+     return rows
+ 
+ 
++#: Every table `load_sde` fills. The build stamp records a build, not a
++#: completed load — an older load can stamp the current build while leaving one
++#: of these empty (an older schema's `CREATE TABLE IF NOT EXISTS` does exactly
++#: that on a pre-existing lake), and the refresh must reload when it finds it.
++_SDE_TABLES = (
++    "sde_types",
++    "sde_market_groups",
++    "sde_solar_systems",
++    "sde_stargates",
++    "sde_npc_stations",
++)
++
++
++def _sde_table_counts(db: Database) -> dict[str, int]:
++    """The row count of every table the load fills. A zero is evidence, not a
++    count: it means the load that stamped the build never filled that table,
++    and the build number alone cannot see it."""
++    return {
++        table: db.conn.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()["n"]
++        for table in _SDE_TABLES
++    }
++
++
+ def load_sde(
+     config: Config,
+     db: Database,
+@@ -263,7 +288,10 @@ def load_sde(
+     bundle_path: Path | None = None,
+     client: httpx.Client | None = None,
+ ) -> SdeLoadResult:
+-    """Refresh the SDE tables. Same build + not forced = a cheap no-op."""
++    """Refresh the SDE tables. Same build + not forced + every SDE table
++    populated = a cheap no-op; an empty table forces the reload whatever the
++    stamp says, reusing the already-downloaded bundle for that build when it
++    is on disk."""
+     if bundle_path is not None:
+         # A locally-supplied bundle names its own build; the filename is the
+         # only provenance we have, so a nameless bundle is recorded as 0.
+@@ -274,22 +302,19 @@ def load_sde(
+     else:
+         build = latest_build(config, client=client)
+         stored = db.get_meta("sde_build")
+-        if stored and int(stored) == build and not force:
++        counts = _sde_table_counts(db)
++        # Same build + every table the load fills is populated = a cheap
++        # no-op. An empty table breaks the match: a broken map must not
++        # survive a matching build number, or the router answers NO_ROUTE to
++        # every scan and the next refresh skips again.
++        if stored and int(stored) == build and not force and all(counts.values()):
+             return SdeLoadResult(
+                 build=build,
+-                types=db.conn.execute("SELECT COUNT(*) AS n FROM sde_types").fetchone()["n"],
+-                market_groups=db.conn.execute(
+-                    "SELECT COUNT(*) AS n FROM sde_market_groups"
+-                ).fetchone()["n"],
+-                solar_systems=db.conn.execute(
+-                    "SELECT COUNT(*) AS n FROM sde_solar_systems"
+-                ).fetchone()["n"],
+-                stargates=db.conn.execute("SELECT COUNT(*) AS n FROM sde_stargates").fetchone()[
+-                    "n"
+-                ],
+-                npc_stations=db.conn.execute(
+-                    "SELECT COUNT(*) AS n FROM sde_npc_stations"
+-                ).fetchone()["n"],
++                types=counts["sde_types"],
++                market_groups=counts["sde_market_groups"],
++                solar_systems=counts["sde_solar_systems"],
++                stargates=counts["sde_stargates"],
++                npc_stations=counts["sde_npc_stations"],
+                 downloaded=False,
+                 bundle_path=config.paths.sde / f"sde-{build}-jsonl.zip",
+             )
+@@ -300,12 +325,35 @@ def load_sde(
+     group_rows = parse_market_groups(bundle)
+     if not type_rows or not group_rows:
+         raise SdeError(f"SDE bundle {bundle} yielded no types or no market groups")
++    systems_rows = parse_solar_systems(bundle)
++    stargate_rows, unresolved = parse_stargates(bundle)
++    station_rows = parse_npc_stations(bundle)
++    if not stargate_rows or not station_rows:
++        # A reload that still lands on an empty map is not a success: the
++        # router would be blind, and "loaded" would be a lie. Reject before
++        # writing anything, so the next refresh retries the same reload.
++        missing = [
++            name
++            for name, count in (
++                ("stargates", len(stargate_rows)),
++                ("NPC stations", len(station_rows)),
++            )
++            if count == 0
++        ]
++        raise SdeError(
++            f"SDE bundle {bundle} carried no {', no '.join(missing)} — "
++            "loading it would leave the map empty and the router blind"
++        )
+     types = db.replace_types(type_rows)
+     groups = db.replace_market_groups(group_rows)
+-    systems = db.replace_solar_systems(parse_solar_systems(bundle))
+-    stargate_rows, unresolved = parse_stargates(bundle)
++    systems = db.replace_solar_systems(systems_rows)
+     stargates = db.replace_stargates(stargate_rows)
+-    stations = db.replace_npc_stations(parse_npc_stations(bundle))
++    stations = db.replace_npc_stations(station_rows)
++    # The map changed under a build the route cache may already hold answers
++    # for: a cached NO_ROUTE computed against the empty map must not outlive
++    # the reload that fills it — `route_cache` is keyed by build, and a cached
++    # route must never outlive the map it was computed on (plan.md §23.8).
++    db.conn.execute("DELETE FROM route_cache WHERE sde_build=?", (build,))
+     db.set_meta("sde_build", str(build))
+     return SdeLoadResult(
+         build=build,
+diff --git a/tests/test_sde_map.py b/tests/test_sde_map.py
+index 861c50f..12adaf8 100644
+--- a/tests/test_sde_map.py
++++ b/tests/test_sde_map.py
+@@ -1,6 +1,6 @@
+ """The map the router reads, and the migration that reaches a live database.
+ 
+-Three things are proved here.
++Four things are proved here.
+ 
+ **The parsers read the shapes the bundle really has.** Verified against build
+ 3478781: `mapStargates` carries `destination` as an object with
+@@ -18,6 +18,13 @@ drives it against a database built with the **old** schema.
+ **A stargate that cannot say where it goes is not an edge.** It is counted, and
+ if every gate is unresolvable the load fails loudly rather than producing a
+ router with an empty map that answers "no route" to everything.
++
++**A same-build refresh sees a broken map, not a stamp.** The build number
++records a build, not a completed load: an older load can stamp the current
++build while leaving a map table empty, and the refresh must reload when it
++finds one — reusing the already-downloaded bundle — rather than no-op over a
++map that answers NO_ROUTE to every scan. A reload that still lands on no
++gates or no stations fails loudly instead of reporting success.
+ """
+ 
+ from __future__ import annotations
+@@ -73,14 +80,14 @@ STATIONS = [
+ ]
+ 
+ 
+-def _bundle(tmp_path: Path, *, stargates=None) -> Path:
++def _bundle(tmp_path: Path, *, stargates=None, stations=None) -> Path:
+     path = tmp_path / "sde-3478781-jsonl.zip"
+     members = {
+         "types.jsonl": TYPES,
+         "marketGroups.jsonl": GROUPS,
+         "mapSolarSystems.jsonl": SYSTEMS,
+         "mapStargates.jsonl": STARGATES if stargates is None else stargates,
+-        "npcStations.jsonl": STATIONS,
++        "npcStations.jsonl": STATIONS if stations is None else stations,
+     }
+     with zipfile.ZipFile(path, "w") as archive:
+         for name, records in members.items():
+@@ -206,3 +213,153 @@ def test_the_migration_is_idempotent(tmp_path):
+     for _ in range(3):
+         with Database(path) as db:
+             assert db.get_meta("schema_version") == "3"
++
++
++# -- 4. the same-build refresh, when the map is only half built -------------
++#
++# The build stamp records a build, not a completed load. An older load can
++# stamp the current build while leaving a map table empty (an older schema's
++# `CREATE TABLE IF NOT EXISTS` does exactly that on the operator's lake), and
++# a refresh that trusts the stamp alone would skip forever, leaving the router
++# with an empty map that answers NO_ROUTE to every scan. These tests keep the
++# network closed: the build lookup and the download are stubbed, so what runs
++# is the refresh's own decision about whether to reload.
++
++
++def _prime_same_build_map_except(db, table: str | None) -> None:
++    """A load stamped the current build but left `table` empty.
++
++    `table=None` fills all five SDE tables — the state a healthy load leaves,
++    which is what the cheap no-op path must still see.
++    """
++    db.replace_market_groups([(18, None, "Minerals")])
++    db.replace_types([(34, "Tritanium", 18, 0.01, 1.0, 1)])
++    db.replace_solar_systems(
++        [
++            (30000142, 10000002, "Jita", 0.945913),
++            (30000144, 10000002, "Perimeter", 0.95),
++        ]
++    )
++    if table != "sde_stargates":
++        db.replace_stargates([(50000056, 30000142, 30000144), (50000057, 30000144, 30000142)])
++    if table != "sde_npc_stations":
++        db.replace_npc_stations(
++            [
++                (60003760, 30000142, 1000035, 14, None),
++                (60003761, 30000144, 1000003, 5, None),
++            ]
++        )
++    db.set_meta("sde_build", "3478781")
++
++
++def _stub_sde_network(monkeypatch, tmp_path: Path, *, bundle: Path | None = None) -> dict:
++    """Close `load_sde`'s two network doors: the build lookup and the download.
++
++    The download answers with a locally built bundle (or `bundle` when given)
++    and counts its calls, so a test can prove whether the refresh reloaded at
++    all, and with which build it reloaded.
++    """
++    calls = {"downloads": 0, "builds": []}
++
++    def fake_latest_build(config, client=None):
++        return 3478781
++
++    def fake_download(config, build, destination, client=None):
++        calls["downloads"] += 1
++        calls["builds"].append(build)
++        return bundle if bundle is not None else _bundle(tmp_path)
++
++    monkeypatch.setattr("evescreener.sde.latest_build", fake_latest_build)
++    monkeypatch.setattr("evescreener.sde.download_bundle", fake_download)
++    return calls
++
++
++@pytest.mark.parametrize("table", ["sde_stargates", "sde_npc_stations"])
++def test_a_same_build_refresh_reloads_when_a_map_table_is_empty(
++    tmp_path, config, db, monkeypatch, table
++):
++    """An empty SDE table is a broken load the stamp cannot see, so a refresh
++    that finds one reloads the bundle whatever the build says — and the router
++    then reads the map the reload fills."""
++    _prime_same_build_map_except(db, table)
++    # A NO_ROUTE computed against the broken map is a stale answer the reload
++    # must take with it: `route_cache` is keyed by build, not by the map.
++    db.conn.execute(
++        "INSERT INTO route_cache(sde_build, origin, destination, profile,"
++        " avoid_hash, systems, jumps, known, reason, computed_at)"
++        " VALUES(3478781, 30000142, 30000144, 'shortest', 'h', '[]', NULL, 0,"
++        " 'no route', '2026-10-26T00:00:00+00:00')"
++    )
++    calls = _stub_sde_network(monkeypatch, tmp_path)
++    result = load_sde(config, db)
++    assert calls["downloads"] == 1, "the empty table must force the reload"
++    assert calls["builds"] == [3478781], "the reload reuses the build it already stamped"
++    assert result.downloaded is True
++    assert result.stargates == 2
++    assert result.npc_stations == 2
++    assert db.get_meta("sde_build") == "3478781"
++    assert (
++        db.conn.execute(
++            "SELECT COUNT(*) AS n FROM route_cache WHERE sde_build=?", (3478781,)
++        ).fetchone()["n"]
++        == 0
++    ), "a cached route must not outlive the map it was computed on"
++    if table == "sde_stargates":
++        from evescreener.routes import RouteGraph
++
++        graph = RouteGraph.from_db(db)
++        assert graph.route(30000142, 30000144).known is True, (
++            "the reload exists so the router finds the system again"
++        )
++
++
++def test_a_same_build_refresh_still_no_ops_when_every_table_is_populated(
++    tmp_path, config, db, monkeypatch
++):
++    """The cheap path the fix must not regress: a matching build with every
++    table filled skips the download, exactly as it does today."""
++    _prime_same_build_map_except(db, None)
++    db.conn.execute(
++        "INSERT INTO route_cache(sde_build, origin, destination, profile,"
++        " avoid_hash, systems, jumps, known, reason, computed_at)"
++        " VALUES(3478781, 30000142, 30000144, 'shortest', 'h',"
++        " '[30000142, 30000144]', 1, 1, '', '2026-10-26T00:00:00+00:00')"
++    )
++    calls = _stub_sde_network(monkeypatch, tmp_path)
++    result = load_sde(config, db)
++    assert calls["downloads"] == 0
++    assert result.downloaded is False
++    assert (
++        db.conn.execute(
++            "SELECT COUNT(*) AS n FROM route_cache WHERE sde_build=?", (3478781,)
++        ).fetchone()["n"]
++        == 1
++    ), "the no-op touches nothing, cache included"
++    assert result.types == 1
++    assert result.market_groups == 1
++    assert result.solar_systems == 2
++    assert result.stargates == 2
++    assert result.npc_stations == 2
++    assert db.get_meta("sde_build") == "3478781"
++
++
++def test_a_reloaded_bundle_with_no_stargates_fails_loudly(tmp_path, config, db, monkeypatch):
++    """A reload that ends on an empty map is not a success. The bundle is
++    rejected before it writes anything, so the next refresh retries the same
++    reload rather than trusting a stamp the load never earned."""
++    _prime_same_build_map_except(db, "sde_stargates")
++    calls = _stub_sde_network(monkeypatch, tmp_path, bundle=_bundle(tmp_path, stargates=[]))
++    with pytest.raises(SdeError, match="no stargates"):
++        load_sde(config, db)
++    assert calls["downloads"] == 1
++    assert db.stargate_edges() == [], "a failed load writes nothing"
++    assert db.get_meta("sde_build") == "3478781"
++
++
++def test_a_reloaded_bundle_with_no_npc_stations_fails_loudly(tmp_path, config, db, monkeypatch):
++    _prime_same_build_map_except(db, "sde_npc_stations")
++    calls = _stub_sde_network(monkeypatch, tmp_path, bundle=_bundle(tmp_path, stations=[]))
++    with pytest.raises(SdeError, match="no NPC stations"):
++        load_sde(config, db)
++    assert calls["downloads"] == 1
++    assert db.station_systems() == {}, "a failed load writes nothing"

@@ -137,6 +137,14 @@ do not rebuild landed work.**
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
 
+### 2026-10-27 — Qwen orchestration bench (docs/bench/qwen-orchestrate)
+
+Docs-only. Three merged commits from non-trading repos were replayed by Qwen 3.8 27B (OpenRouter, Claude Code headless)
+from Opus-written briefs, in throwaway worktrees, and graded blind by Haiku 5.5 and Opus 5.5 against the real diffs.
+Harness (`run-orchestrate.sh`, `seed-review.sh`, prompts), briefs, run folders and the write-up with verdict and a
+proposed tier rule are in `docs/bench/qwen-orchestrate/results.md`. No template, CLI, check or limit changed; the
+proposed rule is not adopted anywhere.
+
 ### 2026-09-11 — Packet M1: workspace memory and Codex recall
 
 Added a pure routing index and dated, provenance-tagged person/project/decision files,

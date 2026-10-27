@@ -1,0 +1,13 @@
+diff --git a/tools/jumpstart.py b/tools/jumpstart.py
+index 9665e67..3ec4483 100644
+--- a/tools/jumpstart.py
++++ b/tools/jumpstart.py
+@@ -137,7 +137,7 @@ INTERNALS_CITATION_RE = re.compile(r'\*\(INTERNALS:\s*"([^"]+)"\)\*')
+ 
+ #: Citations inside an HTML comment are examples, not rules (the shipped template
+ #: carries one), so comments are stripped before anything is matched.
+-HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
++HTML_COMMENT_RE = re.compile(r"<!--.*-->", re.DOTALL)
+ 
+ 
+ # --------------------------------------------------------------------------- #

@@ -1,0 +1,188 @@
+diff --git a/tests/test_summary.py b/tests/test_summary.py
+index 5c9a5e0..896b22f 100644
+--- a/tests/test_summary.py
++++ b/tests/test_summary.py
+@@ -59,6 +59,32 @@ def test_business_report_end_to_end(ledger):
+     assert "Taxes owed" in md
+ 
+ 
++def test_pnl_before_commissions_and_commissions_on_closed(ledger):
++    load_all(ledger)
++    rep = build_report(ledger, 2026, as_of=date(2026, 4, 1))
++    r = 1.37  # fixture FX rate: every USD figure converts at 1.37
++    # Taxable closes in 2026: AAPL bought 100@150 (comm 4.95, Questrade) + 50@152 (comm 1.00, IBKR),
++    # sold 100@160 (comm 4.95) + 50@161 (comm 1.00); TSLA short -20@200 (comm 1.00) covered +20@190 (comm 1.00).
++    # SHOP.TO and the open option buys never close, so they contribute nothing.
++    aapl_before = (16000 + 8050 - 15000 - 7600) * r  # 1450.00 USD gross proceeds minus gross cost
++    tsla_before = (4000 - 3800) * r  # 200.00 USD
++    aapl_comm = (4.95 + 1.00 + 4.95 + 1.00) * r  # buy commissions (in ACB) + sell commissions
++    tsla_comm = (1.00 + 1.00) * r  # short-open commission (in pool) + cover commission
++    # TFSA: NVDA 10@100 (comm 4.95) sold 10@130 (comm 4.95)
++    nvda_before = (1300 - 1000) * r  # 300.00 USD
++    nvda_comm = (4.95 + 4.95) * r
++    assert rep.taxable_pnl_before_commissions == pytest.approx(aapl_before + tsla_before)
++    assert rep.taxable_commissions_on_closed == pytest.approx(aapl_comm + tsla_comm)
++    assert rep.total_pnl_before_commissions == pytest.approx(aapl_before + tsla_before + nvda_before)
++    assert rep.commissions_on_closed == pytest.approx(aapl_comm + tsla_comm + nvda_comm)
++    # P&L before commissions minus commissions equals today's after-commission P&L, all accounts and taxable share.
++    assert rep.total_pnl_before_commissions - rep.commissions_on_closed == pytest.approx(rep.total_pnl)
++    assert rep.taxable_pnl_before_commissions - rep.taxable_commissions_on_closed == pytest.approx(rep.taxable_pnl)
++    # Tax side unchanged: after-commission P&L is still what the tax figures are built from.
++    assert rep.taxable_pnl == pytest.approx(((16000 + 8050 - 15000 - 7600 - 4.95 - 1.00 - 4.95 - 1.00) + (4000 - 3800 - 1.00 - 1.00)) * r)
++    assert rep.total_pnl == pytest.approx(rep.taxable_pnl + rep.tfsa_pnl)
++
++
+ def test_capital_report_and_coverage_gaps(ledger):
+     load_all(ledger)
+     ledger.set_setting("tax_treatment", "CAPITAL")
+diff --git a/tests/test_ui_smoke.py b/tests/test_ui_smoke.py
+index 33a4a8e..92917f6 100644
+--- a/tests/test_ui_smoke.py
++++ b/tests/test_ui_smoke.py
+@@ -37,6 +37,7 @@ def test_main_window_refreshes(qapp, ledger):
+     summary = win.pages[0]
+     assert summary.ufile_model.rowCount() > 5
+     assert summary.cards["total_pnl"].value.text() != "-"
++    assert summary.cards["before_commissions"].value.text() != "-"
+     trades = win.pages[2]
+     assert trades.model.rowCount() == len(ledger.transactions(year=2026))
+     gains = win.pages[3]
+diff --git a/tradertax/gains.py b/tradertax/gains.py
+index 0ff0e99..2764a6a 100644
+--- a/tradertax/gains.py
++++ b/tradertax/gains.py
+@@ -57,6 +57,8 @@ class Realized:
+     fingerprint: str = ""
+     superficial_denied_cad: float = 0.0
+     superficial_note: str = ""
++    # commissions on the quantity this close closes: buy commission held in the pool (pro rata) plus this trade's own commission
++    commissions_cad: float = 0.0
+ 
+     @property
+     def gain_after_superficial(self) -> float:
+@@ -82,6 +84,7 @@ class OpenPosition:
+ class _Pool:
+     qty: float = 0.0
+     cost: float = 0.0  # long: total ACB; short: total net proceeds received
++    comm: float = 0.0  # commissions held in the pool: long buys' commissions, or the short open's sell commission
+     currency: str = "CAD"
+     asset_class: str = "STK"
+     last_date: date | None = None
+@@ -200,18 +203,20 @@ def compute_gains(
+                 cost_cad = (-gross_cad) * (cover / qty) + comm_cad * (cover / qty)
+                 gain = proceeds - cost_cad
+                 events.append(
+-                    _event(t, "SHORT", cover, proceeds, 0.0, cost_cad, gain, rate, source, group)
++                    _event(t, "SHORT", cover, proceeds, 0.0, cost_cad, gain, rate, source, group, pool.comm * frac + comm_cad * (cover / qty))
+                 )
+                 pool.cost -= proceeds
++                pool.comm -= pool.comm * frac
+                 pool.qty += cover
+                 if abs(pool.qty) < 1e-9:
+-                    pool.qty, pool.cost = 0.0, 0.0
++                    pool.qty, pool.cost, pool.comm = 0.0, 0.0, 0.0
+             remainder = qty - cover
+             if remainder > 0:
+                 if cover == 0 and pool.qty == 0 and "C" in _codes(t):
+                     warnings.append(f"{t.trade_date} bought {remainder:g} {t.symbol} in {t.broker} {t.account_id} to close a short {MISSING_OPEN}")
+                 share = remainder / qty
+                 pool.cost += (-gross_cad) * share + comm_cad * share
++                pool.comm += comm_cad * share
+                 pool.qty += remainder
+         else:
+             sell = -qty
+@@ -223,14 +228,15 @@ def compute_gains(
+                 proceeds = gross_cad * share
+                 outlays = comm_cad * share
+                 gain = proceeds - outlays - acb
+-                ev = _event(t, "LONG", close, proceeds, outlays, acb, gain, rate, source, group)
++                ev = _event(t, "LONG", close, proceeds, outlays, acb, gain, rate, source, group, pool.comm * frac + outlays)
+                 if superficial and group == "TAXABLE" and gain < 0 and not flagged:
+                     _apply_superficial(ev, t, close, buys_by_symbol, buy_dates, cum_by_symbol, cum_dates, pending, pools, last_data_date, warnings)
+                 events.append(ev)
+                 pool.cost -= acb
++                pool.comm -= pool.comm * frac
+                 pool.qty -= close
+                 if abs(pool.qty) < 1e-9:
+-                    pool.qty, pool.cost = 0.0, 0.0
++                    pool.qty, pool.cost, pool.comm = 0.0, 0.0, 0.0
+             remainder = sell - close
+             if remainder > 0:
+                 codes = _codes(t)
+@@ -243,6 +249,7 @@ def compute_gains(
+                     )
+                 share = remainder / sell
+                 pool.cost += gross_cad * share - comm_cad * share
++                pool.comm += comm_cad * share
+                 pool.qty -= remainder
+         if flagged and t.asset_class == "OPT" and len(events) > n_events:
+             under = t.symbol.split(" ")[0]
+@@ -281,7 +288,7 @@ def _exercised(t: Transaction) -> bool:
+     return bool(_codes(t) & {"A", "Ex"}) or t.raw.get("action") in ("ASN", "EXE")
+ 
+ 
+-def _event(t: Transaction, side: str, qty: float, proceeds: float, outlays: float, acb: float, gain: float, rate: float, source: str, group: str) -> Realized:
++def _event(t: Transaction, side: str, qty: float, proceeds: float, outlays: float, acb: float, gain: float, rate: float, source: str, group: str, commissions: float = 0.0) -> Realized:
+     return Realized(
+         date=t.trade_date,
+         symbol=t.symbol,
+@@ -300,6 +307,7 @@ def _event(t: Transaction, side: str, qty: float, proceeds: float, outlays: floa
+         fx_rate=rate,
+         fx_source=source,
+         fingerprint=t.fingerprint,
++        commissions_cad=commissions,
+     )
+ 
+ 
+diff --git a/tradertax/summary.py b/tradertax/summary.py
+index ba81d2e..bdeb133 100644
+--- a/tradertax/summary.py
++++ b/tradertax/summary.py
+@@ -45,6 +45,12 @@ class YearReport:
+     taxable_pnl: float = 0.0
+     tfsa_pnl: float = 0.0
+     other_registered_pnl: float = 0.0
++    # the same P&L before commissions, and the commissions on the year's closed trades
++    # (buy commissions in ACB + sell/cover commissions; broker FEE rows are not here, they are expenses)
++    total_pnl_before_commissions: float = 0.0
++    commissions_on_closed: float = 0.0
++    taxable_pnl_before_commissions: float = 0.0
++    taxable_commissions_on_closed: float = 0.0
+     # capital-gains view (taxable pools)
+     proceeds: float = 0.0
+     acb: float = 0.0
+@@ -110,6 +116,10 @@ def build_report(ledger: Ledger, year: int | None = None, *, as_of: date | None
+     rep.taxable_pnl = sum(e.gain_cad for e in taxable_events)
+     rep.tfsa_pnl = sum(e.gain_cad for e in events if e.pool.startswith("TFSA"))
+     rep.other_registered_pnl = rep.total_pnl - rep.taxable_pnl - rep.tfsa_pnl
++    rep.total_pnl_before_commissions = sum(e.gain_cad + e.commissions_cad for e in events)
++    rep.commissions_on_closed = sum(e.commissions_cad for e in events)
++    rep.taxable_pnl_before_commissions = sum(e.gain_cad + e.commissions_cad for e in taxable_events)
++    rep.taxable_commissions_on_closed = sum(e.commissions_cad for e in taxable_events)
+     rep.proceeds = sum(e.proceeds_cad for e in taxable_events)
+     rep.acb = sum(e.acb_cad for e in taxable_events)
+     rep.outlays = sum(e.outlays_cad for e in taxable_events)
+diff --git a/tradertax/ui/pages.py b/tradertax/ui/pages.py
+index f4ef0bd..183ff3b 100644
+--- a/tradertax/ui/pages.py
++++ b/tradertax/ui/pages.py
+@@ -76,6 +76,7 @@ class SummaryPage(Page):
+         grid.setSpacing(10)
+         names = [
+             ("total_pnl", "Total P&L, all accounts"),
++            ("before_commissions", "P&L before commissions"),
+             ("taxable_pnl", "Taxable accounts P&L"),
+             ("tfsa_pnl", "TFSA P&L (tax-free)"),
+             ("income", "Trading income for tax"),
+@@ -140,6 +141,11 @@ class SummaryPage(Page):
+ 
+         c = self.cards
+         c["total_pnl"].set(money(rep.total_pnl), "realised, CAD, after commissions", signed(rep.total_pnl))
++        c["before_commissions"].set(
++            money(rep.total_pnl_before_commissions),
++            f"commissions {money(rep.commissions_on_closed)} (taxable {money(rep.taxable_commissions_on_closed)}) are already inside the P&L - do not add them again as an expense",
++            signed(rep.total_pnl_before_commissions),
++        )
+         c["taxable_pnl"].set(money(rep.taxable_pnl), "margin + cash accounts, all brokers", signed(rep.taxable_pnl))
+         c["tfsa_pnl"].set(money(rep.tfsa_pnl), f"contributions {money(rep.tfsa_contributions)} | withdrawals {money(rep.tfsa_withdrawals)}", signed(rep.tfsa_pnl))
+         if rep.treatment == "BUSINESS":

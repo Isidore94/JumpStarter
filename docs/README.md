@@ -1,6 +1,6 @@
 # JumpStarter documentation index
 
-Last reconciled: **2026-09-11** (packet M1)
+Last reconciled: **2026-10-27** (qwen-orchestrate bench)
 
 Start here when a supporting detail is not in the root control set. This index classifies
 **every** maintained Markdown file, so a historical plan can never be mistaken for
@@ -93,6 +93,12 @@ the archive is listed here.
 | File | What it records |
 |---|---|
 | [`prompts/VERIFICATION_REPORT_2026-09-03.md`](prompts/VERIFICATION_REPORT_2026-09-03.md) | The 2026-09-03 second pass re-derived by reproduction (every command and its output), and the four-agent loop run once on packet I1: what each agent did, what it cost, the proposed allow-list, and what was not done |
+| [`bench/qwen-orchestrate/results.md`](bench/qwen-orchestrate/results.md) | **2026-10-27 bench: can Qwen 3.8 27B orchestrate a whole coding job?** Three merged commits from other repos replayed from an Opus-written brief, blind-graded by Haiku and Opus against the real diff; per-task table, harness findings, verdict and a proposed tier rule (a proposal, not a pipeline change) |
+
+The rest of `docs/bench/qwen-orchestrate/` (`requests.md`, `briefs/`, `prompts/`, `PACKET-runner.md`,
+the two `.sh` runners and the `runs/*/` records, including the `qo/` stage files Qwen wrote and the
+`runs/91eb9b8-contaminated/CONTAMINATED.md` note) is that bench's inputs and raw output. `results.md`
+classifies it; the files are not listed individually here.
 
 `.claude/packets/*.md` are tracked from 2026-09-03: a packet is the record of what was
 authorised, and reviews cite it. They are not classified here individually.

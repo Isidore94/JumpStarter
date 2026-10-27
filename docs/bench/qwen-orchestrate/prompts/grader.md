@@ -25,3 +25,9 @@ Then one verdict for the run: MERGE (would merge as is), MINOR (small fixes), MA
 
 Answer with ONLY this JSON:
 {"correctness":0,"completeness":0,"tests":0,"scope":0,"brief_awareness":0,"self_review":0,"verdict":"MERGE|MINOR|MAJOR|REJECT","evidence":["file:line or quote per score, short"],"summary":"two sentences"}
+
+Run-folder notes: `review.txt` is the self-review of the unseeded diff; in a seeded run the seeded review is
+`review-seeded.txt` (over `diff-seeded.patch`), and both count for the self_review score. `diff-claude-md.patch`
+holds the orchestrator's CLAUDE.md edit when the task has one; its first hunk is the harness's own prepended rules
+block, not the orchestrator's work. Ignore `run.log`, `stderr.txt`, `summary.json`, `key-*.txt`, `*-raw.json`,
+`transcript.jsonl` and `home/`: they are harness plumbing, and they name the runtime.

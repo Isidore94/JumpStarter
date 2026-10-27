@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`main`** — fast-forwarded through M1 at `556cffd`; this reconciliation records integration after independent reviewer GO |
-| Also in flight | **NOTHING unmerged.** M1 workspace memory is integrated. C2 remains integrated; its interrupted final reviewer GO is not claimed |
-| Active items | **M1 COMPLETE**, including fresh Codex session and independent native-agent person/project recall. Phase 1 item 1/gate 2 remain unstarted; item 2/gate 4 remains closed. I2 is not authorized |
-| Last verified baseline | Measured 2026-09-11 on **CPython 3.9.25**, M1 `556cffd`: pytest **63 passed, exit 0**; ruff **0.16.6 clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Fresh Codex recall PASS, exit 0; independent review GO. Retrofit was last measured 2026-09-10: 30 checks, 1 advisory, exit 0; not remeasured for M1 |
+| Working branch | **`claude/qwen-orchestrate-test`** off `main` at `556cffd`; docs-only bench, PR open, not merged |
+| Also in flight | The Qwen orchestration bench branch (this one, awaiting Aaron's merge). M1 and C2 remain integrated on `main` |
+| Active items | **Qwen bench DONE** (see the 2026-10-27 entry; the tier rule it proposes is not adopted). **M1 COMPLETE**, including fresh Codex session and independent native-agent person/project recall. Phase 1 item 1/gate 2 remain unstarted; item 2/gate 4 remains closed. I2 is not authorized |
+| Last verified baseline | Remeasured 2026-10-27 on this branch with the TraderTaxHelper venv interpreter (version not recorded): pytest **63 passed, exit 0**; ruff **clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Previous: 2026-09-11 on **CPython 3.9.25**, M1 `556cffd`, same three numbers. Fresh Codex recall PASS, exit 0; independent review GO. Retrofit was last measured 2026-09-10: 30 checks, 1 advisory, exit 0; not remeasured for M1 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
@@ -52,6 +52,13 @@ A gate is closed by striking its row through and writing what was observed — n
 deleting the row.
 
 ---
+
+### 2026-10-27 — Qwen orchestration bench, docs only
+
+Branch `claude/qwen-orchestrate-test`. Everything landed under `docs/bench/qwen-orchestrate/` plus the
+`docs/README.md` row, this entry and the CHANGELOG entry. Nothing under `templates/`, `tools/` or `tests/` changed, so
+the baseline is unchanged by construction and was remeasured anyway (glance block). Results, verdict and the proposed
+tier rule: `docs/bench/qwen-orchestrate/results.md`. Adopting the rule is Aaron's call; no live pipeline rule changed.
 
 ### 2026-09-11 — Packet M1: workspace memory and Codex recall
 

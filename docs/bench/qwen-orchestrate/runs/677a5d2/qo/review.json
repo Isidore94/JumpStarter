@@ -1,0 +1,10 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "Heading-suffix stripping removes only the trailing parenthesised group, so a heading that carried a non-suffix paren group (## Rule (a) (date, reason)) would keep (a) in its match text. No such heading exists in the data; only a problem if one ever does.",
+    "HTML comments are stripped with a non-greedy <!--.*?--> match: an unterminated <!-- in CLAUDE.md is not stripped, so a cited name inside it would still count. Accepted: an unterminated comment is already malformed Markdown.",
+    "The four pre-existing UNFILLED gaps in .claude/agents/*.md keep check . and test_jumpstarter_passes_its_own_check red on this worktree. Recorded and decided in .qo/plan.md (no-edit rule for .claude/, no test weakening); nothing in this diff is red."
+  ],
+  "summary": "Sceptical review of git diff. tools/jumpstart.py: two constants, two helpers plus a comment-stripper, one audit function, one wiring line in cmd_check, docstring and CLI-help updates - all matching .qo/plan.md, stdlib-only, Python 3.9-compatible (list[str] under the existing __future__ annotations import). Self-match verified empirically: check . finds exactly 10 citations on this repo (the nine known plus the new rule's own), so the new CLAUDE.md bullet does not read as a second citation. All printed strings are ASCII and the pre-existing ASCII test still passes. Six new tests, proven red in .qo/tests-red.txt before the fix and green after: two end-to-end check cases (dangling citation fails and is named; all-resolving passes and prints an OK finding) and four units (folding + comment skip, case + suffix matching, named gap, missing-file silence). No test was weakened, skipped or deleted. Templates, limit constants, retrofit and .claude/ are untouched; the AGENTS.md change is the sanctioned sync-agents regeneration. Docs reconciled per the workflow: CHANGELOG inventory + dated entry, checkpoint block refreshed + dated entry, new INTERNALS entry behind the new rule."
+}
