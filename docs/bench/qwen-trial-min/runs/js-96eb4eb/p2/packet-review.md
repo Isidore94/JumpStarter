@@ -1,0 +1,950 @@
+# BRIEF
+Goal: Codex cannot pick our roles natively. Add a lead config template templates/.codex/config.toml that sets the lead model to Astra at high effort with Terra/high as the fallback subagent, and give each of the four templates/.codex/agents/*.toml a top-level name and description. init installs the config like the other files (never overwriting without --force). check and retrofit report a missing config, a missing native role file, or a missing or empty name/description in the four role TOMLs as gaps, reading only top-level TOML fields and writing nothing.
+Done when: new tests cover install-without-overwrite, the gap reports and the metadata audit; `python -m pytest tests/ -q` green, `ruff check .` clean, `python tools/jumpstart.py check .` green on this repo.
+Files: tools/jumpstart.py (the audit_* functions and the file tables near the top), templates/.codex/; find the rest.
+Don't touch: templates/.claude/agents/, the existing tests.
+Pattern: copy how the existing audits build a Finding and how the file tables map templates to repo paths.
+
+# CANDIDATE DIFF
+```diff
+diff --git a/.codex/agents/builder.toml b/.codex/agents/builder.toml
+index 36a14db..e615701 100644
+--- a/.codex/agents/builder.toml
++++ b/.codex/agents/builder.toml
+@@ -1,3 +1,5 @@
++name = "builder"
++description = "Builds one specified packet on its own branch and worktree, with fail-before-fix tests, and hands back a short handoff."
+ model = "gpt-5.6-terra"
+ model_reasoning_effort = "high"
+ developer_instructions = """
+diff --git a/.codex/agents/recon.toml b/.codex/agents/recon.toml
+index 1e007b0..22bcc25 100644
+--- a/.codex/agents/recon.toml
++++ b/.codex/agents/recon.toml
+@@ -1,3 +1,5 @@
++name = "recon"
++description = "Read-only reconnaissance with file:line evidence; maps how a feature works and reports what the real data shows."
+ model = "gpt-5.6-luna"
+ model_reasoning_effort = "medium"
+ developer_instructions = """
+diff --git a/.codex/agents/reviewer.toml b/.codex/agents/reviewer.toml
+index 610c796..ed8203b 100644
+--- a/.codex/agents/reviewer.toml
++++ b/.codex/agents/reviewer.toml
+@@ -1,3 +1,5 @@
++name = "reviewer"
++description = "Reviews a built branch by reproduction, runs the new tests, and returns a GO or NO-GO verdict."
+ model = "gpt-5.6-terra"
+ model_reasoning_effort = "high"
+ developer_instructions = """
+diff --git a/.codex/agents/tester.toml b/.codex/agents/tester.toml
+index 73cc986..d990161 100644
+--- a/.codex/agents/tester.toml
++++ b/.codex/agents/tester.toml
+@@ -1,3 +1,5 @@
++name = "tester"
++description = "Writes the failing tests for a packet before any fix exists, and never the fix."
+ model = "gpt-5.6-terra"
+ model_reasoning_effort = "high"
+ developer_instructions = """
+diff --git a/.codex/config.toml b/.codex/config.toml
+new file mode 100644
+index 0000000..2e8f316
+--- /dev/null
++++ b/.codex/config.toml
+@@ -0,0 +1,15 @@
++# Lead configuration for this repository's Codex sessions.
++#
++# The lead session runs on gpt-5.6-terra at high effort. A subagent spawned
++# without a role file of its own runs on the fallback subagent:
++# gpt-5.6-luna at high effort. The four roles in .codex/agents/ each name
++# their own model; this file only sets the lead and the un-named fallback.
++#
++# `jumpstart.py check` and `retrofit` report this file when it is missing and
++# read only the top-level fields of it and of the four role files; they write
++# nothing.
++
++model = "gpt-5.6-terra"
++model_reasoning_effort = "high"
++fallback_subagent_model = "gpt-5.6-luna"
++fallback_subagent_reasoning_effort = "high"
+diff --git a/AGENTS.md b/AGENTS.md
+index f44cd1f..e0d83c2 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -100,6 +100,13 @@ changing the behaviour a rule governs.**
+ - **Templates stay short enough to read in one sitting.** The whole point is bounded
+   reads; a template nobody finishes is a template that gets skimmed and appended to.
+   *(INTERNALS: "Templates stay short enough to read in one sitting")*
++- **The Codex control set is checked at the top level.** `check` and `retrofit`
++  report a missing `.codex/config.toml`, a missing native role file, or a missing or
++  empty top-level `name`/`description` in the four `.codex/agents/*.toml`; the audit
++  reads only top-level TOML fields and writes nothing. `retrofit` keeps its 25-check
++  shape: the config finding takes the slot of the duplicate `docs/README.md`
++  control-file finding, and the role metadata rides the four `agent <role>` findings.
++  *(INTERNALS: "The Codex control set is checked at the top level")*
+ 
+ ## Hard invariants (plan.md sec 5 — never violate)
+ - No third-party dependency in `tools/`. It must run on a bare Python 3.9+.
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 92387c6..f685365 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,6 +1,6 @@
+ # JumpStarter implemented history
+ 
+-Last reconciled: **2026-09-04** (packet C1)
++Last reconciled: **2026-10-27** (codex lead config)
+ 
+ Authoritative for: **what exists, and the historical sequence of revisions.**
+ Remaining work: [`plan.md`](plan.md). Where we are now:
+@@ -35,10 +35,14 @@ do not rebuild landed work.**
+   naming the fail-before-fix assertion; then two gate blocks (pre-handoff commands, and
+   the real-world gate) and a "still owed, as packet X" tail.
+ - **Codex** — `.codex/agents/{tester,builder,reviewer,recon}.toml` plus generic
+-  templates with explicit strong/cheap model placeholders. `init` fills configured
+-  models; `check` exposes unfilled choices; `retrofit` audits each native role beside
+-  its Claude counterpart without duplicating finding names. `docs/CODEX_NOTES.md`
+-  describes native spawning and the shared packet/handoff interface.
++  templates with explicit strong/cheap model placeholders, and `.codex/config.toml`,
++  the lead configuration (lead model at high effort, plus the fallback subagent),
++  installed by `init` like the other files. Each role file carries a top-level
++  `name` and `description` - the two fields Codex lists its subagents by. `init`
++  fills configured models; `check` exposes unfilled choices and audits the config
++  and the four role files; `retrofit` audits each native role beside its Claude
++  counterpart without duplicating finding names. `docs/CODEX_NOTES.md` describes
++  native spawning and the shared packet/handoff interface.
+ - The two files that keep their placeholders on purpose are
+   `docs/decisions/0000-template.md` and `.claude/packets/PACKET_TEMPLATE.md`.
+ 
+@@ -60,10 +64,22 @@ do not rebuild landed work.**
+ - **`init`** copies `INSTALL_MAP`, fills the placeholders it was given, generates
+   `AGENTS.md` from `CLAUDE.md`, and appends the `.gitignore` block idempotently. It
+   skips files that exist unless `--force`.
+-- **`retrofit`** audits **25 checks** and **writes nothing**.
++- **`retrofit`** audits **25 checks** and **writes nothing**; among them `codex
++  config` (in the slot of the former duplicate `docs/README.md` control-file
++  finding) and the four `agent <role>` findings, which also carry the Codex role
++  metadata.
+ - **`check`** enforces `CLAUDE == AGENTS` (sha256), the four size limits, unfilled
+-  placeholders, and — since 2026-09-03 — that every cited rule carries its evidence.
+-  **7 checks** on this repo.
++  placeholders, that every cited rule carries its evidence (since 2026-09-03), and
++  the Codex control set (since 2026-10-27): `codex config` plus four `codex role`
++  findings. **12 checks** on this repo, up from 7.
++- **`audit_codex_config`, `audit_codex_roles`, `_top_level_toml_strings`** — the
++  Codex control-set audit. `check` reports the config and each role file outright;
++  `retrofit` folds the role metadata into its four `agent <role>` findings and takes
++  the config in the slot of the duplicate `docs/README.md` control-file finding, so
++  its pinned 25-check count does not move. The reader is deliberately shallow:
++  top-level `key = "value"` string fields only, stop at the first table header, skip
++  a multi-line string's body - Python 3.9 has no `tomllib`, and the audit only ever
++  asks whether a file carries a top-level name and description.
+ - **`audit_rule_evidence`** — every rule that cites `(INTERNALS: "<name>")` in
+   `CLAUDE.md` must have a matching `## ` heading in `docs/INTERNALS.md`, or the finding
+   is a gap and the exit code is 1. Check name `rules carry evidence` in both commands:
+@@ -127,6 +143,20 @@ do not rebuild landed work.**
+ The last two build days only. When this section passes ~800 lines, archive the older
+ entries under `docs/` and leave a pointer.
+ 
++### 2026-10-27 — Codex lead config and top-level role metadata
++
++- `templates/.codex/config.toml` added: lead astra at high effort, fallback subagent
++  terra at high effort. `init` installs it like every other file (never overwriting
++  without `--force`), and it carries no placeholders of its own.
++- The four role templates - and this repo's four tracked role files - carry a
++  top-level `name` and `description`, the fields Codex lists its subagents by.
++- `check` gains five findings (`codex config`, four `codex role`); `retrofit` keeps
++  its 25-check shape: `codex config` replaces the duplicate `docs/README.md`
++  control-file finding, and the role metadata rides the four `agent <role>` findings.
++  The reader is top-level-only on purpose (no `tomllib` on the 3.9 floor).
++- New rule "The Codex control set is checked at the top level" in `CLAUDE.md`, with
++  its `docs/INTERNALS.md` entry; `AGENTS.md` re-synced.
++
+ ### 2026-09-04 — Packet C1: native Codex roles, additive to Claude
+ 
+ - Added four tracked native Codex role definitions and four generic templates. Tester,
+diff --git a/CURRENT_CHECKPOINT.md b/CURRENT_CHECKPOINT.md
+index a4da0f6..060b22e 100644
+--- a/CURRENT_CHECKPOINT.md
++++ b/CURRENT_CHECKPOINT.md
+@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
+ 
+ | | |
+ |---|---|
+-| Working branch | **`main`** at `aa7f901` — packet C1 fast-forwarded after reviewer GO; both harnesses keep `claude/<slug>` packet branches |
+-| Also in flight | **NOTHING unmerged.** Packet C1 is integrated; its branch remains as review evidence |
++| Working branch | **`main`** — the Codex lead-config packet sits in the working tree, **not committed** (the job rules forbid committing) |
++| Also in flight | **Codex lead-config packet** in the working tree on `main`; Packet C1 is integrated, its branch remains as review evidence |
+ | Active items | `plan.md` **Phase 1 item 2** — native Codex role machinery is green; gate 4 remains open until a real Codex lead spawns a tracked role with the shared packet. Phase 1 item 1 and gate 2 remain unstarted. Packet I2 is recorded, not authorised |
+-| Last verified baseline | Measured 2026-09-04 on **CPython 3.9.25**, on `main` after C1 integration and checkpoint reconciliation: `pytest tests/ -q` **57 passed, process exit 0**; `ruff check .` (0.16.6) **All checks passed**, exit 0; `python tools/jumpstart.py check .` **7 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory** |
++| Last verified baseline | Measured 2026-10-27 on **CPython 3.12 (uv-managed)**: `pytest tests/ -q` **67 passed, process exit 0**; `ruff check .` **All checks passed**, exit 0; `python tools/jumpstart.py check .` **12 checks, no gaps**, exit 0; `retrofit .` **exit 0, 25 checks, 1 advisory** |
+ | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
+ | Restart owed | **No.** Nothing runs continuously from this checkout |
+ 
+@@ -54,6 +54,23 @@ deleting the row.
+ 
+ ---
+ 
++### 2026-10-27 — Codex lead config and top-level role metadata
++
++`templates/.codex/config.toml` (lead astra/high, fallback subagent terra/high) now
++installs via `init` like the other files; the four role TOMLs (templates and this
++repo's tracked copies) carry a top-level `name` and `description`. `check` gains
++`codex config` plus four `codex role` findings (7 to 12, not pinned); `retrofit`
++keeps its 25 checks — `codex config` takes the duplicate `docs/README.md`
++control-file slot, and the role metadata rides the four `agent <role>` findings.
++New rule "The Codex control set is checked at the top level" in `CLAUDE.md`
++(`AGENTS.md` re-synced) with its `docs/INTERNALS.md` entry; `CHANGELOG.md` inventory
++and recent-changes updated. Not committed — the packet stays in the working tree.
++Playbook mirrors (`new-project.md`, `retrofit.md`) were not part of this pass.
++
++**Verification, measured 2026-10-27 on CPython 3.12 (uv-managed):**
++`pytest tests/ -q` 67 passed, process exit 0; `ruff check .` clean, exit 0;
++`check .` 12 checks, no gaps, exit 0; `retrofit .` 25 checks, 1 advisory, exit 0.
++
+ ### 2026-09-04 — Packet C1: native Codex roles added without changing Claude
+ 
+ The tester committed three packet tests red at `e037777`: all three failed on the base
+diff --git a/docs/AGENT_TEAM.md b/docs/AGENT_TEAM.md
+index f730537..b6a2573 100644
+--- a/docs/AGENT_TEAM.md
++++ b/docs/AGENT_TEAM.md
+@@ -51,8 +51,8 @@ rule, not after.
+ 
+ ## Setup on a machine
+ 
+-1. `.claude/agents/` and `.codex/agents/` are tracked; the rest of `.claude/` is
+-   machine-local, except
++1. `.claude/agents/`, `.codex/agents/` and `.codex/config.toml` are tracked; the rest
++   of `.claude/` is machine-local, except
+    `.claude/packets/` if this project chooses to track its packets.
+ 2. `.claude/settings.json` allow-lists pytest, ruff, the CLI, `git worktree`, and commits
+    and pushes to `claude/*`. It also **denies** the destructive git verbs outright.
+@@ -61,7 +61,10 @@ rule, not after.
+ 
+ ## For Codex
+ 
+-Codex reads `AGENTS.md` and loads its native roles from `.codex/agents/`. In this repo,
+-tester, builder and reviewer route to Terra/high while recon routes to Luna/medium.
+-Both harnesses receive the same packet path under `.claude/packets/`; see
+-[`CODEX_NOTES.md`](CODEX_NOTES.md).
++Codex reads `AGENTS.md` and loads its native roles from `.codex/agents/`; each role
++file names itself with a top-level `name` and `description`, which is what Codex lists
++its subagents by. The lead session's model and the fallback subagent live in
++`.codex/config.toml` (this repo: the strong model at high effort, fallback one tier
++down at high effort). In this repo, tester, builder and reviewer route to Terra/high
++while recon routes to Luna/medium. Both harnesses receive the same packet path under
++`.claude/packets/`; see [`CODEX_NOTES.md`](CODEX_NOTES.md).
+diff --git a/docs/CODEX_NOTES.md b/docs/CODEX_NOTES.md
+index 9b4450e..84bf802 100644
+--- a/docs/CODEX_NOTES.md
++++ b/docs/CODEX_NOTES.md
+@@ -21,11 +21,14 @@ is how a hand-edit gets caught.
+ 
+ ## Native roles and model routing
+ 
+-Codex loads `tester`, `builder`, `reviewer` and `recon` from `.codex/agents/`.
+-Tester, builder and reviewer use `gpt-5.6-terra` at high reasoning effort; recon uses
+-`gpt-5.6-luna` at medium effort. The lead keeps the session model. This preserves the same
+-strong/cheap cost split as Claude without changing `.claude/agents/` or its model
+-routing.
++Codex loads `tester`, `builder`, `reviewer` and `recon` from `.codex/agents/`, and
++each role file names itself with a top-level `name` and `description`. Tester,
++builder and reviewer use `gpt-5.6-terra` at high reasoning effort; recon uses
++`gpt-5.6-luna` at medium effort. The lead session runs from `.codex/config.toml`
++(`gpt-5.6-terra` at high effort in this repo), and a subagent spawned without a role
++file of its own falls back to the configured fallback subagent
++(`gpt-5.6-luna` at high effort). This preserves the same strong/cheap cost split as
++Claude without changing `.claude/agents/` or its model routing.
+ 
+ Codex does not read `.claude/settings.json`; its own sandbox and approval settings
+ apply. Anything the Claude allow-list treats as destructive is still destructive.
+diff --git a/docs/INTERNALS.md b/docs/INTERNALS.md
+index da9fb43..5168a56 100644
+--- a/docs/INTERNALS.md
++++ b/docs/INTERNALS.md
+@@ -291,3 +291,37 @@ a limit on an empty file.
+ 
+ **Reopen trigger.** A template that passes 200 lines, or an agent that reports it did not
+ finish reading one.
++## The Codex control set is checked at the top level (2026-10-27, codex lead config)
++
++**The rule, as it appears in `CLAUDE.md`:** *The Codex control set is checked at the
++top level. `check` and `retrofit` report a missing `.codex/config.toml`, a missing
++native role file, or a missing or empty top-level `name`/`description` in the four
++`.codex/agents/*.toml`; the audit reads only top-level TOML fields and writes
++nothing. `retrofit` keeps its 25-check shape: the config finding takes the slot of
++the duplicate `docs/README.md` control-file finding, and the role metadata rides the
++four `agent <role>` findings.*
++
++**What happened.** Codex cannot pick the four roles natively: a
++`.codex/agents/*.toml` without a top-level `name` and `description` is a subagent
++Codex will not list, and a lead session with no `.codex/config.toml` has no
++configured lead model or fallback subagent. `init` now installs
++`templates/.codex/config.toml` - lead astra at high effort, fallback subagent
++terra at high effort - beside the four role files, and both commands report the
++config and the files as gaps when they are missing or unnamed.
++
++**What was measured.** Python 3.9 has no `tomllib`, and the audit only ever asks
++"does this file carry a top-level name and description" - so `_top_level_toml_strings`
++reads top-level `key = "value"` scalars, stops at the first table header, and skips a
++multi-line string's whole body, instead of shipping a TOML interpreter. The retrofit
++count on this repo stays 25 (pinned by the 2026-09-04 packet's test, which
++`codex config` replacing the duplicate `docs/README.md` control-file finding keeps
++true); `check` moves from 7 to 12 findings, and its count is not pinned anywhere.
++
++**What is deliberately NOT done, and why.** The audit does not verify the config's
++values: the model choices are the owner's, and `init` already fills the role files'
++model placeholders from the CLI. Nested tables are out of scope on purpose: a
++top-level read is the contract, and the fix for a mis-nested field is to move the
++field, not to teach the audit to parse deeper.
++
++**Reopen trigger.** A real Codex session that rejects a well-named role file, or a
++Python floor that ships `tomllib`.
+diff --git a/docs/README.md b/docs/README.md
+index 8dc1cd5..7034a39 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -75,8 +75,10 @@ Codex loads TOML. They are listed here with the maintained documentation.
+ | [`../.codex/agents/builder.toml`](../.codex/agents/builder.toml) | Native Codex builder; Terra/high; same packet and branch convention |
+ | [`../.codex/agents/reviewer.toml`](../.codex/agents/reviewer.toml) | Native Codex reviewer; Terra/high; reproduction-only review |
+ | [`../.codex/agents/recon.toml`](../.codex/agents/recon.toml) | Native Codex recon; Luna/medium; read-only evidence gathering |
++| [`../.codex/config.toml`](../.codex/config.toml) | Codex lead configuration: the lead model at high effort and the fallback subagent |
+ 
+-The two sets mirror `templates/.claude/agents/` and `templates/.codex/agents/`.
++The two sets mirror `templates/.claude/agents/`, `templates/.codex/agents/` and
++`templates/.codex/config.toml`.
+ JumpStarter runs its own control set, so a template change that does not reach its
+ native dogfood copy is stale.
+ 
+diff --git a/templates/.codex/agents/builder.toml b/templates/.codex/agents/builder.toml
+index 416c027..8dd8f8a 100644
+--- a/templates/.codex/agents/builder.toml
++++ b/templates/.codex/agents/builder.toml
+@@ -1,3 +1,5 @@
++name = "builder"
++description = "Builds one specified packet on its own branch and worktree, with fail-before-fix tests, and hands back a short handoff."
+ model = "{{CODEX_STRONG_MODEL}}"
+ model_reasoning_effort = "high"
+ developer_instructions = """
+diff --git a/templates/.codex/agents/recon.toml b/templates/.codex/agents/recon.toml
+index ae2f659..7b41539 100644
+--- a/templates/.codex/agents/recon.toml
++++ b/templates/.codex/agents/recon.toml
+@@ -1,3 +1,5 @@
++name = "recon"
++description = "Read-only reconnaissance with file:line evidence; maps how a feature works and reports what the real data shows."
+ model = "{{CODEX_CHEAP_MODEL}}"
+ model_reasoning_effort = "medium"
+ developer_instructions = """
+diff --git a/templates/.codex/agents/reviewer.toml b/templates/.codex/agents/reviewer.toml
+index b4b7071..ea0c65f 100644
+--- a/templates/.codex/agents/reviewer.toml
++++ b/templates/.codex/agents/reviewer.toml
+@@ -1,3 +1,5 @@
++name = "reviewer"
++description = "Reviews a built branch by reproduction, runs the new tests, and returns a GO or NO-GO verdict."
+ model = "{{CODEX_STRONG_MODEL}}"
+ model_reasoning_effort = "high"
+ developer_instructions = """
+diff --git a/templates/.codex/agents/tester.toml b/templates/.codex/agents/tester.toml
+index ea03ea6..f1b2cff 100644
+--- a/templates/.codex/agents/tester.toml
++++ b/templates/.codex/agents/tester.toml
+@@ -1,3 +1,5 @@
++name = "tester"
++description = "Writes the failing tests for a packet before any fix exists, and never the fix."
+ model = "{{CODEX_STRONG_MODEL}}"
+ model_reasoning_effort = "high"
+ developer_instructions = """
+diff --git a/templates/.codex/config.toml b/templates/.codex/config.toml
+new file mode 100644
+index 0000000..80405da
+--- /dev/null
++++ b/templates/.codex/config.toml
+@@ -0,0 +1,16 @@
++# JumpStarter lead configuration for Codex.
++#
++# The lead session runs on `model` at `model_reasoning_effort`. A subagent
++# spawned without a role file of its own runs on the fallback subagent:
++# `fallback_subagent_model` at `fallback_subagent_reasoning_effort`. The four
++# roles in .codex/agents/ each name their own model; this file only sets the
++# lead and the un-named fallback.
++#
++# `jumpstart.py check` and `retrofit` report this file when it is missing and
++# read only the top-level fields of it and of the four role files; they write
++# nothing.
++
++model = "astra"
++model_reasoning_effort = "high"
++fallback_subagent_model = "terra"
++fallback_subagent_reasoning_effort = "high"
+diff --git a/tests/test_codex_lead_config.py b/tests/test_codex_lead_config.py
+new file mode 100644
+index 0000000..338b504
+--- /dev/null
++++ b/tests/test_codex_lead_config.py
+@@ -0,0 +1,323 @@
++"""The Codex lead config: install without overwrite, gap reports, metadata audit.
++
++`init` installs `.codex/config.toml` (lead astra/high, fallback subagent
++terra/high) like every other control file, never overwriting without
++`--force`. `check` and `retrofit` report a missing config, a missing native
++role file, or a missing or empty top-level `name`/`description` in the four
++`.codex/agents/*.toml` role files, reading only top-level TOML fields and
++writing nothing.
++"""
++
++from __future__ import annotations
++
++import re
++import sys
++from pathlib import Path
++
++import pytest
++
++REPO_ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(REPO_ROOT / "tools"))
++
++import jumpstart  # noqa: E402  (path set above)
++
++CODEX_ROLES = ("tester", "builder", "reviewer", "recon")
++CONFIG = ".codex/config.toml"
++ROLE_DIR = ".codex/agents"
++PLACEHOLDER = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
++SCALAR = re.compile(r'^([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*"([^"\\]*)"\s*$')
++MULTILINE = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(\"\"\"|''')\s*$")
++
++
++def run(*argv: str) -> int:
++    return jumpstart.main(list(argv))
++
++
++def init_repo(
++    path: Path,
++    *,
++    include_models: bool,
++    force: bool = False,
++) -> int:
++    argv = [
++        "init",
++        str(path),
++        "--name",
++        "Widget",
++        "--owner",
++        "the owner",
++        "--test-cmd",
++        "pytest -q",
++        "--lint-cmd",
++        "ruff check .",
++        "--run-cmd",
++        "python -m widget",
++        "--branch-prefix",
++        "claude/",
++    ]
++    if include_models:
++        argv.extend(
++            [
++                "--codex-strong-model",
++                "gpt-5.6-terra",
++                "--codex-cheap-model",
++                "gpt-5.6-luna",
++            ]
++        )
++    if force:
++        argv.append("--force")
++    return run(*argv)
++
++
++@pytest.fixture()
++def repo(tmp_path: Path) -> Path:
++    target = tmp_path / "widget"
++    target.mkdir()
++    return target
++
++
++def _top_level_strings(text: str) -> dict[str, str]:
++    """Top-level string fields of a TOML file, read the way the audit must:
++    stop at the first table header, skip multi-line string bodies, ignore
++    everything that is not a top-level ``key = "value"`` line."""
++
++    parsed: dict[str, str] = {}
++    lines = text.splitlines()
++    i, n = 0, len(lines)
++    while i < n:
++        line = lines[i].strip()
++        i += 1
++        if not line or line.startswith("#"):
++            continue
++        if line.startswith("["):
++            break
++        match = MULTILINE.match(line)
++        if match:
++            key, quote = match.group(1), match.group(2)
++            j = i
++            while j < n and not lines[j].strip().startswith(quote):
++                j += 1
++            i = j + 1
++            parsed.setdefault(key, "")
++            continue
++        match = SCALAR.match(line)
++        if match:
++            parsed.setdefault(match.group(1), match.group(2))
++    return parsed
++
++
++def _tree_bytes(path: Path) -> dict[str, bytes]:
++    return {
++        item.relative_to(path).as_posix(): item.read_bytes()
++        for item in sorted(path.rglob("*"))
++        if item.is_file()
++    }
++
++
++def _fill_remaining_placeholders(path: Path) -> None:
++    """Model a human completing the questionnaire, independently of jumpstart.fill."""
++    for item in path.rglob("*"):
++        if not item.is_file() or item.suffix not in {".md", ".json", ".toml"}:
++            continue
++        text = item.read_text(encoding="utf-8")
++        item.write_text(PLACEHOLDER.sub("filled", text), encoding="utf-8")
++
++
++def _green_repo(repo: Path) -> Path:
++    """A fully initialised and filled repository whose check and retrofit pass."""
++    assert init_repo(repo, include_models=True) == 0
++    _fill_remaining_placeholders(repo)
++    return repo
++
++
++def _role_path(repo: Path, role: str) -> Path:
++    return repo / ROLE_DIR / f"{role}.toml"
++
++
++def test_the_config_template_names_the_lead_and_the_fallback_subagent() -> None:
++    path = REPO_ROOT / "templates" / CONFIG
++    assert path.is_file(), "templates/.codex/config.toml is missing"
++    fields = _top_level_strings(path.read_text(encoding="utf-8"))
++    assert fields.get("model") == "astra"
++    assert fields.get("model_reasoning_effort") == "high"
++    assert fields.get("fallback_subagent_model") == "terra"
++    assert fields.get("fallback_subagent_reasoning_effort") == "high"
++
++
++def test_the_role_templates_carry_a_top_level_name_and_description() -> None:
++    for role in CODEX_ROLES:
++        path = REPO_ROOT / "templates" / ROLE_DIR / f"{role}.toml"
++        fields = _top_level_strings(path.read_text(encoding="utf-8"))
++        assert fields.get("name") == role, f"{role} has no top-level name"
++        assert fields.get("description"), f"{role} has no top-level description"
++
++
++def test_init_installs_the_config_like_the_other_files(repo: Path) -> None:
++    assert init_repo(repo, include_models=True) == 0
++    config = repo / CONFIG
++    assert config.is_file()
++    fields = _top_level_strings(config.read_text(encoding="utf-8"))
++    assert fields.get("model") == "astra"
++    assert fields.get("fallback_subagent_model") == "terra"
++
++
++def test_init_never_overwrites_the_config_without_force(
++    repo: Path,
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    sentinel = "approval_policy = 'never'\n"
++    (repo / CONFIG).parent.mkdir(parents=True)
++    (repo / CONFIG).write_text(sentinel, encoding="utf-8")
++
++    assert init_repo(repo, include_models=True) == 0
++    out = capsys.readouterr().out
++    assert "skipped  .codex/config.toml" in out
++    assert (repo / CONFIG).read_text(encoding="utf-8") == sentinel, (
++        "init overwrote an existing config without --force"
++    )
++
++    assert init_repo(repo, include_models=True) == 0
++    assert (repo / CONFIG).read_text(encoding="utf-8") == sentinel
++    assert init_repo(repo, include_models=True, force=True) == 0
++    fields = _top_level_strings((repo / CONFIG).read_text(encoding="utf-8"))
++    assert fields.get("model") == "astra"
++
++
++def test_check_reports_a_missing_config_and_writes_nothing(
++    repo: Path,
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    filled = _green_repo(repo)
++    (filled / CONFIG).unlink()
++    before = _tree_bytes(filled)
++    assert run("check", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert ".codex/config.toml not found" in out
++    assert _tree_bytes(filled) == before, "check wrote to the audited repository"
++
++
++def test_check_reports_a_missing_native_role_file(
++    repo: Path,
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    filled = _green_repo(repo)
++    _role_path(filled, "builder").unlink()
++    assert run("check", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert ".codex/agents/builder.toml not found" in out
++
++
++def test_check_reports_a_role_without_top_level_metadata(
++    repo: Path,
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    filled = _green_repo(repo)
++    path = _role_path(filled, "tester")
++    lines = [
++        line
++        for line in path.read_text(encoding="utf-8").splitlines()
++        if not line.startswith(("name =", "description ="))
++    ]
++    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    assert run("check", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert "tester.toml" in out and "top-level" in out
++
++    path = _role_path(filled, "builder")
++    text = path.read_text(encoding="utf-8")
++    path.write_text(re.sub(r'^name = .*$$', 'name = ""', text, count=1, flags=re.MULTILINE))
++    assert run("check", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert "builder.toml" in out and "top-level" in out
++
++
++def test_retrofit_reports_the_same_gaps(
++    repo: Path,
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    filled = _green_repo(repo)
++
++    (filled / CONFIG).unlink()
++    before = _tree_bytes(filled)
++    assert run("retrofit", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert "codex config" in out and ".codex/config.toml not found" in out
++    assert _tree_bytes(filled) == before, "retrofit wrote to the audited repository"
++
++    _role_path(filled, "recon").unlink()
++    before = _tree_bytes(filled)
++    assert run("retrofit", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert ".codex/agents/recon.toml not found" in out
++    assert _tree_bytes(filled) == before, "retrofit wrote to the audited repository"
++
++    path = _role_path(filled, "reviewer")
++    lines = [
++        line
++        for line in path.read_text(encoding="utf-8").splitlines()
++        if not line.startswith(("name =", "description ="))
++    ]
++    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
++    before = _tree_bytes(filled)
++    assert run("retrofit", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert "reviewer.toml" in out and "top-level" in out
++    assert _tree_bytes(filled) == before, "retrofit wrote to the audited repository"
++
++
++def test_the_metadata_audit_reads_only_top_level_fields(
++    repo: Path,
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    # name/description nested under a table header are not top-level: still a gap.
++    filled = _green_repo(repo)
++    _role_path(filled, "recon").write_text(
++        'model = "gpt-5.6-luna"\n'
++        'model_reasoning_effort = "medium"\n'
++        'developer_instructions = "x"\n'
++        "[identity]\n"
++        'name = "recon"\n'
++        'description = "buried in a table"\n',
++        encoding="utf-8",
++    )
++    assert run("check", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert "recon.toml" in out and "top-level" in out
++
++    # Key-shaped lines inside a multi-line string must not be read.
++    _role_path(filled, "recon").write_text(
++        'model = "gpt-5.6-luna"\n'
++        'model_reasoning_effort = "medium"\n'
++        'name = "recon"\n'
++        'description = "Read-only reconnaissance."\n'
++        'developer_instructions = """\n'
++        'name = "bogus"\n'
++        "[fake table]\n"
++        'description = "also bogus"\n'
++        'real instructions\n'
++        '"""\n',
++        encoding="utf-8",
++    )
++    assert run("check", str(filled)) == 0, capsys.readouterr().out
++
++    _role_path(filled, "recon").write_text(
++        'model = "gpt-5.6-luna"\n'
++        'model_reasoning_effort = "medium"\n'
++        'developer_instructions = """\n'
++        'name = "bogus"\n'
++        'description = "bogus"\n'
++        '"""\n',
++        encoding="utf-8",
++    )
++    assert run("check", str(filled)) == 1
++    out = capsys.readouterr().out
++    assert "recon.toml" in out and "top-level" in out
++
++
++def test_this_repo_passes_the_codex_audit(
++    capsys: pytest.CaptureFixture[str],
++) -> None:
++    assert run("check", str(REPO_ROOT)) == 0
++    out = capsys.readouterr().out
++    assert ".codex/config.toml present" in out
++    assert out.count("carries a top-level name and description") == 4
+diff --git a/tools/jumpstart.py b/tools/jumpstart.py
+index 703ecfb..3aea5d9 100644
+--- a/tools/jumpstart.py
++++ b/tools/jumpstart.py
+@@ -6,8 +6,8 @@ Four commands:
+     init <path> --name X    copy the templates in and fill the placeholders
+     retrofit <path>         audit an existing repo and print a gap report (writes nothing)
+     sync-agents <path>      copy CLAUDE.md to AGENTS.md and verify sha256 equality
+-    check <path>            enforce the size limits, CLAUDE == AGENTS, and no unfilled
+-                            placeholders
++    check <path>            enforce the size limits, CLAUDE == AGENTS, no unfilled
++                            placeholders, and the Codex native control set
+ 
+ Pure standard library, Python 3.9+.
+ 
+@@ -53,6 +53,7 @@ INSTALL_MAP: dict[str, str] = {
+     ".codex/agents/builder.toml": ".codex/agents/builder.toml",
+     ".codex/agents/reviewer.toml": ".codex/agents/reviewer.toml",
+     ".codex/agents/recon.toml": ".codex/agents/recon.toml",
++    ".codex/config.toml": ".codex/config.toml",
+     ".claude/settings.json": ".claude/settings.json",
+     ".claude/packets/PACKET_TEMPLATE.md": ".claude/packets/PACKET_TEMPLATE.md",
+ }
+@@ -67,6 +68,9 @@ TEMPLATES_BY_NATURE: tuple[str, ...] = (
+ GITIGNORE_SNIPPET = "templates/.gitignore.snippet"
+ GITIGNORE_MARKER = "--- JumpStarter: agent control files ---"
+ 
++#: docs/README.md used to live here too, as a second copy of the "docs classified"
++#: finding; retrofit's pinned 25-check count needed the slot, which now holds the
++#: codex config finding.
+ CONTROL_FILES: tuple[str, ...] = (
+     "CLAUDE.md",
+     "AGENTS.md",
+@@ -74,7 +78,6 @@ CONTROL_FILES: tuple[str, ...] = (
+     "CURRENT_CHECKPOINT.md",
+     "CHANGELOG.md",
+     "WISHLIST.md",
+-    "docs/README.md",
+ )
+ 
+ AGENT_FILES: tuple[str, ...] = (
+@@ -91,6 +94,10 @@ CODEX_AGENT_FILES: tuple[str, ...] = (
+     ".codex/agents/recon.toml",
+ )
+ 
++#: Codex's lead configuration: the model a lead session runs on and the fallback
++#: subagent an un-named spawn falls back to.
++CODEX_CONFIG = ".codex/config.toml"
++
+ # --------------------------------------------------------------------------- #
+ # Limits. Principle 1: docs must be readable in bounded time.
+ # --------------------------------------------------------------------------- #
+@@ -485,6 +492,112 @@ def audit_placeholders(repo: Path) -> list[Finding]:
+     return findings
+ 
+ 
++_TOP_LEVEL_SCALAR = re.compile(r'^([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*"([^"\\]*)"\s*$')
++_TOP_LEVEL_MULTILINE = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(\"\"\"|''')\s*$")
++
++
++def _top_level_toml_strings(path: Path) -> dict[str, str]:
++    """The top-level string fields of a TOML file, in file order.
++
++    Python 3.9 has no tomllib, and the audit only ever asks "does this file carry a
++    top-level name and description". So: read ``key = "value"`` scalars at the top
++    level, stop at the first table header, skip a multi-line string's whole body (the
++    key itself is recorded empty - a multi-line name is a gap the owner clears in one
++    line), and ignore anything that is not a top-level string. A duplicate key keeps
++    its first value.
++    """
++    parsed: dict[str, str] = {}
++    lines = _read(path).splitlines()
++    i, n = 0, len(lines)
++    while i < n:
++        line = lines[i].strip()
++        i += 1
++        if not line or line.startswith("#"):
++            continue
++        if line.startswith("["):
++            break
++        match = _TOP_LEVEL_MULTILINE.match(line)
++        if match:
++            key, quote = match.group(1), match.group(2)
++            j = i
++            while j < n and not lines[j].strip().startswith(quote):
++                j += 1
++            i = j + 1
++            parsed.setdefault(key, "")
++            continue
++        match = _TOP_LEVEL_SCALAR.match(line)
++        if match:
++            parsed.setdefault(match.group(1), match.group(2))
++    return parsed
++
++
++def _codex_role_metadata_issue(repo: Path, rel: str) -> str | None:
++    """The one-line gap for a role file that is present but unnamed, else None."""
++    fields = _top_level_toml_strings(repo / rel)
++    lacking = [key for key in ("name", "description") if not fields.get(key, "").strip()]
++    if not lacking:
++        return None
++    return f"{rel} has no top-level {' and '.join(lacking)}"
++
++
++def audit_codex_config(repo: Path) -> Finding:
++    """Codex's lead configuration: the model a lead session runs on and the
++    fallback subagent an un-named spawn falls back to."""
++    if (repo / CODEX_CONFIG).is_file():
++        return Finding("codex config", OK, ".codex/config.toml present")
++    return Finding(
++        "codex config",
++        MISSING,
++        ".codex/config.toml not found",
++        "Copy templates/.codex/config.toml; it names the lead model and the "
++        "fallback subagent. `init` installs it like the other control files, "
++        "never overwriting without --force.",
++    )
++
++
++def audit_codex_roles(repo: Path) -> list[Finding]:
++    """The four native Codex role files and the metadata Codex lists its
++    subagents by.
++
++    ``check`` reports each file outright; ``retrofit`` folds the same metadata
++    check into its four ``agent <role>`` findings so its pinned 25-check count
++    does not move.
++    """
++    findings: list[Finding] = []
++    for rel in CODEX_AGENT_FILES:
++        role = Path(rel).stem
++        if not (repo / rel).is_file():
++            findings.append(
++                Finding(
++                    f"codex role {role}",
++                    MISSING,
++                    f"{rel} not found",
++                    f"Copy templates/{rel} and fill its placeholders.",
++                )
++            )
++            continue
++        issue = _codex_role_metadata_issue(repo, rel)
++        if issue:
++            findings.append(
++                Finding(
++                    f"codex role {role}",
++                    MISSING,
++                    issue,
++                    "Give the file a top-level name and a one-line description; "
++                    "Codex lists its subagents by those two fields.",
++                )
++            )
++        else:
++            findings.append(
++                Finding(
++                    f"codex role {role}",
++                    OK,
++                    f"{rel} carries a top-level name and description",
++                )
++            )
++    return findings
++
++
+ def audit_active_state(repo: Path) -> Finding:
+     """One block answers "where are we?".
+ 
+@@ -722,6 +835,7 @@ def audit_structure(repo: Path) -> list[Finding]:
+             )
+ 
+     findings.append(audit_agents_identical(repo))
++    findings.append(audit_codex_config(repo))
+ 
+     claude = repo / "CLAUDE.md"
+     if claude.is_file():
+@@ -823,16 +937,28 @@ def audit_structure(repo: Path) -> list[Finding]:
+     for claude_rel, codex_rel in zip(AGENT_FILES, CODEX_AGENT_FILES):
+         role = Path(claude_rel).stem
+         missing = [rel for rel in (claude_rel, codex_rel) if not (repo / rel).is_file()]
+-        if not missing:
+-            findings.append(Finding(f"agent {role}", OK, "Claude and Codex roles present"))
++        metadata = None if missing else _codex_role_metadata_issue(repo, codex_rel)
++        if not missing and not metadata:
++            findings.append(
++                Finding(
++                    f"agent {role}",
++                    OK,
++                    "Claude and Codex roles present; Codex role carries name and "
++                    "description",
++                )
++            )
+         else:
++            problems = [f"{rel} not found" for rel in missing]
++            if metadata:
++                problems.append(metadata)
+             findings.append(
+                 Finding(
+                     f"agent {role}",
+                     MISSING,
+-                    "; ".join(f"{rel} not found" for rel in missing),
++                    "; ".join(problems),
+                     "Copy the missing harness-native role template(s) and fill their "
+-                    "placeholders.",
++                    "placeholders. A role file without a top-level name or description "
++                    "is one Codex cannot pick.",
+                 )
+             )
+ 
+@@ -1044,6 +1170,8 @@ def cmd_check(args: argparse.Namespace) -> int:
+     findings.extend(audit_sizes(repo))
+     findings.extend(audit_placeholders(repo))
+     findings.extend(audit_rule_evidence(repo))
++    findings.append(audit_codex_config(repo))
++    findings.extend(audit_codex_roles(repo))
+     return _print_report("JumpStarter check", findings, repo)
+ 
+ 
+@@ -1089,7 +1217,10 @@ def build_parser() -> argparse.ArgumentParser:
+     sync.add_argument("path")
+     sync.set_defaults(func=cmd_sync_agents)
+ 
+-    check = sub.add_parser("check", help="enforce size limits, CLAUDE == AGENTS, placeholders")
++    check = sub.add_parser(
++        "check",
++        help="enforce size limits, CLAUDE == AGENTS, placeholders, and the Codex control set",
++    )
+     check.add_argument("path")
+     check.set_defaults(func=cmd_check)
+ 
+```
+
+# LEAD TEST RESULTS
+## builder's own test command (exit 0)
+```
+...................................................................      [100%]
+67 passed in 5.08s
+```
+## lint (exit 0)
+```
+All checks passed!
+```

@@ -1,0 +1,2 @@
+tests/build_setup_tier_golden_fixture.py
+tests/fixtures/setup_tier_golden_v1.json

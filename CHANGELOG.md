@@ -137,6 +137,17 @@ do not rebuild landed work.**
 The last two build days only. When this section passes ~800 lines, archive the older
 entries under `docs/` and leave a pointer.
 
+### 2026-10-27 — qwen-trial-min: Qwen on a minimal brief, nine tasks (docs/bench/qwen-trial-min)
+Docs-only. Nine merged commits (four TradingBotV3, five across ContentSummarizer, EveTradingbot, JumpStarter and
+TraderTaxHelper) replayed from a 5-8 line brief written without lead recon; Qwen 3.8 27B fp4 built each alone in a
+throwaway worktree, Haiku 5.5 MEDIUM reviewed with one rework pass on NO-GO, the lead ran the suites and reproduced
+blockers, Opus 5.5 graded blind against the real diff. Result: 2 MERGE, 3 MINOR, 4 MAJOR; Haiku medium 7 GO / 2 NO-GO
+with two false rounds; $7.04 of a $7.50 OpenRouter cap, the tenth task skipped. Harness (`run-task.sh`, `proxy.js`,
+`packet.sh`, `usage-sum.js`, prompts), briefs, run records and the write-up are under `docs/bench/qwen-trial-min/`;
+verdict in `results.md`: not the default builder, usable on small non-trading tasks when the brief carries names,
+formats and tables. `ruff.toml` excludes `docs/bench/*/runs`; `.gitignore` drops the raw transcripts and copied
+session dirs. No template, CLI, check or limit changed; no pipeline rule changed.
+
 ### 2026-09-11 — Packet M1: workspace memory and Codex recall
 
 Added a pure routing index and dated, provenance-tagged person/project/decision files,

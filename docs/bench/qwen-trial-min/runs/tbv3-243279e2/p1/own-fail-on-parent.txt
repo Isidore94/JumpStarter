@@ -1,0 +1,9 @@
+FAILED tests/test_evidence_snapshot.py::test_the_ops_scripts_are_versioned_here_and_installed_there
+FAILED tests/test_like_cohort_grading.py::test_the_slot_grades_the_history_retroactively
+FAILED tests/test_like_cohort_grading.py::test_the_performance_rollup_carries_the_robust_half
+3 failed, 120 passed in 32.22s
+parent-check done
+FAILED tests/test_m5_strength_characterization.py::test_the_m5_formula_itself_has_not_been_edited
+FAILED tests/test_ws_rp_shared_report.py::test_n3s_narration_tests_are_byte_identical_to_the_branch_point
+FAILED tests/test_ws_rp_shared_report.py::test_the_bounded_narration_view_itself_is_unchanged
+3 failed, 107 passed in 27.04s

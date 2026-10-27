@@ -1,0 +1,6 @@
+OpenRouter key: <key> | used $27.976516052 | today (usage_daily) $14.144999383 | limit 50 | remaining 22.023483948
+
+[qwen/qwen3.8-27b: 59 in, 159 out, via DeepInfra]
+
+
+ready

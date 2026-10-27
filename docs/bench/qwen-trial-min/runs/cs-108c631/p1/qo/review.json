@@ -1,0 +1,12 @@
+{
+  "verdict": "GO",
+  "blockers": [
+    "FIXED before final run: _REFRESH_JS's onHold() treated every input with a non-empty value as user editing, but the Auto-refresh and Transcription .seg controls render <input type=\"hidden\" ... value=\"...\"> which always have values - the countdown would have held permanently and auto-refresh never fired. Fix: skip f.type === \"hidden\" in onHold(). Re-verified by full suite (41/41 green) and by hand-tracing the selector against the rendered HTML."
+  ],
+  "advisories": [
+    "Pre-existing ResourceWarning (unclosed open() in dashboard.summary_page/home) now surfaces because the new tests exercise summary_page with a real file; not introduced by this change and fixing it would touch the summary page, which is out of scope.",
+    "The JS hold-while-editing behavior cannot be unit-tested in this environment (no DOM, no httpx/TestClient); it is verified by code inspection and static render checks, not by executing the script.",
+    "In a JS-less browser the <noscript> meta-refresh reloads even while a field has text (inherent to meta-refresh; the task accepts this as the fallback)."
+  ],
+  "summary": "Per-browser auto-refresh (Refresh now + Off/15s/30s/60s posting to /settings/refresh exactly like /settings/transcribe, persisted in the dash_refresh cookie) with server-side validation on both the write and the read path, a <noscript> meta-refresh fallback on the home page only, a JS countdown that holds and says so while any visible input is focused or non-empty, and a 30 s display-only cache (pipeline.gpu_node_online_cached) for the GPU badge while transcribe() routing still probes live. 11 new tests in tests/test_app.py (10 errors + 1 failure red before the build, all green after); full suite 41/41 OK. One real defect (hidden inputs breaking the hold logic) found in self-review and fixed."
+}

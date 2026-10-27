@@ -1,0 +1,39 @@
+..............FF.....................                                    [100%]
+================================== FAILURES ===================================
+______________ test_assigned_short_put_premium_lowers_share_cost ______________
+
+    def test_assigned_short_put_premium_lowers_share_cost():
+        # IBKR: sold 1 DRAM 65 P for 417, assigned: option row at price 0 (A;C) and 100 shares bought at 65 (A;O).
+        put = "DRAM 2026-07-17 P 65.00"
+        rows = [
+            ib(date(2026, 6, 17), -1, 4.17, put, "O", asset_class="OPT", commission=1.06),
+            ib(date(2026, 7, 16), 100, 65.0, "DRAM", "A;O"),  # listed before the option row in the statement
+            ib(date(2026, 7, 16), 1, 0.0, put, "A;C", asset_class="OPT"),
+        ]
+        res = run(rows, FxTable({}, fallback=2.0))
+>       assert res.events == [] and not res.warnings
+E       AssertionError: assert ([Realized(dat...cial_note='')] == []
+E         
+E         Left contains one more item: Realized(date=datetime.date(2026, 7, 16), symbol='DRAM 2026-07-17 P 65.00', asset_class='OPT', broker='ibkr', account_...ce='fallback', fingerprint='c24232f750d58c6ca794e97779a18b371e1730ac', superficial_denied_cad=0.0, superficial_note='')
+E         Use -v to get more diff)
+
+tests\ref_test_gains.py:211: AssertionError
+___ test_closing_trade_without_opening_is_flagged_and_opening_short_is_not ____
+
+    def test_closing_trade_without_opening_is_flagged_and_opening_short_is_not():
+        rows = [
+            ib(date(2026, 1, 7), 4, 0.25, "NVDA 2026-01-09 P 180.00", "C;P", asset_class="OPT"),  # short opened in 2025
+            ib(date(2026, 1, 8), -100, 175.0, "PLTR", "O"),  # a real short sale
+            ib(date(2026, 1, 8), 100, 174.0, "PLTR", "C"),
+        ]
+        res = run(rows, FxTable({}, fallback=2.0))
+>       assert len(res.warnings) == 1 and "NVDA 2026-01-09 P 180.00" in res.warnings[0] and "earlier statement" in res.warnings[0]
+E       AssertionError: assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = GainsResult(events=[Realized(date=datetime.date(2026, 1, 8), symbol='PLTR', asset_class='STK', broker='ibkr', account_...[], max_foreign_cost_cad=200.0, max_foreign_cost_date=datetime.date(2026, 1, 7), fx_fallback_uses=3, fx_nearest_uses=0).warnings
+
+tests\ref_test_gains.py:223: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/ref_test_gains.py::test_assigned_short_put_premium_lowers_share_cost
+FAILED tests/ref_test_gains.py::test_closing_trade_without_opening_is_flagged_and_opening_short_is_not
+2 failed, 35 passed in 0.25s

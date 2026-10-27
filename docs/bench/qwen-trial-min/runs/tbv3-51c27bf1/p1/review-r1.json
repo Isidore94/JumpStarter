@@ -1,0 +1,20 @@
+{
+  "reviewer": "haiku-5.5 effort medium",
+  "round": 1,
+  "verdict": "NO-GO",
+  "blockers": [
+    {"file": "tests/test_technical_integrity_rolling.py", "line": 687, "claim": "test_chip_counts_the_decisive_tests_per_side asserts LEVELS FAILING for inputs (M5 support 2.0 VERY WEAK, resistance 8.5 STRONG) that hit the brief's SUPPORT FAILING rule; the test expectation is wrong, not the code."},
+    {"file": "tests/test_technical_integrity_rolling.py", "line": 706, "claim": "test_chip_keeps_the_pooled_d1_part asserts LEVELS FAILING for the same inputs; same wrong expectation."},
+    {"file": "tests/test_technical_integrity_rolling.py", "line": 748, "claim": "test_trend_hour_reads_resistance_failing_end_to_end gets support BUILDING not STRONG: events at 11:35-11:45 fall outside the default 60-minute window ending at as_of 13:00. The done-when requires this test to pass."}
+  ],
+  "advisories": [
+    {"file": "scripts/technical_integrity.py", "claim": "_side_norms is a stub copying pooled hour norms to the four side keys; say which values are placeholders."},
+    {"file": "scripts/technical_integrity.py", "claim": "Side filter relies on approach_side being exactly 'above'/'below'; confirm the producer emits those."},
+    {"file": "scripts/technical_integrity.py", "claim": "Both sides MIXED with pooled M5 WEAK gives LEVELS NORMAL; worth a docstring line."},
+    {"file": "scripts/mentor_app/lens.py", "claim": "Neither-side-weak fallback to generic wording is untested."},
+    {"file": "tests", "claim": "test_evidence_snapshot and test_market_read_inbox fail on the clean parent too; confirm they mask nothing."}
+  ],
+  "tests": "Covers side reads, verdict table, old-snapshot fallback, chip, tooltip, lens and Mentor text; misses a passing end-to-end trend hour, the neither-side-weak lens path, and a check that the golden fixture's events and sha are unchanged.",
+  "brief_mistakes": "Brief does not say which window or as_of the trend-hour fixture uses, and leaves the side-norm values open to a stub; the verdict rules in the brief are consistent with the code, so the failing chip tests contradict the brief rather than the brief being wrong.",
+  "lead_reproduction": "All 3 blockers real: the lead reran the two test files in isolation before the review (3 failed, 88 passed) with exactly these failures. No rework pass: the build was cut off by an OpenRouter 402 (credits exhausted) and a second pass would hit the same error; cap headroom was $0.46. Final gate verdict NO-GO. The fixture's events and raw_input_sha256 were checked by the lead: unchanged."
+}

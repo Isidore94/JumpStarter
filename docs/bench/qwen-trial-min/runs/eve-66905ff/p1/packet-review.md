@@ -1,0 +1,245 @@
+# BRIEF
+Goal: the screen's net_edge_pct flatters wide books. It is expected_move_pct minus breakeven_move_pct, but those two are measured against different reference points (the close and the bid), so a wide spread's cost is understated and a wide book can rank first. Price the real round trip multiplicatively instead: target_bid = vwap x (bid_walk / close); net_edge = sell proceeds at target_bid / ask_walk - 1 (the book keeps its shape as price reverts; say that assumption in a comment). A flat book already at value must net exactly minus the tax.
+Done when: tests/test_screen_digest.py has a wide-spread candidate that no longer ranks first and a flat-book case that nets -tax; `PYTHONPATH=src python -m pytest -q` green, ruff clean.
+Files: src/evescreener/screen.py (run_screen, the net_edge_pct line); find the helpers it needs.
+Don't touch: the other gates, the digest output format, the candidate sort.
+Pattern: the existing breakeven_move_pct / tiers maths in screen.py.
+
+# CANDIDATE DIFF
+```diff
+diff --git a/src/evescreener/screen.py b/src/evescreener/screen.py
+index e8c2f85..27b2b7b 100644
+--- a/src/evescreener/screen.py
++++ b/src/evescreener/screen.py
+@@ -32,7 +32,7 @@ from .signals.setup import SetupParams, anchor_grid, evaluate_setups
+ from .store.db import Database
+ from .timeutil import ensure_utc, iso, parse_iso, utcnow
+ 
+-__all__ = ["Candidate", "ScreenResult", "run_screen"]
++__all__ = ["Candidate", "ScreenResult", "net_edge_pct", "run_screen"]
+ 
+ 
+ @dataclass(slots=True)
+@@ -151,6 +151,36 @@ def _tier_prices(row, tiers) -> dict[float, float | None]:
+     return prices
+ 
+ 
++def net_edge_pct(
++    *,
++    vwap: float | None,
++    close: float | None,
++    ask_walk: float | None,
++    bid_walk: float | None,
++    costs: CostModel,
++) -> float | None:
++    """The net edge of the real round trip at the reversion price, in percent.
++
++    Subtracting `expected_move_pct` (measured from the close) from
++    `breakeven_move_pct` (measured from the bid) understates a wide spread:
++    the two percentages do not share a reference, so the cost of the walk is
++    never fully charged. Instead price the round trip multiplicatively —
++    entry crosses at the measured ask walk, and the exit fills where the bid
++    sits once the price has reverted to anchored value. The book is assumed
++    to keep its shape through that reversion, so the bid walk scales by the
++    same factor the close does: `vwap * bid_walk / close`. A wide spread is
++    charged the cost it actually is, and a flat book already at value nets
++    exactly minus the sales tax. Any missing or non-positive input is
++    UNKNOWN, never an optimistic zero.
++    """
++    if not vwap or not close or not ask_walk or not bid_walk:
++        return None
++    if vwap <= 0 or close <= 0 or ask_walk <= 0 or bid_walk <= 0:
++        return None
++    target_bid = vwap * (bid_walk / close)
++    return (costs.sell_proceeds(target_bid, maker=False) / ask_walk - 1.0) * 100.0
++
++
+ def run_screen(
+     config: Config,
+     db: Database,
+@@ -315,6 +345,15 @@ def run_screen(
+         strength = real_relative_strength(
+             frame, composite_frame, length=config.signals.rrs_length, scope="forge_composite"
+         )
++        # The ranking quantity: the real round trip, priced multiplicatively
++        # (the book keeps its shape as the price reverts to value).
++        net_edge = net_edge_pct(
++            vwap=bands.vwap,
++            close=reference,
++            ask_walk=ask_prices[tiers[0]],
++            bid_walk=bid_prices[tiers[0]],
++            costs=costs,
++        )
+         candidates.append(
+             Candidate(
+                 type_id=int(type_id),
+@@ -339,7 +378,7 @@ def run_screen(
+                     }
+                     for tier in breakevens
+                 ],
+-                net_edge_pct=(expected_move - smallest.breakeven_move_pct),
++                net_edge_pct=net_edge,
+                 expected_move_pct=expected_move,
+                 entry_price=priced.entry_price,
+                 exit_price=priced.exit_price_taker,
+diff --git a/tests/test_screen_digest.py b/tests/test_screen_digest.py
+index 13c40c6..e5f17db 100644
+--- a/tests/test_screen_digest.py
++++ b/tests/test_screen_digest.py
+@@ -10,6 +10,7 @@ import numpy as np
+ import pandas as pd
+ import pytest
+ 
++from evescreener.costs import CostModel
+ from evescreener.digest import (
+     AMBIGUOUS,
+     DELIVERED,
+@@ -20,7 +21,7 @@ from evescreener.digest import (
+     post_digest,
+     split_content,
+ )
+-from evescreener.screen import run_screen
++from evescreener.screen import net_edge_pct, run_screen
+ from evescreener.signals.composite import build_composite
+ 
+ NOW = datetime(2026, 8, 20, 16, 0, tzinfo=UTC)
+@@ -77,6 +78,65 @@ def book_for(type_ids, *, sweep=NOW, ask=760_000.0, bid=740_000.0):
+     return pd.DataFrame(rows)
+ 
+ 
++def shaped_bars(type_ids, levels):
++    """Flat at Q, a bump to P on bars 180-189, back to Q on bars 190-199.
++
++    Per `levels: {type_id: (Q, P)}`; unlisted types stay flat at 500k and can
++    never be setups (zero sigma -> dip UNKNOWN). The anchored segment starts
++    at bar 180, so its vwap is exactly (P + Q) / 2, and close[199] ==
++    close[179] makes the 20-day move exactly zero.
++    """
++    stamps = pd.date_range("2026-01-01 11:00", periods=200, freq="D", tz="UTC")
++    rows = []
++    for type_id in type_ids:
++        close = np.full(200, 500_000.0)
++        if type_id in levels:
++            q, p = levels[type_id]
++            close[:] = q
++            close[180:190] = p
++        for index, stamp in enumerate(stamps):
++            rows.append(
++                {
++                    "type_id": type_id,
++                    "region_id": 10000002,
++                    "datetime": stamp,
++                    "high": close[index] * 1.01,
++                    "low": close[index] * 0.99,
++                    "close": close[index],
++                    "volume": 100_000.0,
++                    "order_count": 400,
++                    "isk_value": close[index] * 100_000.0,
++                    "fetched_at": "2026-08-20T00:00:00+00:00",
++                }
++            )
++    return pd.DataFrame(rows)
++
++
++def wobble_bars(type_ids):
++    """A 20-bar sine wobble for every type: the composite's 20-day move is
++    exactly 0 while its ATR stays positive, so every RRS read comes out 0."""
++    stamps = pd.date_range("2026-01-01 11:00", periods=200, freq="D", tz="UTC")
++    close = 1_000_000.0 * (1.0 + 0.01 * np.sin(np.pi * np.arange(200) / 10.0))
++    rows = []
++    for type_id in type_ids:
++        for index, stamp in enumerate(stamps):
++            rows.append(
++                {
++                    "type_id": type_id,
++                    "region_id": 10000002,
++                    "datetime": stamp,
++                    "high": close[index],
++                    "low": close[index],
++                    "close": close[index],
++                    "volume": 100_000.0,
++                    "order_count": 400,
++                    "isk_value": close[index] * 100_000.0,
++                    "fetched_at": "2026-08-20T00:00:00+00:00",
++                }
++            )
++    return pd.DataFrame(rows)
++
++
+ @pytest.fixture
+ def seeded_db(db):
+     db.replace_types([(tid, f"Type {tid}", 1857, 1.0, 1.0, 1) for tid in range(34, 50)])
+@@ -147,6 +207,58 @@ def test_a_spoofed_book_is_flagged(config, seeded_db):
+         assert any("one order holds" in flag for flag in result.candidates[0]["flags"])
+ 
+ 
++def test_flat_book_at_value_nets_exactly_minus_the_tax(config):
++    costs = CostModel.from_config(config)
++    edge = net_edge_pct(
++        vwap=100_000.0, close=100_000.0, ask_walk=100_000.0, bid_walk=100_000.0, costs=costs
++    )
++    # A book already sitting at value has no reversion to harvest: crossing the
++    # ask walk in and the same level out loses exactly the sales tax — no
++    # more, no less.
++    assert edge == pytest.approx(-costs.sales_tax_pct, abs=1e-12)
++
++
++def test_a_wide_spread_no_longer_ranks_first(config, seeded_db):
++    # Both types dip below anchored value and clear every gate; the wide book
++    # dips deeper AND carries the fatter spread. Under the old
++    # `expected_move - breakeven` arithmetic — one percentage against the
++    # close minus one against the bid — the wide book's spread cost was
++    # understated and this exact scenario ranked it first (+30.4934 vs
++    # +29.5663). Priced as the real round trip (entry at the ask walk, exit
++    # at the bid that keeps the book's shape through the reversion), the
++    # order flips.
++    wide, tight = 37, 38
++    levels = {wide: (700_000.0, 1_300_000.0), tight: (753_000.0, 1_255_000.0)}
++    ids = list(range(34, 44))
++    bars = shaped_bars(ids, levels)
++    composite = build_composite(wobble_bars(ids), members=10, min_members=5)
++    book = pd.concat(
++        [
++            book_for([wide], ask=760_000.0, bid=700_000.0),
++            book_for([tight], ask=757_000.0, bid=755_000.0),
++        ],
++        ignore_index=True,
++    )
++    result = run_screen(config, seeded_db, bars, composite, book, now=NOW)
++    assert result.setups_found == 2
++    assert result.unknown_cost == 0
++    assert [row["type_id"] for row in result.candidates] == [tight, wide]
++
++    costs = CostModel.from_config(config)
++    by_id = {row["type_id"]: row for row in result.candidates}
++    # Re-derive the formula from the scenario's exact inputs:
++    # target_bid = vwap * (bid_walk / close); sell proceeds net of the sales
++    # tax; edge = proceeds / ask_walk - 1.
++    for type_id, (q, p), ask, bid in (
++        (wide, levels[wide], 760_000.0, 700_000.0),
++        (tight, levels[tight], 757_000.0, 755_000.0),
++    ):
++        vwap = (p + q) / 2.0
++        expected = ((vwap * (bid / q) * (1.0 - costs.sales_tax_pct / 100.0)) / ask - 1.0) * 100.0
++        assert by_id[type_id]["net_edge_pct"] == pytest.approx(expected, abs=1e-6)
++    assert by_id[wide]["net_edge_pct"] < by_id[tight]["net_edge_pct"]
++
++
+ # -- the digest -------------------------------------------------------------
+ 
+ 
+```
+
+# LEAD TEST RESULTS
+## builder's own test command (exit )
+```
+........................................................................ [ 27%]
+........................................................................ [ 55%]
+........................................................................ [ 83%]
+...........................................                              [100%]
+259 passed, 7 deselected in 11.23s
+```
+## lint (exit )
+```
+All checks passed!
+```

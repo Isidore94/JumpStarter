@@ -1,0 +1,20 @@
+FURB167 [*] Use of regular expression alias `re.M`
+   --> tests\test_codex_lead_config.py:228:79
+    |
+226 |     path = _role_path(filled, "builder")
+227 |     text = path.read_text(encoding="utf-8")
+228 |     path.write_text(re.sub(r'^name = .*$$', 'name = ""', text, count=1, flags=re.M))
+    |                                                                               ^^^^
+229 |     assert run("check", str(filled)) == 1
+230 |     out = capsys.readouterr().out
+    |
+help: Replace with `re.MULTILINE`
+    |
+227 |     text = path.read_text(encoding="utf-8")
+    -     path.write_text(re.sub(r'^name = .*$$', 'name = ""', text, count=1, flags=re.M))
+228 +     path.write_text(re.sub(r'^name = .*$$', 'name = ""', text, count=1, flags=re.MULTILINE))
+229 |     assert run("check", str(filled)) == 1
+    |
+
+Found 1 error.
+[*] 1 fixable with the `--fix` option.

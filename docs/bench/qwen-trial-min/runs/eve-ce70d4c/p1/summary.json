@@ -1,0 +1,36 @@
+{
+  "sha7": "ce70d4c",
+  "repo": "C:/Users/Aaron/EveTradingbot",
+  "base": "0edd59c",
+  "ref": "ce70d4c",
+  "pass": "first",
+  "exit_code": 0,
+  "elapsed_s": 235,
+  "turns": 75,
+  "own_tests_rc": 0,
+  "ruff_rc": 0,
+  "ref_tests_rc": 0,
+  "leak_count": 1,
+  "self_review_verdict": "GO",
+  "own_cmd": "C:/Users/Aaron/EveTradingbot/.venv/Scripts/python.exe -m pytest -q",
+  "lint_cmd": "C:/Users/Aaron/EveTradingbot/.venv/Scripts/python.exe -m ruff check .",
+  "import_ok": true,
+  "ref_pass": 29,
+  "ref_total": 29,
+  "cost_usd": 0.23116,
+  "usage": {
+    "requests": 25,
+    "input": 72850,
+    "output": 26308,
+    "thinking": 15666,
+    "cache_read": 1675776,
+    "cost": 0.23116,
+    "errors": 0,
+    "providers": {
+      "ModelRun": 25
+    }
+  },
+  "key_delta_usd": 0.402552,
+  "key_before": "OpenRouter key: <key> | used $23.683471087 | today (usage_daily) $9.851954418 | limit 50 | remaining 26.316528913\n\n[qwen/qwen3.8-27b: 59 in, 181 out, via DeepInfra]\n\n\nready",
+  "key_after": "OpenRouter key: <key> | used $24.086022707 | today (usage_daily) $10.254506038 | limit 50 | remaining 25.913977293\n\n[qwen/qwen3.8-27b: 59 in, 128 out, via DeepInfra]\n\n\nready"
+}

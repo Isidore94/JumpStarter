@@ -1,6 +1,6 @@
 # JumpStarter documentation index
 
-Last reconciled: **2026-09-11** (packet M1)
+Last reconciled: **2026-10-27** (qwen-trial-min bench)
 
 Start here when a supporting detail is not in the root control set. This index classifies
 **every** maintained Markdown file, so a historical plan can never be mistaken for
@@ -93,6 +93,13 @@ the archive is listed here.
 | File | What it records |
 |---|---|
 | [`prompts/VERIFICATION_REPORT_2026-09-03.md`](prompts/VERIFICATION_REPORT_2026-09-03.md) | The 2026-09-03 second pass re-derived by reproduction (every command and its output), and the four-agent loop run once on packet I1: what each agent did, what it cost, the proposed allow-list, and what was not done |
+
+| [`bench/qwen-trial-min/results.md`](bench/qwen-trial-min/results.md) | **2026-10-27 bench: can Qwen 3.8 27B fp4 build from a 5-8 line brief with a Haiku-medium gate and one rework?** Nine merged commits (4 TradingBotV3, 5 across four other repos) replayed with no lead recon; Qwen built each alone, Haiku MEDIUM reviewed, the lead ran the suites, Opus graded blind; per-task table, comparison with qwen-trial-10, failures by cause, what the minimal brief must always include, the verdict. Nothing in the live pipeline changed |
+
+The rest of `docs/bench/qwen-trial-min/` (`requests.md`, `briefs/`, `prompts/`, the runners `run-task.sh`,
+`proxy.js`, `packet.sh`, `usage-sum.js`, `cost.py`, and `runs/<task>/p<n>/` with each pass's diff, summary,
+usage log, review packets and the review and judge JSON) is that bench's inputs and raw output; transcripts and
+copied `home/` session dirs are git-ignored. `results.md` classifies it.
 
 `.claude/packets/*.md` are tracked from 2026-09-03: a packet is the record of what was
 authorised, and reviews cite it. They are not classified here individually.

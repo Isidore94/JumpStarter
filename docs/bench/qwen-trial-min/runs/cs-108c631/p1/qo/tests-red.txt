@@ -1,0 +1,120 @@
+..........EEE...EEEEEEE.FC:\Users\Aaron\llm-harness\wt\qtm-108c631\dashboard.py:350: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\Aaron\\AppData\\Local\\Temp\\tmpgsm6ep0s\\abc.txt' mode='r' encoding='utf-8'>
+  text = open(path, encoding="utf-8").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................
+======================================================================
+ERROR: test_badge_cache_remembers_an_offline_node (test_app.GpuBadgeCacheTests.test_badge_cache_remembers_an_offline_node)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 458, in test_badge_cache_remembers_an_offline_node
+    mock.patch.object(pipeline.time, "time", clock.time):
+                      ^^^^^^^^^^^^^
+AttributeError: module 'pipeline' has no attribute 'time'
+
+======================================================================
+ERROR: test_badge_probes_at_most_every_30_seconds (test_app.GpuBadgeCacheTests.test_badge_probes_at_most_every_30_seconds)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 442, in test_badge_probes_at_most_every_30_seconds
+    mock.patch.object(pipeline.time, "time", clock.time):
+                      ^^^^^^^^^^^^^
+AttributeError: module 'pipeline' has no attribute 'time'
+
+======================================================================
+ERROR: test_transcribe_routes_on_a_live_probe_not_the_badge_cache (test_app.GpuBadgeCacheTests.test_transcribe_routes_on_a_live_probe_not_the_badge_cache)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 471, in test_transcribe_routes_on_a_live_probe_not_the_badge_cache
+    mock.patch.object(pipeline.time, "time", clock.time), \
+                      ^^^^^^^^^^^^^
+AttributeError: module 'pipeline' has no attribute 'time'
+
+======================================================================
+ERROR: test_every_offered_interval_round_trips_through_the_cookie (test_app.RefreshControlTests.test_every_offered_interval_round_trips_through_the_cookie)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 383, in test_every_offered_interval_round_trips_through_the_cookie
+    cookie = dashboard.set_refresh(value).headers["set-cookie"]
+             ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'dashboard' has no attribute 'set_refresh'
+
+======================================================================
+ERROR: test_hand_edited_cookie_cannot_set_a_faster_interval (test_app.RefreshControlTests.test_hand_edited_cookie_cannot_set_a_faster_interval)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 388, in test_hand_edited_cookie_cannot_set_a_faster_interval
+    cookie = dashboard.set_refresh(value).headers["set-cookie"]
+             ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'dashboard' has no attribute 'set_refresh'
+
+======================================================================
+ERROR: test_home_badge_uses_the_cached_probe_not_the_live_one (test_app.RefreshControlTests.test_home_badge_uses_the_cached_probe_not_the_live_one)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 410, in test_home_badge_uses_the_cached_probe_not_the_live_one
+    ), mock.patch("pipeline.gpu_node_online_cached", return_value=True) as cached, \
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Aaron\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\unittest\mock.py", line 1467, in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Aaron\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\unittest\mock.py", line 1437, in get_original
+    raise AttributeError(
+AttributeError: <module 'pipeline' from 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-108c631\\pipeline.py'> does not have the attribute 'gpu_node_online_cached'
+
+======================================================================
+ERROR: test_home_ignores_a_cookie_outside_the_offered_values (test_app.RefreshControlTests.test_home_ignores_a_cookie_outside_the_offered_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 403, in test_home_ignores_a_cookie_outside_the_offered_values
+    text = self.home_html(cookies)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 359, in home_html
+    return dashboard.home(_FakeRequest(cookies))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: home() takes 0 positional arguments but 1 was given
+
+======================================================================
+ERROR: test_home_offers_refresh_now_and_the_offered_intervals (test_app.RefreshControlTests.test_home_offers_refresh_now_and_the_offered_intervals)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 362, in test_home_offers_refresh_now_and_the_offered_intervals
+    text = self.home_html()
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 359, in home_html
+    return dashboard.home(_FakeRequest(cookies))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: home() takes 0 positional arguments but 1 was given
+
+======================================================================
+ERROR: test_home_renders_the_meta_refresh_for_a_valid_cookie (test_app.RefreshControlTests.test_home_renders_the_meta_refresh_for_a_valid_cookie)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 393, in test_home_renders_the_meta_refresh_for_a_valid_cookie
+    text = self.home_html({"dash_refresh": "30"})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 359, in home_html
+    return dashboard.home(_FakeRequest(cookies))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: home() takes 0 positional arguments but 1 was given
+
+======================================================================
+ERROR: test_refresh_post_redirects_and_sets_the_cookie (test_app.RefreshControlTests.test_refresh_post_redirects_and_sets_the_cookie)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 376, in test_refresh_post_redirects_and_sets_the_cookie
+    response = dashboard.set_refresh("30")
+               ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'dashboard' has no attribute 'set_refresh'
+
+======================================================================
+FAIL: test_settings_refresh_route_is_registered (test_app.RefreshControlTests.test_settings_refresh_route_is_registered)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Aaron\llm-harness\wt\qtm-108c631\tests\test_app.py", line 373, in test_settings_refresh_route_is_registered
+    self.assertIn(("/settings/refresh", {"POST"}), routes)
+AssertionError: ('/settings/refresh', {'POST'}) not found in [('/openapi.json', {'GET', 'HEAD'}), ('/docs', {'GET', 'HEAD'}), ('/docs/oauth2-redirect', {'GET', 'HEAD'}), ('/redoc', {'GET', 'HEAD'}), ('/', {'GET'}), ('/s/{stem}', {'GET'}), ('/search', {'GET'}), ('/queue', {'POST'}), ('/drain', {'POST'}), ('/settings/transcribe', {'POST'}), ('/retry/{number}', {'POST'})]
+
+----------------------------------------------------------------------
+Ran 41 tests in 0.222s
+
+FAILED (failures=1, errors=10)

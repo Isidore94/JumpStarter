@@ -1,0 +1,403 @@
+FFFF.FFFFFFFFFFF...F.                                                    [100%]
+================================== FAILURES ===================================
+______________ test_a_reversal_inside_the_session_sets_the_flag _______________
+
+    def test_a_reversal_inside_the_session_sets_the_flag():
+>       flag, note = m30.evaluate_extended_pullback(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            _long_bars(), side="LONG", now=NOW, session_date=FIRE_DT.date(),
+            daily_bars=tape.open_gate_daily_bars(),
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'evaluate_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:84: AttributeError
+_________ test_a_reversal_in_an_earlier_session_does_not_set_the_flag _________
+
+    def test_a_reversal_in_an_earlier_session_does_not_set_the_flag():
+>       flag, note = m30.evaluate_extended_pullback(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            _long_bars(), side="LONG", now=NOW + timedelta(days=1),
+            session_date=FIRE_DT.date() + timedelta(days=1),
+            daily_bars=tape.open_gate_daily_bars(),
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'evaluate_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:93: AttributeError
+___________________ test_missing_or_short_bars_are_unknown ____________________
+
+    def test_missing_or_short_bars_are_unknown():
+>       assert m30.evaluate_extended_pullback([], side="LONG", now=NOW, session_date=FIRE_DT.date())[0] is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'evaluate_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:103: AttributeError
+_____________________ test_shorts_read_the_mirrored_rule ______________________
+
+    def test_shorts_read_the_mirrored_rule():
+>       flag, _note = m30.evaluate_extended_pullback(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            tape.mirror(_long_bars()), side="SHORT", now=NOW, session_date=FIRE_DT.date(),
+            daily_bars=tape.open_gate_daily_bars(),
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'evaluate_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:109: AttributeError
+____________________ test_flag_waiver_and_bonus_end_to_end ____________________
+
+session_today = None
+
+    def test_flag_waiver_and_bonus_end_to_end(session_today):
+        row = _extended_long()
+>       summary = _stamp([row], {"EXT": _long_bars()})
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\ref_test_m30_extended_pullback.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'symbol': 'EXT', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': 'UPPER_3', ...}]
+bars_by_symbol = {'EXT': [{'dt': datetime.datetime(2026, 8, 17, 6, 30), 'open': 100.0, 'high': 100.1, 'low': 99.9, ...}, {'dt': datetim...00000000001, ...}, {'dt': datetime.datetime(2026, 8, 17, 9, 0), 'open': 101.5, 'high': 101.6, 'low': 101.4, ...}, ...]}
+calls = None, kwargs = {}
+
+    def _stamp(rows, bars_by_symbol, calls=None, **kwargs):
+        def fetch(symbols, *, now):
+            if calls is not None:
+                calls.append((list(symbols), now))
+            return {symbol: bars_by_symbol.get(symbol) for symbol in symbols}
+    
+>       return m30.stamp_m30_extended_pullback(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            rows,
+            daily_frames_by_symbol={row["symbol"]: _Daily() for row in rows},
+            now_local=NOW,
+            fetch=fetch,
+            **kwargs,
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:73: AttributeError
+_____________ test_a_reversal_yesterday_leaves_the_row_a_hard_no ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000011B3BA87020>
+
+    def test_a_reversal_yesterday_leaves_the_row_a_hard_no(monkeypatch):
+        monkeypatch.setattr(
+            m30, "target_session",
+            lambda now_local: (FIRE_DT.date() + timedelta(days=1), NOW + timedelta(days=1)),
+        )
+        row = _extended_long()
+>       _stamp([row], {"EXT": _long_bars()})
+
+tests\ref_test_m30_extended_pullback.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'symbol': 'EXT', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': 'UPPER_3', ...}]
+bars_by_symbol = {'EXT': [{'dt': datetime.datetime(2026, 8, 17, 6, 30), 'open': 100.0, 'high': 100.1, 'low': 99.9, ...}, {'dt': datetim...00000000001, ...}, {'dt': datetime.datetime(2026, 8, 17, 9, 0), 'open': 101.5, 'high': 101.6, 'low': 101.4, ...}, ...]}
+calls = None, kwargs = {}
+
+    def _stamp(rows, bars_by_symbol, calls=None, **kwargs):
+        def fetch(symbols, *, now):
+            if calls is not None:
+                calls.append((list(symbols), now))
+            return {symbol: bars_by_symbol.get(symbol) for symbol in symbols}
+    
+>       return m30.stamp_m30_extended_pullback(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            rows,
+            daily_frames_by_symbol={row["symbol"]: _Daily() for row in rows},
+            now_local=NOW,
+            fetch=fetch,
+            **kwargs,
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:73: AttributeError
+__________ test_missing_bars_are_unknown_and_the_row_stays_a_hard_no __________
+
+session_today = None
+
+    def test_missing_bars_are_unknown_and_the_row_stays_a_hard_no(session_today):
+        row = _extended_long()
+>       summary = _stamp([row], {})
+                  ^^^^^^^^^^^^^^^^^
+
+tests\ref_test_m30_extended_pullback.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'symbol': 'EXT', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': 'UPPER_3', ...}]
+bars_by_symbol = {}, calls = None, kwargs = {}
+
+    def _stamp(rows, bars_by_symbol, calls=None, **kwargs):
+        def fetch(symbols, *, now):
+            if calls is not None:
+                calls.append((list(symbols), now))
+            return {symbol: bars_by_symbol.get(symbol) for symbol in symbols}
+    
+>       return m30.stamp_m30_extended_pullback(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            rows,
+            daily_frames_by_symbol={row["symbol"]: _Daily() for row in rows},
+            now_local=NOW,
+            fetch=fetch,
+            **kwargs,
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:73: AttributeError
+_______ test_a_failed_fetch_is_unknown_for_every_name_and_never_raises ________
+
+session_today = None
+caplog = <_pytest.logging.LogCaptureFixture object at 0x0000011B3BA202C0>
+
+    def test_a_failed_fetch_is_unknown_for_every_name_and_never_raises(session_today, caplog):
+        rows = [_extended_long("EXT"), _extended_long("EXU")]
+    
+        def broken(symbols, *, now):
+            raise RuntimeError("yahoo down")
+    
+>       summary = m30.stamp_m30_extended_pullback(rows, now_local=NOW, fetch=broken)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:163: AttributeError
+________ test_rows_that_are_not_extended_are_never_touched_or_fetched _________
+
+session_today = None
+
+    def test_rows_that_are_not_extended_are_never_touched_or_fetched(session_today):
+        clean = _extended_long("CLN", current_band_zone="UPPER_1 to UPPER_2", extended_closes_outside_band2=1)
+        under_low = _extended_long("LOW", last_close=110.0)  # extended AND under yesterday's low
+        unknown = _extended_long("UNK", current_band_zone="", extended_closes_outside_band2=None)
+        calls: list = []
+>       summary = _stamp([clean, under_low, unknown], {}, calls=calls)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\ref_test_m30_extended_pullback.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'symbol': 'CLN', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': 'UPPER_1 to UPPER_2', ...}, ...e': 'UPPER_3', ...}, {'symbol': 'UNK', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': '', ...}]
+bars_by_symbol = {}, calls = [], kwargs = {}
+
+    def _stamp(rows, bars_by_symbol, calls=None, **kwargs):
+        def fetch(symbols, *, now):
+            if calls is not None:
+                calls.append((list(symbols), now))
+            return {symbol: bars_by_symbol.get(symbol) for symbol in symbols}
+    
+>       return m30.stamp_m30_extended_pullback(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            rows,
+            daily_frames_by_symbol={row["symbol"]: _Daily() for row in rows},
+            now_local=NOW,
+            fetch=fetch,
+            **kwargs,
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:73: AttributeError
+_______________ test_one_batched_fetch_for_the_extended_subset ________________
+
+session_today = None
+
+    def test_one_batched_fetch_for_the_extended_subset(session_today):
+        rows = [_extended_long("EXT"), _extended_long("EXU"), _extended_long("CLN", current_band_zone="VWAP to UPPER_1",
+                                                                             extended_closes_outside_band2=0)]
+        calls: list = []
+>       _stamp(rows, {"EXT": _long_bars(), "EXU": _long_bars()}, calls=calls)
+
+tests\ref_test_m30_extended_pullback.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'symbol': 'EXT', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': 'UPPER_3', ...}, {'symbol': ......}, {'symbol': 'CLN', 'side': 'LONG', 'setup_family': 'avwap_breakout', 'current_band_zone': 'VWAP to UPPER_1', ...}]
+bars_by_symbol = {'EXT': [{'dt': datetime.datetime(2026, 8, 17, 6, 30), 'open': 100.0, 'high': 100.1, 'low': 99.9, ...}, {'dt': datetim...00000000001, ...}, {'dt': datetime.datetime(2026, 8, 17, 9, 0), 'open': 101.5, 'high': 101.6, 'low': 101.4, ...}, ...]}
+calls = [], kwargs = {}
+
+    def _stamp(rows, bars_by_symbol, calls=None, **kwargs):
+        def fetch(symbols, *, now):
+            if calls is not None:
+                calls.append((list(symbols), now))
+            return {symbol: bars_by_symbol.get(symbol) for symbol in symbols}
+    
+>       return m30.stamp_m30_extended_pullback(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            rows,
+            daily_frames_by_symbol={row["symbol"]: _Daily() for row in rows},
+            now_local=NOW,
+            fetch=fetch,
+            **kwargs,
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:73: AttributeError
+________ test_inputs_missing_on_the_row_are_read_from_the_symbol_entry ________
+
+session_today = None
+
+    def test_inputs_missing_on_the_row_are_read_from_the_symbol_entry(session_today):
+        row = {"symbol": "EXT", "side": "LONG", "current_band_zone": "UPPER_3", "extended_closes_outside_band2": 4}
+        ai_state = {"symbols": {"EXT": {"last_close": 120.0, "previous_day_low": 115.0}}}
+        features: dict = {"EXT": {}}
+>       _stamp([row], {"EXT": _long_bars()}, ai_state=ai_state, feature_rows_by_symbol=features)
+
+tests\ref_test_m30_extended_pullback.py:193: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'symbol': 'EXT', 'side': 'LONG', 'current_band_zone': 'UPPER_3', 'extended_closes_outside_band2': 4}]
+bars_by_symbol = {'EXT': [{'dt': datetime.datetime(2026, 8, 17, 6, 30), 'open': 100.0, 'high': 100.1, 'low': 99.9, ...}, {'dt': datetim...00000000001, ...}, {'dt': datetime.datetime(2026, 8, 17, 9, 0), 'open': 101.5, 'high': 101.6, 'low': 101.4, ...}, ...]}
+calls = None
+kwargs = {'ai_state': {'symbols': {'EXT': {'last_close': 120.0, 'previous_day_low': 115.0}}}, 'feature_rows_by_symbol': {'EXT': {}}}
+
+    def _stamp(rows, bars_by_symbol, calls=None, **kwargs):
+        def fetch(symbols, *, now):
+            if calls is not None:
+                calls.append((list(symbols), now))
+            return {symbol: bars_by_symbol.get(symbol) for symbol in symbols}
+    
+>       return m30.stamp_m30_extended_pullback(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            rows,
+            daily_frames_by_symbol={row["symbol"]: _Daily() for row in rows},
+            now_local=NOW,
+            fetch=fetch,
+            **kwargs,
+        )
+E       AttributeError: module 'master_avwap_lib.m30_extended_pullback' has no attribute 'stamp_m30_extended_pullback'. Did you mean: 'stamp_m30_extended_pullbacks'?
+
+tests\ref_test_m30_extended_pullback.py:73: AttributeError
+_ test_target_session_is_today_once_open_else_the_last_completed[now0-2026-10-05-evaluate_at0] _
+
+fixed_session_hours = None, now = datetime.datetime(2026, 10, 5, 9, 0)
+session = '2026-10-05', evaluate_at = datetime.datetime(2026, 10, 5, 9, 0)
+
+    @pytest.mark.parametrize(
+        "now, session, evaluate_at",
+        [
+            # Inside Monday's session: today, read up to now.
+            (datetime(2026, 10, 5, 9, 0), "2026-10-05", datetime(2026, 10, 5, 9, 0)),
+            # After Monday's close: today, capped at the close.
+            (datetime(2026, 10, 5, 18, 0), "2026-10-05", datetime(2026, 10, 5, 13, 0)),
+            # Monday before the open: Friday's completed session.
+            (datetime(2026, 10, 5, 5, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+            # Saturday: Friday's completed session.
+            (datetime(2026, 10, 3, 10, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+        ],
+    )
+    def test_target_session_is_today_once_open_else_the_last_completed(fixed_session_hours, now, session, evaluate_at):
+        got_session, got_at = m30.target_session(now)
+>       assert got_session.isoformat() == session
+E       AssertionError: assert '2026-10-05T06:30:00' == '2026-10-05'
+E         
+E         - 2026-10-05
+E         + 2026-10-05T06:30:00
+
+tests\ref_test_m30_extended_pullback.py:229: AssertionError
+_ test_target_session_is_today_once_open_else_the_last_completed[now1-2026-10-05-evaluate_at1] _
+
+fixed_session_hours = None, now = datetime.datetime(2026, 10, 5, 18, 0)
+session = '2026-10-05', evaluate_at = datetime.datetime(2026, 10, 5, 13, 0)
+
+    @pytest.mark.parametrize(
+        "now, session, evaluate_at",
+        [
+            # Inside Monday's session: today, read up to now.
+            (datetime(2026, 10, 5, 9, 0), "2026-10-05", datetime(2026, 10, 5, 9, 0)),
+            # After Monday's close: today, capped at the close.
+            (datetime(2026, 10, 5, 18, 0), "2026-10-05", datetime(2026, 10, 5, 13, 0)),
+            # Monday before the open: Friday's completed session.
+            (datetime(2026, 10, 5, 5, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+            # Saturday: Friday's completed session.
+            (datetime(2026, 10, 3, 10, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+        ],
+    )
+    def test_target_session_is_today_once_open_else_the_last_completed(fixed_session_hours, now, session, evaluate_at):
+        got_session, got_at = m30.target_session(now)
+>       assert got_session.isoformat() == session
+E       AssertionError: assert '2026-10-05T06:30:00' == '2026-10-05'
+E         
+E         - 2026-10-05
+E         + 2026-10-05T06:30:00
+
+tests\ref_test_m30_extended_pullback.py:229: AssertionError
+_ test_target_session_is_today_once_open_else_the_last_completed[now2-2026-10-02-evaluate_at2] _
+
+fixed_session_hours = None, now = datetime.datetime(2026, 10, 5, 5, 0)
+session = '2026-10-02', evaluate_at = datetime.datetime(2026, 10, 2, 13, 0)
+
+    @pytest.mark.parametrize(
+        "now, session, evaluate_at",
+        [
+            # Inside Monday's session: today, read up to now.
+            (datetime(2026, 10, 5, 9, 0), "2026-10-05", datetime(2026, 10, 5, 9, 0)),
+            # After Monday's close: today, capped at the close.
+            (datetime(2026, 10, 5, 18, 0), "2026-10-05", datetime(2026, 10, 5, 13, 0)),
+            # Monday before the open: Friday's completed session.
+            (datetime(2026, 10, 5, 5, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+            # Saturday: Friday's completed session.
+            (datetime(2026, 10, 3, 10, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+        ],
+    )
+    def test_target_session_is_today_once_open_else_the_last_completed(fixed_session_hours, now, session, evaluate_at):
+        got_session, got_at = m30.target_session(now)
+>       assert got_session.isoformat() == session
+E       AssertionError: assert '2026-10-02T06:30:00' == '2026-10-02'
+E         
+E         - 2026-10-02
+E         + 2026-10-02T06:30:00
+
+tests\ref_test_m30_extended_pullback.py:229: AssertionError
+_ test_target_session_is_today_once_open_else_the_last_completed[now3-2026-10-02-evaluate_at3] _
+
+fixed_session_hours = None, now = datetime.datetime(2026, 10, 3, 10, 0)
+session = '2026-10-02', evaluate_at = datetime.datetime(2026, 10, 2, 13, 0)
+
+    @pytest.mark.parametrize(
+        "now, session, evaluate_at",
+        [
+            # Inside Monday's session: today, read up to now.
+            (datetime(2026, 10, 5, 9, 0), "2026-10-05", datetime(2026, 10, 5, 9, 0)),
+            # After Monday's close: today, capped at the close.
+            (datetime(2026, 10, 5, 18, 0), "2026-10-05", datetime(2026, 10, 5, 13, 0)),
+            # Monday before the open: Friday's completed session.
+            (datetime(2026, 10, 5, 5, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+            # Saturday: Friday's completed session.
+            (datetime(2026, 10, 3, 10, 0), "2026-10-02", datetime(2026, 10, 2, 13, 0)),
+        ],
+    )
+    def test_target_session_is_today_once_open_else_the_last_completed(fixed_session_hours, now, session, evaluate_at):
+        got_session, got_at = m30.target_session(now)
+>       assert got_session.isoformat() == session
+E       AssertionError: assert '2026-10-02T06:30:00' == '2026-10-02'
+E         
+E         - 2026-10-02
+E         + 2026-10-02T06:30:00
+
+tests\ref_test_m30_extended_pullback.py:229: AssertionError
+_____ test_the_runner_calls_the_fit_pass_right_after_the_expected_r_pass ______
+
+    def test_the_runner_calls_the_fit_pass_right_after_the_expected_r_pass():
+        import inspect
+    
+        source = inspect.getsource(runner._run_master_impl)
+        expected_r_at = source.index("apply_expected_r_ranking(")
+>       m30_at = source.index("stamp_m30_extended_pullback(")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: substring not found
+
+tests\ref_test_trader_fit_rank_golden.py:94: ValueError
+=========================== short test summary info ===========================
+FAILED tests/ref_test_m30_extended_pullback.py::test_a_reversal_inside_the_session_sets_the_flag
+FAILED tests/ref_test_m30_extended_pullback.py::test_a_reversal_in_an_earlier_session_does_not_set_the_flag
+FAILED tests/ref_test_m30_extended_pullback.py::test_missing_or_short_bars_are_unknown
+FAILED tests/ref_test_m30_extended_pullback.py::test_shorts_read_the_mirrored_rule
+FAILED tests/ref_test_m30_extended_pullback.py::test_flag_waiver_and_bonus_end_to_end
+FAILED tests/ref_test_m30_extended_pullback.py::test_a_reversal_yesterday_leaves_the_row_a_hard_no
+FAILED tests/ref_test_m30_extended_pullback.py::test_missing_bars_are_unknown_and_the_row_stays_a_hard_no
+FAILED tests/ref_test_m30_extended_pullback.py::test_a_failed_fetch_is_unknown_for_every_name_and_never_raises
+FAILED tests/ref_test_m30_extended_pullback.py::test_rows_that_are_not_extended_are_never_touched_or_fetched
+FAILED tests/ref_test_m30_extended_pullback.py::test_one_batched_fetch_for_the_extended_subset
+FAILED tests/ref_test_m30_extended_pullback.py::test_inputs_missing_on_the_row_are_read_from_the_symbol_entry
+FAILED tests/ref_test_m30_extended_pullback.py::test_target_session_is_today_once_open_else_the_last_completed[now0-2026-10-05-evaluate_at0]
+FAILED tests/ref_test_m30_extended_pullback.py::test_target_session_is_today_once_open_else_the_last_completed[now1-2026-10-05-evaluate_at1]
+FAILED tests/ref_test_m30_extended_pullback.py::test_target_session_is_today_once_open_else_the_last_completed[now2-2026-10-02-evaluate_at2]
+FAILED tests/ref_test_m30_extended_pullback.py::test_target_session_is_today_once_open_else_the_last_completed[now3-2026-10-02-evaluate_at3]
+FAILED tests/ref_test_trader_fit_rank_golden.py::test_the_runner_calls_the_fit_pass_right_after_the_expected_r_pass
+16 failed, 5 passed in 1.72s

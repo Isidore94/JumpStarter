@@ -1,0 +1,17 @@
+{"reviewer": "haiku-medium", "round": 1, "verdict": "NO-GO",
+ "blockers": [
+  {"file": "scripts/master_avwap_lib/trader_fit.py", "line": 305, "claim": "The diff only renames _fit_inputs to fit_input; compute_trader_fit never reads m30_extended_pullback, so the waiver of above_third_band / extended_3_closes and the bonus are not implemented; test_fire_in_the_open_session_flags_waives_bonus_and_tags fails."},
+  {"file": "scripts/master_avwap_lib/trader_fit.py", "line": 305, "claim": "tf.FLAG_EXTENDED_PULLBACK and tf.EXTENDED_PULLBACK_POINTS are referenced by the tests but never defined in the diff; AttributeError."},
+  {"file": "tests/test_m30_extended_pullback.py", "line": 516, "claim": "Imports EXTENDED_PULLBACK_TAG / derive_setup_tag_payload from setup_tagging, which the diff does not touch; the setup tag is not implemented and the import fails."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "line": 40, "claim": "Imports WAIVABLE_RULES and hard_no_rules from trader_fit, which the diff does not add; ImportError would break the whole scan."},
+  {"file": "tests (lead test results)", "line": 701, "claim": "The lead's suite run is not green: exit 127 with F markers and no test names; done-when requires pytest and ruff green."}
+ ],
+ "advisories": [
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "datetime.now() is a naive PC-local clock; session clock only correct if the PC is on market-local time."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "'session is None' branch sets rows to None without logging, unlike the fetch-failure path."},
+  {"file": "tests/test_m30_extended_pullback.py", "claim": "test_the_extended_check_uses_the_same_merged_input_as_the_fit does not isolate the ai_state merge path; fit call passes {} where stamp passes None."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "DOWNLOAD_CHUNK_SYMBOLS == 50 and the _download(period, interval) signature are assumed, not visible in the diff."}
+ ],
+ "tests": "Covers in-session fire, yesterday's fire, short tape, failed fetch with one warning, non-extended rows untouched, chunking 50+5, session clock cases and runner placement; misses waiver/bonus/tag paths (reviewer believed the code was absent); no green run shown.",
+ "brief_mistakes": "Brief lists trader_fit.py (waiver, bonus) and the setup tag as in scope but setup_tagging.py is not in the files list; brief does not say whether the clock is market-local.",
+ "lead_reproduction": "Blockers 1-4 do NOT reproduce: FLAG_EXTENDED_PULLBACK, EXTENDED_PULLBACK_POINTS, WAIVABLE_RULES, hard_no_rules and the m30_extended_pullback waiver/bonus branch already exist in trader_fit.py at the parent commit a079383 (7 hits), and setup_tagging.py already defines EXTENDED_PULLBACK_TAG there (2 hits); the reference commit itself touches neither file. Qwen's test file passes 18/18 in isolation. Blocker 5 is real but harness-caused: the whole-suite -n 4 run died on a Windows access violation in an unrelated Qt test under memory pressure. Advisories 1 and 4 not checked. Round 2 below re-reviews with this note appended; no rework pass was sent because there is nothing for the builder to fix."}

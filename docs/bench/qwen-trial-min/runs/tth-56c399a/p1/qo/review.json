@@ -1,0 +1,13 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "Item 2 fix is only in the activity-statement parser (ibkr.py:131). The flex parser (ibkr.py:~254) still uses abs() on IBCommission; the task names the Comm/Fee column only, so this was left unchanged deliberately.",
+    "Partial assignment (fewer contracts closed than the option pool holds) rolls the proportional pool ACB; the assignment row's own commission is not rolled (assignment rows carry no execution fee - if one ever did, it would stay behind on the option row, which now produces no event).",
+    "A roll-coded option row with no matching same-day share trade falls back to ordinary pool processing (kept behaviour); under the new warning rule an orphan OPT close now also warns, including flex rows that carry no O/C code.",
+    "Retroactive ACB adjustment (share row processed before the option row) happens after the superficial-loss denial check, so an exercised long put that flips a loss into a gain would keep its denial. Documented edge, no test.",
+    "If two identical share rows share a fingerprint, the retroactive path adjusts the most recent matching event. Duplicates are rare in this data; noted, not guarded.",
+    "Interlisted merges rename the share symbol before pairing; pairing uses the same renamed list, so it is consistent."
+  ],
+  "summary": "All 5 items implemented with the smallest changes: premium roll in compute_gains (pairing pass + in-loop stamp/attach, CAD-denominated so no extra fx.rate calls and no file-order dependence - both same-day orders tested), signed IBKR Comm/Fee (cost negative, rebate negative cost = money in), O/C-aware 'nothing held' warning (no warn on code O, warn on empty-pool closes for STK and OPT), Schedule-8 CPP crediting (employment pensionable first against YMP then YAMPE; salary above YAMPE -> zero business CPP, verified against the 2026 rules), and a display-only 11th Summary card reading the same other_income setting the Settings field writes. Full suite 55 passed (baseline 43 + 12 new), ruff clean. Numbers re-derived by hand: e.g. assigned put at 150 strike, premium 400 - 0.65 comm, 1.37 USD/CAD -> ACB (15000 + 1 - 399.35) x 1.37, matching the integration test. No blocker found on re-derivation."
+}

@@ -1,0 +1,455 @@
+FFFFFFFFFFFFFFFFFFFFF.FFFFF..F...........                                [100%]
+================================== FAILURES ===================================
+________ test_tape_speed_light_thresholds_vs_spy_hour_norm[0.05-calm] _________
+
+range_pct = 0.05, light = 'calm'
+
+    @pytest.mark.parametrize(
+        "range_pct, light",
+        [(0.05, "calm"), (0.1058, "normal"), (0.15, "fast")],
+    )
+    def test_tape_speed_light_thresholds_vs_spy_hour_norm(range_pct, light):
+>       from technical_integrity import SESSION_HOUR_SPY_RANGE_NORMS, TAPE_LIGHT_SCHEMA, _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name 'SESSION_HOUR_SPY_RANGE_NORMS' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py). Did you mean: 'SESSION_HOUR_TICK_RANGE_NORMS'?
+
+tests\test_technical_integrity_tape.py:70: ImportError
+______ test_tape_speed_light_thresholds_vs_spy_hour_norm[0.1058-normal] _______
+
+range_pct = 0.1058, light = 'normal'
+
+    @pytest.mark.parametrize(
+        "range_pct, light",
+        [(0.05, "calm"), (0.1058, "normal"), (0.15, "fast")],
+    )
+    def test_tape_speed_light_thresholds_vs_spy_hour_norm(range_pct, light):
+>       from technical_integrity import SESSION_HOUR_SPY_RANGE_NORMS, TAPE_LIGHT_SCHEMA, _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name 'SESSION_HOUR_SPY_RANGE_NORMS' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py). Did you mean: 'SESSION_HOUR_TICK_RANGE_NORMS'?
+
+tests\test_technical_integrity_tape.py:70: ImportError
+________ test_tape_speed_light_thresholds_vs_spy_hour_norm[0.15-fast] _________
+
+range_pct = 0.15, light = 'fast'
+
+    @pytest.mark.parametrize(
+        "range_pct, light",
+        [(0.05, "calm"), (0.1058, "normal"), (0.15, "fast")],
+    )
+    def test_tape_speed_light_thresholds_vs_spy_hour_norm(range_pct, light):
+>       from technical_integrity import SESSION_HOUR_SPY_RANGE_NORMS, TAPE_LIGHT_SCHEMA, _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name 'SESSION_HOUR_SPY_RANGE_NORMS' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py). Did you mean: 'SESSION_HOUR_TICK_RANGE_NORMS'?
+
+tests\test_technical_integrity_tape.py:70: ImportError
+_______ test_tape_speed_light_accepts_attribute_bars_like_the_bot_cache _______
+
+    def test_tape_speed_light_accepts_attribute_bars_like_the_bot_cache():
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:94: ImportError
+______________ test_tape_speed_light_unknown_without_enough_bars ______________
+
+    def test_tape_speed_light_unknown_without_enough_bars():
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:111: ImportError
+_________ test_tape_speed_light_unknown_when_the_newest_bar_is_stale __________
+
+    def test_tape_speed_light_unknown_when_the_newest_bar_is_stale():
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:125: ImportError
+______________ test_tape_speed_light_counts_completed_bars_only _______________
+
+    def test_tape_speed_light_counts_completed_bars_only():
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:137: ImportError
+___________ test_tape_speed_light_skips_bars_without_a_session_hour ___________
+
+    def test_tape_speed_light_skips_bars_without_a_session_hour():
+>       from technical_integrity import SESSION_HOUR_SPY_RANGE_NORMS, _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name 'SESSION_HOUR_SPY_RANGE_NORMS' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py). Did you mean: 'SESSION_HOUR_TICK_RANGE_NORMS'?
+
+tests\test_technical_integrity_tape.py:147: ImportError
+______________ test_tape_speed_light_skips_unreadable_bars[None] ______________
+
+bad_row = None
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+___________ test_tape_speed_light_skips_unreadable_bars[not a row] ____________
+
+bad_row = 'not a row'
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+____________ test_tape_speed_light_skips_unreadable_bars[bad_row2] ____________
+
+bad_row = {'start': '2026-10-05T10:30:00-04:00', 'high': 101.0, 'low': 99.0}
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+____________ test_tape_speed_light_skips_unreadable_bars[bad_row3] ____________
+
+bad_row = {'start': '2026-10-05T10:30:00-04:00', 'high': 101.0, 'low': 99.0, 'close': 'oops'}
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+____________ test_tape_speed_light_skips_unreadable_bars[bad_row4] ____________
+
+bad_row = {'start': '2026-10-05T10:30:00-04:00', 'high': 99.0, 'low': 101.0, 'close': 100.0}
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+____________ test_tape_speed_light_skips_unreadable_bars[bad_row5] ____________
+
+bad_row = {'start': '2026-10-05T10:30:00-04:00', 'high': 101.0, 'low': 99.0, 'close': 0.0}
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+____________ test_tape_speed_light_skips_unreadable_bars[bad_row6] ____________
+
+bad_row = {'start': 'garbage', 'high': 101.0, 'low': 99.0, 'close': 100.0}
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+____________ test_tape_speed_light_skips_unreadable_bars[bad_row7] ____________
+
+bad_row = namespace(dt='garbage', high=101.0, low=99.0, close=100.0)
+
+    @pytest.mark.parametrize(
+        "bad_row",
+        [
+            None,
+            "not a row",
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0},  # no close
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": "oops"},
+            {"start": "2026-10-05T10:30:00-04:00", "high": 99.0, "low": 101.0, "close": 100.0},  # low > high
+            {"start": "2026-10-05T10:30:00-04:00", "high": 101.0, "low": 99.0, "close": 0.0},  # close <= 0
+            {"start": "garbage", "high": 101.0, "low": 99.0, "close": 100.0},
+            SimpleNamespace(dt="garbage", high=101.0, low=99.0, close=100.0),
+        ],
+    )
+    def test_tape_speed_light_skips_unreadable_bars(bad_row):
+>       from technical_integrity import _spy_range_bar, tape_speed_light
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:172: ImportError
+________________ test_tape_light_prefers_spy_when_it_is_known _________________
+
+    def test_tape_light_prefers_spy_when_it_is_known():
+>       from technical_integrity import tape_light
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:214: ImportError
+_________ test_tape_light_falls_back_to_tick_with_wide_becoming_fast __________
+
+    def test_tape_light_falls_back_to_tick_with_wide_becoming_fast():
+>       from technical_integrity import tape_light
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:225: ImportError
+______________ test_tape_light_falls_back_to_tick_calm_unchanged ______________
+
+    def test_tape_light_falls_back_to_tick_calm_unchanged():
+>       from technical_integrity import tape_light
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:237: ImportError
+_______ test_tape_light_none_when_both_are_unknown_keeps_the_spy_reason _______
+
+    def test_tape_light_none_when_both_are_unknown_keeps_the_spy_reason():
+>       from technical_integrity import tape_light
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:245: ImportError
+________ test_tape_light_treats_a_failed_spy_read_like_an_unknown_spy _________
+
+    def test_tape_light_treats_a_failed_spy_read_like_an_unknown_spy():
+>       from technical_integrity import tape_light
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:262: ImportError
+______ test_tick_wrapper_is_the_generic_light_with_tick_norms_and_label _______
+
+    def test_tick_wrapper_is_the_generic_light_with_tick_norms_and_label():
+>       from technical_integrity import SESSION_HOUR_TICK_RANGE_NORMS, _tick_bar, tape_speed_light, tick_range_light
+E       ImportError: cannot import name 'tape_speed_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:309: ImportError
+___ test_publish_snapshot_tape_falls_back_to_tick_when_spy_provider_raises ____
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13933/test_publish_snapshot_tape_fal0')
+rolling_fixture = FixtureContract(name='technical_integrity_rolling_v1', path=WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-243279e/tes...6-10-05T11:25:00-04:00', 'tick': {'bar_count': 2, 'light': 'unknown', 'last_bar_end': '2026-10-05T11:05:00-04:00'}}]}})
+
+    def test_publish_snapshot_tape_falls_back_to_tick_when_spy_provider_raises(tmp_path, rolling_fixture):
+        def boom():
+            raise RuntimeError("spy cache gone")
+    
+>       monitor = _monitor(
+            tmp_path,
+            tick_rows_provider=lambda: rolling_fixture["tick_rows"],
+            spy_bars_provider=boom,
+        )
+
+tests\test_technical_integrity_tape.py:331: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13933/test_publish_snapshot_tape_fal0')
+kwargs = {'tick_rows_provider': <function test_publish_snapshot_tape_falls_back_to_tick_when_spy_provider_raises.<locals>.<lamb... <function test_publish_snapshot_tape_falls_back_to_tick_when_spy_provider_raises.<locals>.boom at 0x000001C99E177740>}
+
+    def _monitor(tmp_path, **kwargs):
+        from technical_integrity import TechnicalIntegrityMonitor
+    
+>       return TechnicalIntegrityMonitor(
+            events_path=tmp_path / "events.jsonl",
+            state_path=tmp_path / "state.json",
+            snapshot_path=tmp_path / "snapshot.json",
+            **kwargs,
+        )
+E       TypeError: TechnicalIntegrityMonitor.__init__() got an unexpected keyword argument 'spy_bars_provider'
+
+tests\test_technical_integrity_tape.py:56: TypeError
+____________ test_publish_snapshot_tape_uses_spy_bars_when_present ____________
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13933/test_publish_snapshot_tape_use0')
+rolling_fixture = FixtureContract(name='technical_integrity_rolling_v1', path=WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-243279e/tes...6-10-05T11:25:00-04:00', 'tick': {'bar_count': 2, 'light': 'unknown', 'last_bar_end': '2026-10-05T11:05:00-04:00'}}]}})
+
+    def test_publish_snapshot_tape_uses_spy_bars_when_present(tmp_path, rolling_fixture):
+>       from technical_integrity import _spy_range_bar
+E       ImportError: cannot import name '_spy_range_bar' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:349: ImportError
+____ test_publish_snapshot_tape_is_none_sourced_when_everything_is_unknown ____
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13933/test_publish_snapshot_tape_is_0')
+
+    def test_publish_snapshot_tape_is_none_sourced_when_everything_is_unknown(tmp_path):
+        def boom():
+            raise RuntimeError("ledger gone")
+    
+>       monitor = _monitor(tmp_path, tick_rows_provider=boom, spy_bars_provider=lambda: [])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_technical_integrity_tape.py:371: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13933/test_publish_snapshot_tape_is_0')
+kwargs = {'tick_rows_provider': <function test_publish_snapshot_tape_is_none_sourced_when_everything_is_unknown.<locals>.boom a...unction test_publish_snapshot_tape_is_none_sourced_when_everything_is_unknown.<locals>.<lambda> at 0x000001C99E177B00>}
+
+    def _monitor(tmp_path, **kwargs):
+        from technical_integrity import TechnicalIntegrityMonitor
+    
+>       return TechnicalIntegrityMonitor(
+            events_path=tmp_path / "events.jsonl",
+            state_path=tmp_path / "state.json",
+            snapshot_path=tmp_path / "snapshot.json",
+            **kwargs,
+        )
+E       TypeError: TechnicalIntegrityMonitor.__init__() got an unexpected keyword argument 'spy_bars_provider'
+
+tests\test_technical_integrity_tape.py:56: TypeError
+_______________ test_chip_and_tooltip_name_spy_or_tick_fallback _______________
+
+    def test_chip_and_tooltip_name_spy_or_tick_fallback():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        fixture = load_fixture_contract("technical_integrity_rolling_v1")
+        as_of = "2026-10-05T11:00:00-04:00"
+        now = datetime.fromisoformat(as_of)
+    
+        # No SPY bars: the TICK light carries the reading (wide -> fast).
+>       fallback = _snapshot_at(fixture, as_of)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_technical_integrity_tape.py:413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+fixture = FixtureContract(name='technical_integrity_rolling_v1', path=WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-243279e/tes...6-10-05T11:25:00-04:00', 'tick': {'bar_count': 2, 'light': 'unknown', 'last_bar_end': '2026-10-05T11:05:00-04:00'}}]}})
+as_of = '2026-10-05T11:00:00-04:00', spy_bars = (), tick_rows = None
+
+    def _snapshot_at(fixture, as_of, spy_bars=(), tick_rows=None):
+>       from technical_integrity import (
+            aggregate_technical_integrity,
+            rolling_technical_integrity,
+            tape_light,
+            tape_speed_light,
+            tick_range_light,
+            _spy_range_bar,
+        )
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_tape.py:384: ImportError
+___________ test_chip_and_tooltip_lead_with_the_now_reading_golden ____________
+
+    def test_chip_and_tooltip_lead_with_the_now_reading_golden():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        fixture = _fixture()
+        for case in fixture["expected"]["cases"]:
+            if "chip" not in case:
+                continue
+>           snapshot = _snapshot_at(fixture, case)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_technical_integrity_rolling.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+fixture = FixtureContract(name='technical_integrity_rolling_v1', path=WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-243279e/tes...6-10-05T11:25:00-04:00', 'tick': {'bar_count': 2, 'light': 'unknown', 'last_bar_end': '2026-10-05T11:05:00-04:00'}}]}})
+case = {'as_of': '2026-10-05T11:00:00-04:00', 'rolling': {'all': {'score': 5.3, 'state': 'MIXED', 'pressure': 'BEARISH', 'tes...ange': 415.0, 'ratio': 1.3655, ...}, 'chip': 'Technicals now: D1 VERY WEAK 2.2/10 · M5 STRONG 9.1/10 · tape fast', ...}
+
+    def _snapshot_at(fixture, case):
+>       from technical_integrity import (
+            aggregate_technical_integrity,
+            rolling_technical_integrity,
+            tape_light,
+            tape_speed_light,
+            tick_range_light,
+        )
+E       ImportError: cannot import name 'tape_light' from 'technical_integrity' (C:\Users\Aaron\llm-harness\wt\qtm-243279e\scripts\technical_integrity.py)
+
+tests\test_technical_integrity_rolling.py:44: ImportError
+=========================== short test summary info ===========================
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_thresholds_vs_spy_hour_norm[0.05-calm]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_thresholds_vs_spy_hour_norm[0.1058-normal]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_thresholds_vs_spy_hour_norm[0.15-fast]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_accepts_attribute_bars_like_the_bot_cache
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_unknown_without_enough_bars
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_unknown_when_the_newest_bar_is_stale
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_counts_completed_bars_only
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_bars_without_a_session_hour
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[None]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[not a row]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[bad_row2]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[bad_row3]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[bad_row4]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[bad_row5]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[bad_row6]
+FAILED tests/test_technical_integrity_tape.py::test_tape_speed_light_skips_unreadable_bars[bad_row7]
+FAILED tests/test_technical_integrity_tape.py::test_tape_light_prefers_spy_when_it_is_known
+FAILED tests/test_technical_integrity_tape.py::test_tape_light_falls_back_to_tick_with_wide_becoming_fast
+FAILED tests/test_technical_integrity_tape.py::test_tape_light_falls_back_to_tick_calm_unchanged
+FAILED tests/test_technical_integrity_tape.py::test_tape_light_none_when_both_are_unknown_keeps_the_spy_reason
+FAILED tests/test_technical_integrity_tape.py::test_tape_light_treats_a_failed_spy_read_like_an_unknown_spy
+FAILED tests/test_technical_integrity_tape.py::test_tick_wrapper_is_the_generic_light_with_tick_norms_and_label
+FAILED tests/test_technical_integrity_tape.py::test_publish_snapshot_tape_falls_back_to_tick_when_spy_provider_raises
+FAILED tests/test_technical_integrity_tape.py::test_publish_snapshot_tape_uses_spy_bars_when_present
+FAILED tests/test_technical_integrity_tape.py::test_publish_snapshot_tape_is_none_sourced_when_everything_is_unknown
+FAILED tests/test_technical_integrity_tape.py::test_chip_and_tooltip_name_spy_or_tick_fallback
+FAILED tests/test_technical_integrity_rolling.py::test_chip_and_tooltip_lead_with_the_now_reading_golden
+27 failed, 14 passed in 2.11s

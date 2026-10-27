@@ -1,0 +1,36 @@
+{
+  "sha7": "96eb4eb",
+  "repo": "C:/Users/Aaron/JumpStarter",
+  "base": "d3c3f81",
+  "ref": "96eb4eb",
+  "pass": "rework",
+  "exit_code": 0,
+  "elapsed_s": 197,
+  "turns": 89,
+  "own_tests_rc": 0,
+  "ruff_rc": 0,
+  "ref_tests_rc": 1,
+  "leak_count": 1,
+  "self_review_verdict": "GO",
+  "own_cmd": "C:/Users/Aaron/TraderTaxHelper/.venv/Scripts/python.exe -m pytest -q",
+  "lint_cmd": "C:/Users/Aaron/TraderTaxHelper/.venv/Scripts/python.exe -m ruff check .",
+  "import_ok": "n/a",
+  "ref_pass": 6,
+  "ref_total": 11,
+  "cost_usd": 0.20909,
+  "usage": {
+    "requests": 37,
+    "input": 57092,
+    "output": 21321,
+    "thinking": 14254,
+    "cache_read": 1604096,
+    "cost": 0.20909,
+    "errors": 0,
+    "providers": {
+      "ModelRun": 37
+    }
+  },
+  "key_delta_usd": 0.187592,
+  "key_before": "OpenRouter key: <key> | used $25.883238817 | today (usage_daily) $12.051722148 | limit 50 | remaining 24.116761183\n\n[qwen/qwen3.8-27b: 59 in, 128 out, via DeepInfra]\n\n\nready",
+  "key_after": "OpenRouter key: <key> | used $26.070831227 | today (usage_daily) $12.239314558 | limit 50 | remaining 23.929168773\n\n[qwen/qwen3.8-27b: 59 in, 15 out, via DeepInfra]\n\n\nready"
+}

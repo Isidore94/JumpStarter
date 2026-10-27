@@ -1,0 +1,12 @@
+# GREEN — build verification (2026-10-27)
+
+$ PYTHONPATH=src python -m pytest -q
+........................................................................ [ 83%]
+...........................................                              [100%]
+259 passed, 7 deselected in 11.69s
+
+$ python -m ruff check . (scratch probes excluded; they are deleted before handoff)
+All checks passed!
+
+$ python -m ruff format --check . (scratch excluded)
+60 files already formatted

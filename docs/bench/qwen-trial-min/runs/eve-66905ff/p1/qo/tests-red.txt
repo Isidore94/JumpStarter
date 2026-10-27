@@ -1,0 +1,30 @@
+# RED — new tests fail before the fix (2026-10-27)
+#
+# Command: PYTHONPATH=src python -m pytest -q tests/test_screen_digest.py
+#
+=================================== ERRORS ====================================
+________________ ERROR collecting tests/test_screen_digest.py _________________
+ImportError while importing test module 'C:\Users\Aaron\llm-harness\wt\qtm-66905ff\tests\test_screen_digest.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level], package, level)
+tests\test_screen_digest.py:24: in <module>
+    from evescreener.screen import net_edge_pct, run_screen
+E   ImportError: cannot import name 'net_edge_pct' from 'evescreener.screen' (C:\Users\Aaron\llm-harness\wt\qtm-66905ff\src\evescreener\screen.py)
+=========================== short test summary info ===========================
+ERROR tests/test_screen_digest.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 1.02s
+
+# With the import satisfied, both assertions fail against the live formula
+# (verified by .qo/scratch/probe2.py against the unmodified run_screen):
+#   - test_a_wide_spread_no_longer_ranks_first: live order is [37, 38] (the
+#     wide book first, +30.4934 vs +29.5663); the test asserts [38, 37] and
+#     net edges +28.4930 / +27.1382.
+#   - test_flat_book_at_value_nets_exactly_minus_the_tax: the target
+#     function does not exist, and the live subtraction
+#     (expected_move - breakeven_move_pct) has no business being
+#     -sales_tax_pct for a flat book at value.
+# All pre-existing tests in the file were green at this point (33 passed in
+# the baseline run of test_screen_digest.py + test_costs.py).

@@ -1,0 +1,8 @@
+# Build verification (final) - Tue Oct 27 11:03:44 PDT 2026
+
+$ python -m pytest -q
+.......................................................                  [100%]
+55 passed in 1.15s
+
+$ python -m ruff check tradertax tests
+All checks passed!

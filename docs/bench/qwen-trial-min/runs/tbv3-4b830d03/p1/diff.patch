@@ -1,0 +1,733 @@
+diff --git a/scripts/bounce_bot_lib/legacy.py b/scripts/bounce_bot_lib/legacy.py
+index 9421e6d..eeda142 100644
+--- a/scripts/bounce_bot_lib/legacy.py
++++ b/scripts/bounce_bot_lib/legacy.py
+@@ -4189,7 +4189,13 @@ class BounceBot(EWrapper, EClient):
+         }
+ 
+     def _evaluate_bounce_alert_quality(self, direction, levels, event_row):
+-        """Tier + mute verdict for a confirmed bounce, from the learning state."""
++        """Setup tier + learning letter + mute verdict for a confirmed bounce.
++
++        The alert shows the four-facts setup tier; the learning letter stays
++        beside it as `learning_tier` and still owns the mute.
++        """
++        row = event_row if isinstance(event_row, dict) else {}
++        setup = self._setup_tier_for_alert(direction, levels, row)
+         try:
+             from bounce_bot_lib.learning import (
+                 evaluate_bounce_quality,
+@@ -4197,7 +4203,6 @@ class BounceBot(EWrapper, EClient):
+                 time_bucket_for,
+             )
+ 
+-            row = event_row if isinstance(event_row, dict) else {}
+             bounce_type_keys = _bounce_type_keys_from_levels(levels or {})
+             state = load_bounce_learning_state()
+             when = _bounce_quality_time(row) or get_market_local_now()
+@@ -4220,10 +4225,37 @@ class BounceBot(EWrapper, EClient):
+             )
+         except Exception as exc:  # learning must never block an alert
+             logging.warning("Bounce learning evaluation failed (alerting anyway): %s", exc)
+-            return {"tier": "B", "muted": False, "mute_reasons": [], "reasons": []}
+-        quality["shadow_s9"] = self._shadow_s9_tier(state, context, when)
++            quality = {"tier": "B", "muted": False, "mute_reasons": [], "reasons": []}
++        else:
++            quality["shadow_s9"] = self._shadow_s9_tier(state, context, when)
++        quality["learning_tier"] = quality["tier"]
++        if setup:
++            quality["setup_tier"] = setup
++            quality["tier"] = setup["tier"]
+         return quality
+ 
++    @staticmethod
++    def _setup_tier_for_alert(direction, levels, row):
++        """The four-facts setup tier for this alert. `{}` when the rule cannot score it."""
++        try:
++            from bounce_bot_lib.setup_tier import evaluate_setup_tier
++
++            bounce_types = str(row.get("bounce_types") or "").strip()
++            if not bounce_types:
++                bounce_types = ";".join(_bounce_type_keys_from_levels(levels or {}))
++            return evaluate_setup_tier(
++                side=str(direction or ""),
++                # The bar time is a fact about the bar: no fallback to now, an
++                # unknown hour simply scores 0.
++                when=_bounce_quality_time(row),
++                bounce_types=bounce_types,
++                sector_rrs_present=bool(str(row.get("rrs_sector") or "").strip()),
++                tape=str(row.get("internals_tape") or ""),
++            )
++        except Exception as exc:
++            logging.debug("Setup tier skipped (advisory only): %s", exc)
++            return {}
++
+     @staticmethod
+     def _shadow_s9_tier(state, context, when) -> dict:
+         """S9 shadow tier, evidence only: `{}` on any failure, never read by a live decision."""
+@@ -5449,6 +5481,8 @@ class BounceBot(EWrapper, EClient):
+                     "event_type": "tier_assigned",
+                     "event_id": event_id,
+                     "tier": tier,
++                    # The learning letter beside the setup tier the alert showed.
++                    "learning_tier": str(verdict.get("learning_tier") or "").strip(),
+                     "muted": bool(verdict.get("muted")),
+                     "proven": bool(verdict.get("proven")),
+                     # S9 shadow tier beside the live one (evidence only).
+diff --git a/scripts/bounce_bot_lib/setup_tier.py b/scripts/bounce_bot_lib/setup_tier.py
+new file mode 100644
+index 0000000..35a6f35
+--- /dev/null
++++ b/scripts/bounce_bot_lib/setup_tier.py
+@@ -0,0 +1,138 @@
++"""Setup tier for M5 bounce alerts: a point rule over four measured facts.
++
++The learning letter (learning.evaluate_bounce_quality) does not separate
++outcomes - every letter shows up in 23-28% of winners. Four facts on the
++event row do: the bar hour, the bounce family, whether a sector RRS is
++present, and the internals tape vs. the side. This module scores those four
++facts into an A/B/C/D letter that the alert shows, while the hook keeps the
++learning letter beside it as `learning_tier`.
++
++The rule is advisory evidence: it never mutes, never raises into the alert
++path, and an unknown fact scores 0 - missing data is "unknown", never
++"confirmed".
++"""
++
++from __future__ import annotations
++
++from datetime import datetime
++
++from market_session import get_market_session_window
++
++#: The boundary map, highest first: 4/3/2/1/0/-1 -> A/B/C/D/D/D.
++TIER_BOUNDARIES = ((4, "A"), (3, "B"), (2, "C"), (1, "D"), (0, "D"), (-1, "D"))
++
++_BAR_HOUR_UNKNOWN_REASON = "bar hour unknown: 0"
++
++
++def tier_for_points(points: int) -> str:
++    """Map a fact total onto the letter ladder (4/3/2 -> A/B/C, 1 and below -> D)."""
++    for threshold, tier in TIER_BOUNDARIES:
++        if points >= threshold:
++            return tier
++    return "D"
++
++
++def _bar_hour_points(when: datetime | None) -> tuple[int, str]:
++    """Fact 1: the bar hour in its session. Opening -1, mid-session +1, last hour 0.
++
++    A naive bar time is market-local (the zone the session window is
++    expressed in); an aware one is converted into it. Off-window or missing
++    time is unknown, which scores 0.
++    """
++    try:
++        if when is None:
++            return 0, _BAR_HOUR_UNKNOWN_REASON
++        session = get_market_session_window(reference=when)
++        moment = when
++        if moment.tzinfo is None:
++            moment = moment.replace(tzinfo=session.open_local.tzinfo)
++        else:
++            moment = moment.astimezone(session.open_local.tzinfo)
++        if moment < session.open_local or moment >= session.close_local:
++            return 0, _BAR_HOUR_UNKNOWN_REASON
++        hour = moment.hour
++    except Exception:
++        return 0, _BAR_HOUR_UNKNOWN_REASON
++    if hour == session.open_local.hour:
++        return -1, f"opening bar (hour {hour}): -1"
++    if hour >= session.last_hour_start_local.hour:
++        return 0, f"last-hour bar (hour {hour}): 0"
++    return 1, f"mid-session bar (hour {hour}): +1"
++
++
++def _bounce_family_points(bounce_types: list[str] | tuple | str | None) -> tuple[int, str]:
++    """Fact 2: the bounce family. Regime types +1, h1_green_to_yellow -1, else 0.
++
++    Accepts a list or a ";" string, case-insensitive; with several types the
++    best row wins, so regime beats h1_green_to_yellow.
++    """
++    if isinstance(bounce_types, str):
++        raw = (part for part in str(bounce_types).split(";"))
++    else:
++        raw = (bounce_types or [])
++    types = {str(type).strip().lower() for type in raw if str(type or "").strip()}
++    if not types:
++        return 0, "bounce family: unknown: 0"
++    if any("regime" in type for type in types):
++        return 1, "bounce family: regime: +1"
++    if "h1_green_to_yellow" in types:
++        return -1, "bounce family: h1_green_to_yellow: -1"
++    return 0, "bounce family: neutral: 0"
++
++
++def _sector_rrs_points(sector_rrs_present: bool) -> tuple[int, str]:
++    """Fact 3: a sector RRS present is +1; absence is unknown, not negative."""
++    if sector_rrs_present:
++        return 1, "sector RRS present: +1"
++    return 0, "sector RRS absent: 0"
++
++
++def _tape_points(tape: str, side: str) -> tuple[int, str]:
++    """Fact 4: the internals tape vs. the side, both case-insensitive.
++
++    risk_on* with long and risk_off* with short score +1, the opposite
++    combination -1, the neutral mixed tape 0, and an unknown tape or side 0.
++    """
++    tape_value = str(tape or "").strip().lower()
++    side_value = str(side or "").strip().lower()
++    if tape_value in ("risk_on", "risk_on_tilt"):
++        if side_value == "long":
++            return 1, f"internals tape {tape_value} supports long: +1"
++        if side_value == "short":
++            return -1, f"internals tape {tape_value} opposes short: -1"
++        return 0, f"internals tape {tape_value}, side unknown: 0"
++    if tape_value in ("risk_off", "risk_off_tilt"):
++        if side_value == "short":
++            return 1, f"internals tape {tape_value} supports short: +1"
++        if side_value == "long":
++            return -1, f"internals tape {tape_value} opposes long: -1"
++        return 0, f"internals tape {tape_value}, side unknown: 0"
++    if tape_value == "mixed":
++        return 0, "internals tape mixed is neutral: 0"
++    return 0, "internals tape unknown: 0"
++
++
++def evaluate_setup_tier(
++    *,
++    side: str = "",
++    when: datetime | None = None,
++    bounce_types: list[str] | tuple | str = (),
++    sector_rrs_present: bool = False,
++    tape: str = "",
++) -> dict:
++    """Score the four measured facts of a bounce alert into a setup tier.
++
++    Returns `{"tier", "points", "reasons"}`: one reason per table row, in
++    table order (bar hour, bounce family, sector RRS, internals tape). The
++    reachable total is -3..+4; the letter follows TIER_BOUNDARIES.
++    """
++    hour_points, hour_reason = _bar_hour_points(when)
++    family_points, family_reason = _bounce_family_points(bounce_types)
++    rrs_points, rrs_reason = _sector_rrs_points(bool(sector_rrs_present))
++    tape_points, tape_reason = _tape_points(tape, side)
++    total = hour_points + family_points + rrs_points + tape_points
++    return {
++        "tier": tier_for_points(total),
++        "points": total,
++        "reasons": [hour_reason, family_reason, rrs_reason, tape_reason],
++    }
+diff --git a/tests/test_s9_p14_tier_golden.py b/tests/test_s9_p14_tier_golden.py
+index f67f94c..81adc87 100644
+--- a/tests/test_s9_p14_tier_golden.py
++++ b/tests/test_s9_p14_tier_golden.py
+@@ -142,6 +142,7 @@ def test_the_bot_seam_keeps_live_tier_text_and_mutes_with_extreme_regime_segment
+     state = _state_with_extreme_regime_segments()
+     monkeypatch.setattr(learning, "load_bounce_learning_state", lambda path=None: state)
+     monkeypatch.setattr(learning, "structural_regime_on", lambda day: REGIME)
++    monkeypatch.setenv("TRADINGBOT_MARKET_TIMEZONE", "America/New_York")
+     shadow_differs = 0
+     for case in CASES:
+         inputs = case["inputs"]
+@@ -160,11 +161,38 @@ def test_the_bot_seam_keeps_live_tier_text_and_mutes_with_extreme_regime_segment
+         )
+         shadow = quality.pop("shadow_s9")
+         expected = EXPECTED[case["id"]]
+-        assert quality == expected["quality"], case["id"]  # tier, composite, mutes, reasons
++        setup = quality.pop("setup_tier")
++
++        def _prefix_swap(message, new_tier, learning_tier=expected["quality"]["tier"]):
++            prefix = f"[{learning_tier}-TIER] "
++            assert message.startswith(prefix)
++            return f"[{new_tier}-TIER] " + message[len(prefix):]
++
++        # The message body stays byte-identical; only the tier prefix moves
++        # (the formatter reads quality["tier"], which is now the setup letter).
+         if quality.get("proven_reasons"):
+-            assert _message(case, quality) == _p14_text(case), case["id"]
++            assert _message(case, quality) == _prefix_swap(_p14_text(case), setup["tier"]), case["id"]
+         else:
+-            assert _message(case, quality) == expected["message"], case["id"]
++            assert _message(case, quality) == _prefix_swap(expected["message"], setup["tier"]), case["id"]
++
++        learning_tier = quality.pop("learning_tier")
++        shown_tier = quality.pop("tier")
++        # The learning verdict is untouched; only the shown tier moved.
++        assert learning_tier == expected["quality"]["tier"], case["id"]
++        rest = dict(expected["quality"])
++        rest.pop("tier")
++        assert quality == rest, case["id"]
++        assert shown_tier == setup["tier"], case["id"]
++        # These rows carry no RRS and no tape: the 10:00 bar scores +1 and the
++        # family at most +/-1, so the total is 0/1/2.
++        types = {bounce_type.lower() for bounce_type in inputs["bounce_types"]}
++        family = 1 if any("regime" in value for value in types) else (
++            -1 if "h1_green_to_yellow" in types else 0
++        )
++        points = 1 + family
++        assert setup["points"] == points, case["id"]
++        assert setup["tier"] == ("C" if points == 2 else "D"), case["id"]
++        assert len(setup["reasons"]) == 4, case["id"]
+         plain = learning.evaluate_shadow_tier(STATE, **{k: v for k, v in inputs.items() if k != "swing_traits"})
+         shadow_differs += int(shadow != plain)
+     # The regime segments DO move the shadow, so the seam really fed it the regime.
+diff --git a/tests/test_s9_shadow_tier.py b/tests/test_s9_shadow_tier.py
+index 4c3e43f..448c532 100644
+--- a/tests/test_s9_shadow_tier.py
++++ b/tests/test_s9_shadow_tier.py
+@@ -154,18 +154,38 @@ def test_alert_quality_carries_the_shadow_beside_the_unchanged_live_verdict(monk
+     state = learning.build_learning_state([_row("bounce_type", "long", "vwap", 400, 0.3)])
+     monkeypatch.setattr(learning, "load_bounce_learning_state", lambda path=None: state)
+     monkeypatch.setattr(learning, "structural_regime_on", lambda day: "")
++    monkeypatch.setenv("TRADINGBOT_MARKET_TIMEZONE", "America/New_York")
+     row = {"market_environment": "", "signal_time": "2026-09-25 10:15:00"}
+     quality = legacy.BounceBot._evaluate_bounce_alert_quality(
+         legacy.BounceBot, "long", {"vwap": 1.0}, row
+     )
+     shadow = quality.pop("shadow_s9")
+-    assert quality == learning.evaluate_bounce_quality(
++    shown_tier = quality.pop("tier")
++    learning_tier = quality.pop("learning_tier")
++    setup = quality.pop("setup_tier")
++    expected = learning.evaluate_bounce_quality(
+         state,
+         direction="long",
+         bounce_types=["vwap"],
+         time_bucket=learning.time_bucket_for(legacy._bounce_quality_time(row)),
+         bounce_combo="vwap",
+     )
++    assert learning_tier == "S" == expected.pop("tier")
++    # The learning verdict (mutes, reasons, proven, composite) is untouched;
++    # only the shown tier moved to the rule's letter.
++    assert quality == expected
++    # No RRS and no tape on this row, so only the bar hour can score.
++    assert setup == {
++        "tier": "D",
++        "points": 1,
++        "reasons": [
++            "mid-session bar (hour 10): +1",
++            "bounce family: neutral: 0",
++            "sector RRS absent: 0",
++            "internals tape unknown: 0",
++        ],
++    }
++    assert shown_tier == "D"
+     assert shadow == {"tier": "S", "composite_r": 0.3}
+ 
+ 
+diff --git a/tests/test_setup_tier.py b/tests/test_setup_tier.py
+new file mode 100644
+index 0000000..e756de9
+--- /dev/null
++++ b/tests/test_setup_tier.py
+@@ -0,0 +1,409 @@
++"""The M5 setup tier: a point rule over four measured facts, beside the learning letter.
++
++The learning letter does not separate outcomes (23-28% for every letter); four
++facts on the event row do: the bar hour, the bounce family, whether a sector
++RRS is present, and the internals tape vs. the side. The rule scores them into
++an A/B/C/D letter the alert shows, while the learning letter is kept beside it
++as `learning_tier`. Unknown facts score 0 - missing data is "unknown", never
++"confirmed".
++"""
++
++import sys
++from datetime import datetime
++from pathlib import Path
++from zoneinfo import ZoneInfo
++
++import pytest
++
++ROOT_DIR = Path(__file__).resolve().parents[1]
++SCRIPTS_DIR = ROOT_DIR / "scripts"
++if str(SCRIPTS_DIR) not in sys.path:
++    sys.path.insert(0, str(SCRIPTS_DIR))
++
++from bounce_bot_lib import setup_tier  # noqa: E402
++
++
++@pytest.fixture(autouse=True)
++def _pin_the_market_timezone(monkeypatch):
++    """Naive bar times are market-local; pin the zone so hour expectations are stable."""
++    monkeypatch.setenv("TRADINGBOT_MARKET_TIMEZONE", "America/New_York")
++
++
++def tier(**kwargs) -> dict:
++    return setup_tier.evaluate_setup_tier(**kwargs)
++
++
++# --------------------------------------------------------------------------- the boundary map
++def test_every_boundary_of_the_point_table():
++    assert setup_tier.tier_for_points(4) == "A"
++    assert setup_tier.tier_for_points(3) == "B"
++    assert setup_tier.tier_for_points(2) == "C"
++    assert setup_tier.tier_for_points(1) == "D"
++    assert setup_tier.tier_for_points(0) == "D"
++    assert setup_tier.tier_for_points(-1) == "D"
++
++
++def test_below_the_table_stays_d():
++    assert setup_tier.tier_for_points(-2) == "D"
++    assert setup_tier.tier_for_points(-3) == "D"
++
++
++# --------------------------------------------------------------------------- fact 1: bar hour
++def test_the_opening_hour_bar_scores_minus_one():
++    result = tier(when=datetime(2026, 9, 25, 9, 45))
++    assert result["points"] == -1
++    assert result["tier"] == "D"
++    assert result["reasons"][0] == "opening bar (hour 9): -1"
++
++
++def test_the_opening_hour_starts_at_the_session_open():
++    assert tier(when=datetime(2026, 9, 25, 9, 30))["points"] == -1
++    assert tier(when=datetime(2026, 9, 25, 9, 29))["points"] == 0
++
++
++def test_the_mid_session_hours_score_plus_one():
++    for hour in (10, 11, 12, 13, 14):
++        result = tier(when=datetime(2026, 9, 25, hour, 30))
++        assert result["points"] == 1
++        assert result["reasons"][0] == f"mid-session bar (hour {hour}): +1"
++
++
++def test_the_last_hour_scores_zero():
++    result = tier(when=datetime(2026, 9, 25, 15, 45))
++    assert result["points"] == 0
++    assert result["reasons"][0] == "last-hour bar (hour 15): 0"
++
++
++def test_an_off_window_or_missing_time_is_unknown_never_confirmed():
++    assert tier(when=None)["points"] == 0
++    assert tier(when=datetime(2026, 9, 25, 8, 0))["points"] == 0
++    assert tier(when=datetime(2026, 9, 25, 16, 15))["points"] == 0
++    assert tier(when=datetime(2026, 9, 25, 7, 59))["reasons"][0] == "bar hour unknown: 0"
++    assert tier(when=None)["reasons"][0] == "bar hour unknown: 0"
++
++
++def test_an_aware_bar_time_is_converted_into_the_session_zone():
++    aware_ny = datetime(2026, 9, 25, 10, 30, tzinfo=ZoneInfo("America/New_York"))
++    assert tier(when=aware_ny)["points"] == 1
++    aware_utc = datetime(2026, 9, 25, 14, 30, tzinfo=ZoneInfo("UTC"))  # 10:30 EDT
++    assert tier(when=aware_utc)["points"] == 1
++
++
++# --------------------------------------------------------------------------- fact 2: bounce family
++def test_a_regime_family_scores_plus_one():
++    result = tier(bounce_types=["regime_pause_rs"])
++    assert result["points"] == 1
++    assert result["reasons"][1] == "bounce family: regime: +1"
++
++
++def test_h1_green_to_yellow_scores_minus_one():
++    result = tier(bounce_types=["h1_green_to_yellow"])
++    assert result["points"] == -1
++    assert result["reasons"][1] == "bounce family: h1_green_to_yellow: -1"
++
++
++def test_the_family_rule_is_case_insensitive():
++    assert tier(bounce_types=["REGIME_PAUSE_RS"])["points"] == 1
++    assert tier(bounce_types=["H1_GREEN_TO_YELLOW"])["points"] == -1
++
++
++def test_bounce_types_accept_a_semicolon_string():
++    assert tier(bounce_types="vwap;regime_break")["points"] == 1
++    assert tier(bounce_types="vwap;h1_green_to_yellow")["points"] == -1
++    assert tier(bounce_types="vwap;ema_15")["points"] == 0
++
++
++def test_regime_beats_h1_green_to_yellow():
++    assert tier(bounce_types=["h1_green_to_yellow", "regime_pause_rs"])["points"] == 1
++    assert tier(bounce_types="regime_pause_rs;h1_green_to_yellow")["points"] == 1
++
++
++def test_other_or_missing_families_score_zero():
++    neutral = tier(bounce_types=["vwap"])
++    assert neutral["points"] == 0
++    assert neutral["reasons"][1] == "bounce family: neutral: 0"
++    unknown = tier()
++    assert unknown["points"] == 0
++    assert unknown["reasons"][1] == "bounce family: unknown: 0"
++    assert tier(bounce_types=";;")["reasons"][1] == "bounce family: unknown: 0"
++    assert tier(bounce_types=None)["reasons"][1] == "bounce family: unknown: 0"
++
++
++# --------------------------------------------------------------------------- fact 3: sector RRS present
++def test_a_present_sector_rrs_scores_plus_one():
++    result = tier(sector_rrs_present=True)
++    assert result["points"] == 1
++    assert result["reasons"][2] == "sector RRS present: +1"
++
++
++def test_an_absent_sector_rrs_scores_zero():
++    result = tier()
++    assert result["points"] == 0
++    assert result["reasons"][2] == "sector RRS absent: 0"
++
++
++# --------------------------------------------------------------------------- fact 4: internals tape vs side
++def test_the_aligned_tape_scores_plus_one():
++    assert tier(side="long", tape="risk_on")["points"] == 1
++    assert tier(side="long", tape="risk_on_tilt")["points"] == 1
++    assert tier(side="short", tape="risk_off")["points"] == 1
++    assert tier(side="short", tape="risk_off_tilt")["points"] == 1
++
++
++def test_the_aligned_reasons_name_the_tape():
++    assert tier(side="long", tape="risk_on")["reasons"][3] == "internals tape risk_on supports long: +1"
++    assert tier(side="short", tape="risk_off_tilt")["reasons"][3] == "internals tape risk_off_tilt supports short: +1"
++
++
++def test_the_opposite_tape_scores_minus_one():
++    assert tier(side="short", tape="risk_on")["points"] == -1
++    assert tier(side="short", tape="risk_on_tilt")["points"] == -1
++    assert tier(side="long", tape="risk_off")["points"] == -1
++    assert tier(side="long", tape="risk_off_tilt")["points"] == -1
++
++
++def test_the_side_is_case_insensitive():
++    assert tier(side="LONG", tape="risk_on")["points"] == 1
++    assert tier(side="Short", tape="risk_off")["points"] == 1
++    assert tier(side="SHORT", tape="risk_on")["points"] == -1
++
++
++def test_neutral_and_unknown_tapes_score_zero():
++    mixed = tier(side="long", tape="mixed")
++    assert mixed["points"] == 0
++    assert mixed["reasons"][3] == "internals tape mixed is neutral: 0"
++    blank = tier(side="long", tape="")
++    assert blank["points"] == 0
++    assert blank["reasons"][3] == "internals tape unknown: 0"
++    assert tier(side="long", tape="unknown")["points"] == 0
++    assert tier(side="long", tape="sideways")["points"] == 0
++
++
++def test_a_known_tape_with_an_unknown_side_scores_zero():
++    result = tier(side="", tape="risk_on")
++    assert result["points"] == 0
++    assert result["reasons"][3] == "internals tape risk_on, side unknown: 0"
++    assert tier(side="up", tape="risk_off")["points"] == 0
++
++
++# --------------------------------------------------------------------------- totals and reason order
++def test_all_four_facts_aligned_score_a():
++    result = tier(
++        side="long",
++        when=datetime(2026, 9, 25, 10, 30),
++        bounce_types=["regime_pause_rs"],
++        sector_rrs_present=True,
++        tape="risk_on",
++    )
++    assert result["points"] == 4
++    assert result["tier"] == "A"
++    assert result["reasons"] == [
++        "mid-session bar (hour 10): +1",
++        "bounce family: regime: +1",
++        "sector RRS present: +1",
++        "internals tape risk_on supports long: +1",
++    ]
++
++
++def test_the_reasons_follow_table_order_with_mixed_signs():
++    result = tier(
++        side="short",
++        when=datetime(2026, 9, 25, 12, 0),
++        bounce_types="regime_break;ema_15",
++        sector_rrs_present=True,
++        tape="risk_off",
++    )
++    assert result["points"] == 4
++    assert result["reasons"] == [
++        "mid-session bar (hour 12): +1",
++        "bounce family: regime: +1",
++        "sector RRS present: +1",
++        "internals tape risk_off supports short: +1",
++    ]
++
++
++def test_three_aligned_facts_score_b():
++    result = tier(side="long", when=datetime(2026, 9, 25, 10, 30), sector_rrs_present=True, tape="risk_on")
++    assert (result["points"], result["tier"]) == (3, "B")
++
++
++def test_two_aligned_facts_score_c():
++    result = tier(side="long", when=datetime(2026, 9, 25, 10, 30), sector_rrs_present=True)
++    assert (result["points"], result["tier"]) == (2, "C")
++
++
++def test_one_aligned_fact_scores_d():
++    result = tier(side="long", when=datetime(2026, 9, 25, 10, 30))
++    assert (result["points"], result["tier"]) == (1, "D")
++
++
++def test_no_aligned_facts_score_d():
++    result = tier(side="long", when=datetime(2026, 9, 25, 15, 30), bounce_types=["vwap"], tape="mixed")
++    assert (result["points"], result["tier"]) == (0, "D")
++
++
++def test_conflicting_facts_can_reach_minus_three():
++    result = tier(
++        side="long",
++        when=datetime(2026, 9, 25, 9, 45),
++        bounce_types=["h1_green_to_yellow"],
++        tape="risk_off",
++    )
++    assert result["points"] == -3
++    assert result["tier"] == "D"
++    assert result["reasons"] == [
++        "opening bar (hour 9): -1",
++        "bounce family: h1_green_to_yellow: -1",
++        "sector RRS absent: 0",
++        "internals tape risk_off opposes long: -1",
++    ]
++
++
++def test_the_result_shape_is_tier_points_and_four_reasons():
++    result = tier()
++    assert set(result) == {"tier", "points", "reasons"}
++    assert result["tier"] in {"A", "B", "C", "D"}
++    assert len(result["reasons"]) == 4
++
++
++# --------------------------------------------------------------------------- the legacy hook
++def _learning_state():
++    from bounce_bot_lib import learning
++
++    def _row(dimension, direction, segment, n, avg_r):
++        return {
++            "dimension": dimension,
++            "direction": direction,
++            "segment": segment,
++            "sample_count": n,
++            "avg_close_r": avg_r,
++            "std_close_r": 1.0,
++            "session_count": 20,
++        }
++
++    return learning.build_learning_state([_row("bounce_type", "long", "regime_pause_rs", 400, 0.3)])
++
++
++def _aligned_row() -> dict:
++    return {
++        "market_environment": "",
++        "signal_time": "2026-09-25 10:15:00",
++        "bounce_types": "regime_pause_rs",
++        "rrs_sector": "XLK",
++        "internals_tape": "risk_on",
++    }
++
++
++ALIGNED_SETUP = {
++    "tier": "A",
++    "points": 4,
++    "reasons": [
++        "mid-session bar (hour 10): +1",
++        "bounce family: regime: +1",
++        "sector RRS present: +1",
++        "internals tape risk_on supports long: +1",
++    ],
++}
++
++
++def test_the_alert_dict_shows_the_setup_tier_and_keeps_the_learning_letter(monkeypatch):
++    from bounce_bot_lib import legacy, learning
++
++    state = _learning_state()
++    monkeypatch.setattr(learning, "load_bounce_learning_state", lambda path=None: state)
++    monkeypatch.setattr(learning, "structural_regime_on", lambda day: "")
++    row = _aligned_row()
++    quality = legacy.BounceBot._evaluate_bounce_alert_quality(legacy.BounceBot, "long", {"regime_pause_rs": 1.0}, row)
++
++    expected_learning = learning.evaluate_bounce_quality(
++        state,
++        direction="long",
++        bounce_types=["regime_pause_rs"],
++        time_bucket=learning.time_bucket_for(legacy._bounce_quality_time(row)),
++        market_environment="",
++        priority_bucket="",
++        focus_label="",
++        bounce_combo="regime_pause_rs",
++        setup_family="",
++    )
++    assert expected_learning["tier"] == "S"
++
++    shadow = quality.pop("shadow_s9")
++    assert shadow == {"tier": "S", "composite_r": 0.3}
++    assert quality.pop("tier") == "A"
++    assert quality.pop("learning_tier") == expected_learning.pop("tier")
++    assert quality.pop("setup_tier") == ALIGNED_SETUP
++    # mutes, mute_reasons, reasons, proven, proven_reasons, composite_r: untouched
++    assert quality == expected_learning
++
++
++def test_the_learning_fallback_still_carries_the_setup_tier(monkeypatch):
++    from bounce_bot_lib import legacy, learning
++
++    def _explode(path=None):
++        raise RuntimeError("state unreadable")
++
++    monkeypatch.setattr(learning, "load_bounce_learning_state", _explode)
++    quality = legacy.BounceBot._evaluate_bounce_alert_quality(legacy.BounceBot, "long", {"regime_pause_rs": 1.0}, _aligned_row())
++    assert quality["tier"] == "A"  # the rule's tier, from the event row alone
++    assert quality["learning_tier"] == "B"  # the fallback letter
++    assert quality["muted"] is False
++    assert quality["mute_reasons"] == []
++    assert quality["reasons"] == []
++    assert quality["setup_tier"]["points"] == 4
++    assert "shadow_s9" not in quality
++
++
++def test_a_rule_that_cannot_score_leaves_the_learning_verdict_untouched(monkeypatch):
++    from bounce_bot_lib import legacy, learning, setup_tier
++
++    state = _learning_state()
++    monkeypatch.setattr(learning, "load_bounce_learning_state", lambda path=None: state)
++    monkeypatch.setattr(learning, "structural_regime_on", lambda day: "")
++
++    def _broken(**kwargs):
++        raise RuntimeError("no facts")
++
++    monkeypatch.setattr(setup_tier, "evaluate_setup_tier", _broken)
++    quality = legacy.BounceBot._evaluate_bounce_alert_quality(legacy.BounceBot, "long", {"regime_pause_rs": 1.0}, _aligned_row())
++    assert quality["tier"] == "S"
++    assert quality["learning_tier"] == "S"
++    assert "setup_tier" not in quality
++    assert "shadow_s9" in quality
++
++
++# --------------------------------------------------------------------------- the recorded row
++def _tier_host(tmp_path):
++    import evidence_ledger as el
++
++    from bounce_bot_lib.legacy import BounceBot
++
++    class _Host:
++        pass
++
++    host = _Host.__new__(_Host)
++    host._outcome_ledger_obj = el.intraday_outcome_ledger(tmp_path)
++    host._outcome_ledger_failed = False
++    host._outcome_ledger = (lambda: host._outcome_ledger_obj)
++    host.record_alert_tier = BounceBot.record_alert_tier.__get__(host, _Host)
++    return host
++
++
++def test_the_recorded_tier_row_carries_the_learning_tier(tmp_path):
++    host = _tier_host(tmp_path)
++    host.record_alert_tier("eid", {"tier": "A", "learning_tier": "S", "muted": False, "proven": False})
++    rows = list(host._outcome_ledger_obj.read())
++    assert len(rows) == 1
++    assert rows[0]["event_type"] == "tier_assigned"
++    assert rows[0]["event_id"] == "eid"
++    assert rows[0]["tier"] == "A"
++    assert rows[0]["learning_tier"] == "S"
++
++
++def test_the_recorded_row_survives_a_verdict_without_a_learning_tier(tmp_path):
++    host = _tier_host(tmp_path)
++    host.record_alert_tier("eid", {"tier": "C", "muted": False})
++    rows = list(host._outcome_ledger_obj.read())
++    assert len(rows) == 1
++    assert rows[0]["tier"] == "C"
++    assert rows[0]["learning_tier"] == ""

@@ -1,0 +1,10 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "The helper's input guards (None / non-positive -> None) mirror breakeven_move_pct's style and are unreachable at the single call site (the gates at screen.py guarantee positive vwap/close/ask/bid there); they exist so the function stays honest if reused.",
+    "net_edge_pct is strictly positive for every candidate that passes the smallest-tier gate (gate inequality r > u/(1-fee) is algebraically identical to the new net edge being > 0), so the sort at screen.py:405 keeps its exact semantics and the existing assertion net_edge_pct > 0 stays true.",
+    "The scenario in test_a_wide_spread_no_longer_ranks_first is exact fixed-point (no RNG; all sums < 2^53), so the ranking inversion it pins cannot drift with seeds or libraries; margins are ~0.93pp (old formula) and ~1.35pp (new)."
+  ],
+  "summary": "Diff is minimal: one keyword-only helper net_edge_pct in screen.py (multiplicative round trip: target_bid = vwap * bid_walk / close, net = sell_proceeds(target_bid, maker=False) / ask_walk - 1, shape-preservation assumption stated in the docstring and at the call site), one call replacing the expected_move - breakeven subtraction, __all__ updated. No gate, digest format, sort, or costs.py change. Reproduced: reverting the call site alone makes the ranking test fail with [37, 38] != [38, 37] (the old flattering order), and every number re-derives by hand (wide: 1,000,000 * (700,000/700,000) * 0.96625 / 760,000 - 1 = +27.1382%; tight: +28.4930%; old: +30.4934% / +29.5663%). Flat book at value nets exactly -sales tax, pinned to 1e-12. Full suite 259 passed / 7 network deselected; ruff check and ruff format --check clean on the whole repo."
+}

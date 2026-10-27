@@ -1,0 +1,251 @@
+# Red run (tests written before the fix) - Tue Oct 27 11:02:35 PDT 2026
+# Baseline before any source change: 43 passed, ruff clean (background task bx9exymc4).
+
+....FFFFF.FF..............F........F........FF....                       [100%]
+================================== FAILURES ===================================
+___________ test_exercised_long_call_premium_rolls_into_share_cost ____________
+
+fx = <tradertax.fx.FxTable object at 0x0000018A00B899D0>
+
+    def test_exercised_long_call_premium_rolls_into_share_cost(fx):
+        # Exercise a long call: the premium paid becomes part of the shares' cost;
+        # the option row (code "Ex") is not a separate realised disposition.
+        rows = [
+            tx(date(2026, 1, 5), 1, 3.0, symbol=CALL, asset_class="OPT", commission=0, raw={"code": "O"}),
+            tx(date(2026, 3, 1), 100, 150.0, commission=0, raw={"code": "Ex", "seq": 1}),
+            tx(date(2026, 3, 1), -1, 3.0, symbol=CALL, asset_class="OPT", commission=0, raw={"code": "Ex", "seq": 2}),
+            tx(date(2026, 3, 2), -100, 160.0, commission=0),
+        ]
+        res = run(rows, fx)
+>       assert all(e.symbol != CALL for e in res.events), "the option must not be realised separately"
+E       AssertionError: the option must not be realised separately
+E       assert False
+E        +  where False = all(<generator object test_exercised_long_call_premium_rolls_into_share_cost.<locals>.<genexpr> at 0x0000018A00B9DB10>)
+
+tests\test_gains.py:96: AssertionError
+_____________ test_assigned_short_put_premium_reduces_share_cost ______________
+
+fx = <tradertax.fx.FxTable object at 0x0000018A02E6A7E0>
+
+    def test_assigned_short_put_premium_reduces_share_cost(fx):
+        # Assignment of a short put: the premium received reduces the cost of the
+        # shares taken over (IBKR code "A"). Option row comes first in the file.
+        rows = [
+            tx(date(2026, 1, 5), -1, 4.0, symbol=PUT, asset_class="OPT", commission=0, raw={"code": "O"}),
+            tx(date(2026, 3, 1), 1, 4.0, symbol=PUT, asset_class="OPT", commission=0, raw={"code": "A", "seq": 1}),
+            tx(date(2026, 3, 1), 100, 90.0, commission=0, raw={"code": "A", "seq": 2}),
+            tx(date(2026, 3, 2), -100, 95.0, commission=0),
+        ]
+        res = run(rows, fx)
+        assert res.open_positions == []
+>       (e,) = res.events
+        ^^^^
+E       ValueError: too many values to unpack (expected 1)
+
+tests\test_gains.py:116: ValueError
+_______ test_assignment_roll_is_order_independent_and_not_the_row_price _______
+
+fx = <tradertax.fx.FxTable object at 0x0000018A02DD36B0>
+
+    def test_assignment_roll_is_order_independent_and_not_the_row_price(fx):
+        # Same assignment with the share row first in the file, and with the option
+        # row priced at 4.50: the roll is the premium from the option pool, not the
+        # row's price. Both orders must give the same result.
+        rows = [
+            tx(date(2026, 1, 5), -1, 4.0, symbol=PUT, asset_class="OPT", commission=0, raw={"code": "O"}),
+            tx(date(2026, 3, 1), 100, 90.0, commission=0, raw={"code": "A", "seq": 1}),
+            tx(date(2026, 3, 1), 1, 4.5, symbol=PUT, asset_class="OPT", commission=0, raw={"code": "A", "seq": 2}),
+            tx(date(2026, 3, 2), -100, 95.0, commission=0),
+        ]
+        res = run(rows, fx)
+>       (e,) = res.events
+        ^^^^
+E       ValueError: too many values to unpack (expected 1)
+
+tests\test_gains.py:132: ValueError
+___________ test_exercised_long_put_premium_adds_to_sold_shares_acb ___________
+
+fx = <tradertax.fx.FxTable object at 0x0000018A02DD09B0>
+
+    def test_exercised_long_put_premium_adds_to_sold_shares_acb(fx):
+        # Exercise a long put: deliver the shares at the strike; the premium paid
+        # adds to the ACB of the shares sold (the share row is processed first).
+        rows = [
+            tx(date(2026, 1, 5), 100, 80.0, commission=0, raw={"code": "O"}),
+            tx(date(2026, 1, 6), 1, 4.0, symbol=PUT, asset_class="OPT", commission=0, raw={"code": "O"}),
+            tx(date(2026, 3, 1), -100, 90.0, commission=0, raw={"code": "Ex", "seq": 1}),
+            tx(date(2026, 3, 1), -1, 4.0, symbol=PUT, asset_class="OPT", commission=0, raw={"code": "Ex", "seq": 2}),
+        ]
+        res = run(rows, fx)
+>       (e,) = res.events
+        ^^^^
+E       ValueError: too many values to unpack (expected 1)
+
+tests\test_gains.py:147: ValueError
+___________________ test_questrade_assignment_rolls_premium ___________________
+
+fx = <tradertax.fx.FxTable object at 0x0000018A02DD1400>
+
+    def test_questrade_assignment_rolls_premium(fx):
+        # Questrade flags the option row with action "ASN" (no O/C codes at all).
+        be = "BE 2026-07-02 P 260.00"
+        rows = [
+            tx(date(2026, 1, 5), -1, 4.0, symbol=be, asset_class="OPT", commission=0, raw={"action": "BUY"}),
+            tx(date(2026, 3, 1), 1, 4.0, symbol=be, asset_class="OPT", commission=0, raw={"action": "ASN", "seq": 1}),
+            tx(date(2026, 3, 1), 100, 260.0, symbol="BE", commission=0, raw={"action": "BUY", "seq": 2}),
+        ]
+        res = run(rows, fx)
+>       assert res.events == []
+E       AssertionError: assert [Realized(dat...cial_note='')] == []
+E         
+E         Left contains one more item: Realized(date=datetime.date(2026, 3, 1), symbol='BE 2026-07-02 P 260.00', asset_class='OPT', broker='questrade', accou...ce='fallback', fingerprint='72e81bc939609ec9c26990e988fa0989c48e8154', superficial_denied_cad=0.0, superficial_note='')
+E         Use -v to get more diff
+
+tests\test_gains.py:163: AssertionError
+____________________ test_ibkr_open_short_sale_no_warning _____________________
+
+fx = <tradertax.fx.FxTable object at 0x0000018A02E6E120>
+
+    def test_ibkr_open_short_sale_no_warning(fx):
+        # IBKR code "O" says the short was deliberately opened: no warning.
+        rows = [tx(date(2026, 2, 3), -20, 200.0, commission=0, raw={"code": "O"})]
+        res = run(rows, fx)
+>       assert res.warnings == []
+E       AssertionError: assert ['2026-02-03 ... manual row)'] == []
+E         
+E         Left contains one more item: '2026-02-03 sold 20 AAPL in questrade 1 with nothing held: a short sale, or an opening position is missing (add it under Trades > Add manual row)'
+E         Use -v to get more diff
+
+tests\test_gains.py:188: AssertionError
+__________________ test_ibkr_orphan_close_warns_for_options ___________________
+
+fx = <tradertax.fx.FxTable object at 0x0000018A00B89D90>
+
+    def test_ibkr_orphan_close_warns_for_options(fx):
+        # A closing row (code "C") with no open position warns - now for options too.
+        rows = [tx(date(2026, 2, 10), -1, 3.0, symbol=CALL, asset_class="OPT", commission=0, raw={"code": "C"})]
+        res = run(rows, fx)
+>       assert res.warnings and "nothing held" in res.warnings[0]
+E       AssertionError: assert ([])
+E        +  where [] = GainsResult(events=[], open_positions=[OpenPosition(pool='TAXABLE', symbol='AAPL 2027-01-15 C 150.00', asset_class='OP...26, 2, 10))], warnings=[], max_foreign_cost_cad=0.0, max_foreign_cost_date=None, fx_fallback_uses=1, fx_nearest_uses=0).warnings
+
+tests\test_gains.py:196: AssertionError
+___________________ test_ibkr_commission_rebate_is_money_in ___________________
+
+    def test_ibkr_commission_rebate_is_money_in():
+        # In the file fees are negative; a positive Comm/Fee is a rebate - money in, not a cost.
+        rows = rows_from_bytes(IB_REBATE.encode())
+        assert detect(rows) == "ibkr"
+        parsed = parse_rows(rows, "ibkr_rebate.csv")
+        ibm, ge = [r for r in parsed.rows if r.kind == "TRADE"]
+        assert ibm.commission == 1 and ibm.net == pytest.approx(-1001)  # ordinary fee stays a cost
+>       assert ge.commission == pytest.approx(-1.25)  # rebate: negative cost
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert 1.25 == -1.25 ± 1.2e-06
+E         
+E         comparison failed
+E         Obtained: 1.25
+E         Expected: -1.25 ± 1.2e-06
+
+tests\test_parsers.py:76: AssertionError
+___________________ test_cpp_credits_job_pensionable_first ____________________
+
+rules = {'year': 2026, 'note': '2026 figures from published budgets and indexation (federal 2%); treat provincial BPAs as esti...le in %LOCALAPPDATA%\\TraderTaxHelper to override.', 'capital_gains_inclusion': 0.5, 'instalment_threshold': 3000, ...}
+
+    def test_cpp_credits_job_pensionable_first(rules):
+        # Schedule 8: the job's payroll CPP is credited against the YMP/YAMPE first, so a
+        # salary above the YAMPE leaves no CPP on the trading income.
+        t = compute_tax(rules, "BC", Income(other_income=90000, business_income=50000))
+>       assert t.cpp_contribution == 0
+E       AssertionError: assert 5533.5 == 0
+E        +  where 5533.5 = TaxBreakdown(net_income=136768.25, taxable_income=136768.25, federal_tax=22692.75, provincial_tax=9991.717724999999, c...vincial_credits': 868.994, 'cpp_base': 5533.5, 'cpp2': 0.0, 'eligible_grossed_up': 0.0, 'noneligible_grossed_up': 0.0}).cpp_contribution
+
+tests\test_tax_and_expenses.py:37: AssertionError
+_________________________ test_main_window_refreshes __________________________
+
+qapp = <PySide6.QtWidgets.QApplication(0x18a02736da0) at 0x0000018A02E61740>
+ledger = <tradertax.db.Ledger object at 0x0000018A03001E50>
+
+    def test_main_window_refreshes(qapp, ledger):
+        from tradertax.ui.app import AppState, MainWindow
+    
+        qt = parse_rows(rows_from_bytes(questrade_csv(QT_MARGIN_ROWS).encode()), "qt.csv")
+        ledger.commit_import(qt, account_type="MARGIN", period_start=date(2026, 1, 1), period_end=date(2026, 3, 1))
+        ib = parse_rows(rows_from_bytes(IB_STATEMENT.encode()), "ib.csv")
+        ledger.commit_import(ib, account_type="MARGIN", period_start=ib.period_start, period_end=ib.period_end)
+        ledger.add_expense(Expense(2026, date(2026, 2, 1), "capital", "mini pc", 1500, kind="CAPITAL", cca_class="50"))
+        ledger.set_setting("tax_year", 2026)
+        state = AppState(ledger)
+        win = MainWindow(state)
+        state.rebuild()
+        assert state.report is not None and state.last_error == ""
+        summary = win.pages[0]
+        assert summary.ufile_model.rowCount() > 5
+        assert summary.cards["total_pnl"].value.text() != "-"
+        trades = win.pages[2]
+        assert trades.model.rowCount() == len(ledger.transactions(year=2026))
+        gains = win.pages[3]
+        assert gains.sym_model.rowCount() >= 2
+        expenses = win.pages[4]
+        assert expenses.cca_model.rowCount() == 1
+        # switching treatment through settings rebuilds without error
+        settings = win.pages[5]
+        settings.treatment.setCurrentIndex(1)
+        settings.save()
+        assert state.report.treatment == "CAPITAL"
+        assert state.last_error == ""
+        # the summary card mirrors the Settings > Other income field
+        ledger.set_setting("other_income", 60000)
+        state.rebuild()
+>       assert summary.cards["job_income"].value.text() == "60,000.00"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'job_income'
+
+tests\test_ui_smoke.py:55: KeyError
+________________ test_ibkr_assignment_rolls_premium_end_to_end ________________
+
+ledger = <tradertax.db.Ledger object at 0x0000018A035DA090>
+
+    def test_ibkr_assignment_rolls_premium_end_to_end(ledger):
+        # A short put assigned at 150: the premium net of commission reduces the ACB of
+        # the forced 100-share buy; the option must not open or close as its own position.
+        ib = parse_rows(rows_from_bytes(IB_ASSIGNMENT.encode()), "ib_assign.csv")
+        ledger.commit_import(ib, account_type="MARGIN", period_start=ib.period_start, period_end=ib.period_end)
+        ledger.set_setting("tax_year", 2026)
+        rep = build_report(ledger, 2026, as_of=date(2026, 4, 1))
+        (p,) = rep.open_taxable
+        assert p.symbol == "AAPL" and p.quantity == 100
+>       assert p.acb_cad == pytest.approx((15000 + 1 - 400 + 0.65) * 1.37)
+E       assert 20551.37 == 20004.2605 ± 0.0200043
+E         
+E         comparison failed
+E         Obtained: 20551.37
+E         Expected: 20004.2605 ± 0.0200043
+
+tests\test_summary.py:44: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_gains.py::test_exercised_long_call_premium_rolls_into_share_cost
+FAILED tests/test_gains.py::test_assigned_short_put_premium_reduces_share_cost
+FAILED tests/test_gains.py::test_assignment_roll_is_order_independent_and_not_the_row_price
+FAILED tests/test_gains.py::test_exercised_long_put_premium_adds_to_sold_shares_acb
+FAILED tests/test_gains.py::test_questrade_assignment_rolls_premium - Asserti...
+FAILED tests/test_gains.py::test_ibkr_open_short_sale_no_warning - AssertionE...
+FAILED tests/test_gains.py::test_ibkr_orphan_close_warns_for_options - Assert...
+FAILED tests/test_parsers.py::test_ibkr_commission_rebate_is_money_in - asser...
+FAILED tests/test_tax_and_expenses.py::test_cpp_credits_job_pensionable_first
+FAILED tests/test_ui_smoke.py::test_main_window_refreshes - KeyError: 'job_in...
+FAILED tests/test_summary.py::test_ibkr_assignment_rolls_premium_end_to_end
+11 failed, 39 passed in 1.00s
+
+# Note: the run above is the first red capture. Two tests were later corrected
+# before the build because the FIRST version of the test itself was wrong, not
+# the code:
+#  - test_assignment_without_share_row_is_ordinary_close: closing a short option
+#    is a BUY (qty +1), the first version used a sell; corrected to a buy-back
+#    at 5.00 (expected gain (400 - 500) x 2, SHORT side).
+#  - test_cpp_credits_job_pensionable_first: the middle cases forgot the CPP2
+#    band (85000 - 74600 = 10400 at 8%) which the business still holds when the
+#    salary is inside/below the YMP; expected values corrected.
+# Both corrected tests still fail against the unmodified source for the right
+# reasons (wrong ACB / wrong CPP contribution). All 11 red failures above assert
+# new behaviour; every pre-existing test was green in the baseline run.

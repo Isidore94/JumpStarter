@@ -1,0 +1,8 @@
+{
+  "judge": "opus-5.5 effort high, blind",
+  "round": "first (no rework possible: OpenRouter credits exhausted)",
+  "correctness": 2, "completeness": 2, "tests": 1, "scope": 3, "brief_awareness": 2, "self_review": 0, "trading_risk": 3,
+  "verdict": "MAJOR",
+  "notes": "Core logic mostly right: side sub-reads built in rolling_technical_integrity, pooled numbers unchanged; technicals_verdict: fast tape overrides, both sides scored decide, building side or old snapshot falls back to the pooled M5 rule; older Mentor text unchanged. The HOLDING rule is looser than the reference (HOLDING when either side is FIRM/STRONG and neither weak; reference needs both sides firm); the brief named the words but not the rule, and this one choice is 26 of the 62 hidden failures. Side norm table is a clearly labelled stub copying the pooled hour norm. 'sup n res n' read as test counts, not scores, without flagging the ambiguity. Done-when not met: 3 own tests fail; two are bad expectations in the test file (_side_market(2.0, 8.5) correctly yields SUPPORT FAILING but the tests assert LEVELS FAILING), the third is the required end-to-end trend-hour test (BUILDING instead of STRONG/RESISTANCE FAILING), so the key acceptance case is unproven. Build cut off before finishing (OpenRouter 402), no self-review. Display and Mentor wording only; no order or sizing code.",
+  "lead_note": "Final verdict = first-round verdict. Causes: provider (402 cut the build at turn 135 before Qwen could fix its own red tests), brief too thin (HOLDING vs NORMAL rule, test-helper signature, Mentor wording). Cost $0.78, 11.5 min, 135 turns, 1 pass."
+}

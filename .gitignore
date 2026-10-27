@@ -16,3 +16,7 @@ __pycache__/
 # a packet is the record of what was authorized, and reviews cite it).
 !/.claude/packets/
 # --- end JumpStarter ---------------------------------------------------------
+
+# --- bench evidence: keep the raw transcripts and copied session dirs out of git ------
+docs/bench/*/runs/**/home/
+docs/bench/*/runs/**/transcript.jsonl

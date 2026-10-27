@@ -1,0 +1,48 @@
+....................FFFF                                                 [100%]
+================================== FAILURES ===================================
+_ test_net_edge_prices_the_actual_round_trip_not_a_difference_of_percentages __
+
+    def test_net_edge_prices_the_actual_round_trip_not_a_difference_of_percentages():
+        """The naive `expected_move - breakeven` form flatters wide books.
+    
+        Both percentages are measured against different reference points (the close
+        and the bid), so subtracting them understates the cost of a wide spread —
+        the exact failure mode plan.md §9 R5 warns about. This is a real Forge
+        candidate from a live sweep: a 44% spread that the naive form scored at
+        +16%.
+        """
+        from evescreener.costs import CostModel
+>       from evescreener.screen import _net_edge_pct
+E       ImportError: cannot import name '_net_edge_pct' from 'evescreener.screen' (C:\Users\Aaron\llm-harness\wt\qtm-66905ff\src\evescreener\screen.py)
+
+tests\ref_test_screen_digest.py:326: ImportError
+______________________ test_a_tight_book_keeps_its_edge _______________________
+
+    def test_a_tight_book_keeps_its_edge():
+        from evescreener.costs import CostModel
+>       from evescreener.screen import _net_edge_pct
+E       ImportError: cannot import name '_net_edge_pct' from 'evescreener.screen' (C:\Users\Aaron\llm-harness\wt\qtm-66905ff\src\evescreener\screen.py)
+
+tests\ref_test_screen_digest.py:346: ImportError
+_________________ test_net_edge_is_unknown_without_both_walks _________________
+
+    def test_net_edge_is_unknown_without_both_walks():
+        from evescreener.costs import CostModel
+>       from evescreener.screen import _net_edge_pct
+E       ImportError: cannot import name '_net_edge_pct' from 'evescreener.screen' (C:\Users\Aaron\llm-harness\wt\qtm-66905ff\src\evescreener\screen.py)
+
+tests\ref_test_screen_digest.py:361: ImportError
+_______________________ test_tax_is_inside_the_net_edge _______________________
+
+    def test_tax_is_inside_the_net_edge():
+        from evescreener.costs import CostModel
+>       from evescreener.screen import _net_edge_pct
+E       ImportError: cannot import name '_net_edge_pct' from 'evescreener.screen' (C:\Users\Aaron\llm-harness\wt\qtm-66905ff\src\evescreener\screen.py)
+
+tests\ref_test_screen_digest.py:371: ImportError
+=========================== short test summary info ===========================
+FAILED tests/ref_test_screen_digest.py::test_net_edge_prices_the_actual_round_trip_not_a_difference_of_percentages
+FAILED tests/ref_test_screen_digest.py::test_a_tight_book_keeps_its_edge - Im...
+FAILED tests/ref_test_screen_digest.py::test_net_edge_is_unknown_without_both_walks
+FAILED tests/ref_test_screen_digest.py::test_tax_is_inside_the_net_edge - Imp...
+4 failed, 20 passed in 3.13s

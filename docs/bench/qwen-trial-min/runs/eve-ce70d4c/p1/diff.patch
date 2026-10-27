@@ -1,0 +1,273 @@
+diff --git a/src/evescreener/hauling.py b/src/evescreener/hauling.py
+index 929b828..41d155e 100644
+--- a/src/evescreener/hauling.py
++++ b/src/evescreener/hauling.py
+@@ -40,7 +40,7 @@ import pandas as pd
+ from .books import DepthCurve, DepthLevel, DepthSnapshot, q_walk
+ from .config import Config
+ from .costs import CostModel
+-from .routes import HIGHSEC, PROFILES, RouteFacts, RouteGraph
++from .routes import HIGHSEC, PROFILES, SHORTEST, RouteFacts, RouteGraph
+ from .timeutil import ensure_utc, iso, utcnow
+ 
+ __all__ = [
+@@ -611,21 +611,38 @@ class _Trip:
+     detail: str = ""
+ 
+ 
+-def _route(graph, cache, origin, destination, profile: HaulProfile) -> RouteFacts:
++def _route(
++    graph,
++    cache,
++    origin,
++    destination,
++    profile: HaulProfile,
++    *,
++    avoid=None,
++    security_profile=None,
++) -> RouteFacts:
++    """One route under the profile's constraints, one or both of which the
++    probes in `_trip` ask about with an override. Both dispatches stay on the
++    same path as the trip itself: through the route cache when there is one, so
++    a question already answered in a scan is not searched again."""
++    if avoid is None:
++        avoid = profile.avoid_systems
++    if security_profile is None:
++        security_profile = profile.security_profile
+     if cache is not None:
+         return cache.route(
+             graph,
+             origin,
+             destination,
+-            profile=profile.security_profile,
+-            avoid=profile.avoid_systems,
++            profile=security_profile,
++            avoid=avoid,
+             safer_penalty=profile.safer_penalty,
+         )
+     return graph.route(
+         origin,
+         destination,
+-        profile=profile.security_profile,
+-        avoid=profile.avoid_systems,
++        profile=security_profile,
++        avoid=avoid,
+         safer_penalty=profile.safer_penalty,
+     )
+ 
+@@ -647,21 +664,47 @@ def _trip(
+         )
+     )
+     if not haul.known:
+-        # A security profile that blocks an otherwise-connected pair is a
+-        # different fact from a pair that is not connected at all, and the
+-        # operator can act on the first one by changing the profile.
+-        blocked = (
+-            profile.security_profile == HIGHSEC
+-            and graph.route(source.system_id, destination.system_id).known
++        # Which of the operator's own inputs cuts the route is a different
++        # question from whether anything cuts it, so ask them separately — and
++        # ask both of the cache, the way the trip itself was asked. Drop the
++        # avoid list under his own profile first: if that connects, the avoid
++        # list is what cut the route, and only the operator can drop it. Then
++        # drop the profile itself: if the shortest profile connects, the
++        # security profile is the blocker, and only the operator can change it.
++        # Neither connects and the pair is simply not there.
++        without_avoid = _route(
++            graph, cache, source.system_id, destination.system_id, profile, avoid=()
+         )
++        if without_avoid.known:
++            reason, detail = (
++                NO_ROUTE,
++                f"the pair connects under the {profile.security_profile} profile without "
++                f"the avoid list — the {len(profile.avoid_systems)} system(s) on it cut the route",
++            )
++        elif _route(
++            graph,
++            cache,
++            source.system_id,
++            destination.system_id,
++            profile,
++            avoid=(),
++            security_profile=SHORTEST,
++        ).known:
++            reason, detail = (
++                ROUTE_BLOCKED_SECURITY,
++                f"the pair connects on the shortest profile — the {profile.security_profile} "
++                "security profile is what blocks it",
++            )
++        else:
++            reason, detail = NO_ROUTE, haul.reason
+         return _Trip(
+             pickup=pickup,
+             haul=haul,
+             total_jumps=None,
+             detour_jumps=None,
+             active_minutes=None,
+-            reason=ROUTE_BLOCKED_SECURITY if blocked else NO_ROUTE,
+-            detail=haul.reason,
++            reason=reason,
++            detail=detail,
+         )
+ 
+     detour_jumps = None
+diff --git a/tests/test_haul_detour.py b/tests/test_haul_detour.py
+index 41efd9b..dd75cab 100644
+--- a/tests/test_haul_detour.py
++++ b/tests/test_haul_detour.py
+@@ -23,10 +23,19 @@ import pytest
+ pytestmark = pytest.mark.gui
+ 
+ from evescreener.crossregion import FreightQuote  # noqa: E402
+-from evescreener.haulfreight import attach_freight, freight_comparison
+-from evescreener.hauling import ALONG_ROUTE, NO_ROUTE, Station, scan_hauls
+-from evescreener.routes import RouteGraph
+-from test_hauling import DEST, DOMAIN, FORGE, NOW, SOURCE, _orders, _profile, _snapshot
++from evescreener.haulfreight import attach_freight, freight_comparison  # noqa: E402
++from evescreener.hauling import ALONG_ROUTE, NO_ROUTE, Station, scan_hauls  # noqa: E402
++from evescreener.routes import RouteGraph  # noqa: E402
++from test_hauling import (  # noqa: E402
++    DEST,
++    DOMAIN,
++    FORGE,
++    NOW,
++    SOURCE,
++    _orders,
++    _profile,
++    _snapshot,
++)
+ 
+ RENS_SYS, RENS_STATION, HEIMATAR = 30002510, 60004588, 10000030
+ STAGING = Station(60099999, 30002510, HEIMATAR, "Rens", None)
+diff --git a/tests/test_hauling.py b/tests/test_hauling.py
+index 017e6d1..0a2fb02 100644
+--- a/tests/test_hauling.py
++++ b/tests/test_hauling.py
+@@ -272,6 +272,127 @@ def test_a_low_sec_corridor_is_blocked_by_security_not_called_disconnected(confi
+     assert not scan.rejected_for(NO_ROUTE)
+ 
+ 
++def test_the_avoid_list_that_cuts_the_route_is_named_not_blamed_on_security(config, worked):
++    """A pair whose route is cut by the operator's own avoid list used to come
++    back ROUTE_BLOCKED_SECURITY: the probe re-ran the route with the default
++    profile and no avoid list, so it blamed the security profile for what the
++    operator's list did. The avoid list is the blocker, and it is the operator's
++    to drop — which is not what 'blocked by security' says."""
++    graph = _graph(jumps=2, security=0.9)  # Jita — 90000 — Amarr, all high-sec
++    scan = _scan(
++        config,
++        worked,
++        graph=graph,
++        profile=_profile(security_profile="highsec", avoid_systems=(90_000,)),
++    )
++    assert scan.plans == []
++    assert not scan.rejected_for(ROUTE_BLOCKED_SECURITY)
++    rejections = scan.rejected_for(NO_ROUTE)
++    assert rejections, f"expected NO_ROUTE; got {scan.rejection_counts}"
++    assert "avoid" in rejections[0].detail, "the detail says which input cuts the route"
++
++
++def test_a_security_profile_that_blocks_the_route_names_the_shortest_profile(config, worked):
++    """No avoid list involved: the profile itself empties the graph. Dropping
++    the avoid list changes nothing, the shortest profile connects, so this is
++    ROUTE_BLOCKED_SECURITY — and the detail says what the operator can do
++    about it."""
++    scan = _scan(
++        config,
++        worked,
++        graph=_graph(jumps=2, security=0.2),
++        profile=_profile(security_profile="highsec"),
++    )
++    assert scan.plans == []
++    rejections = scan.rejected_for(ROUTE_BLOCKED_SECURITY)
++    assert rejections, f"expected ROUTE_BLOCKED_SECURITY; got {scan.rejection_counts}"
++    assert not scan.rejected_for(NO_ROUTE)
++    assert "shortest" in rejections[0].detail
++
++
++def test_a_pair_disconnected_under_every_profile_is_plain_no_route(config, worked):
++    """Neither question connects: even the shortest profile finds no route
++    through, so the pair is genuinely disconnected rather than cut by anything
++    the operator owns. Both probes fail, and the detail stays the route's own
++    reason."""
++    graph = RouteGraph(
++        [(JITA, 90_000)],
++        {JITA: 0.9, 90_000: 0.9, AMARR: 0.9},
++        sde_build=3478781,
++    )
++    scan = _scan(
++        config,
++        worked,
++        graph=graph,
++        profile=_profile(security_profile="highsec", avoid_systems=(90_000,)),
++    )
++    assert scan.plans == []
++    assert not scan.rejected_for(ROUTE_BLOCKED_SECURITY)
++    rejections = scan.rejected_for(NO_ROUTE)
++    assert rejections, f"expected NO_ROUTE; got {scan.rejection_counts}"
++    assert "no high-sec route" in rejections[0].detail
++
++
++class _RecordingCache:
++    """Stands in for `route_cache`: records what the scan asks of it, then
++    defers to the bare graph exactly `RouteCache.route` does on a miss. The
++    probes have to be asked here, where the trip was asked, or a cached answer
++    is recomputed for nothing and a stored NO_ROUTE is searched again."""
++
++    def __init__(self, graph):
++        self.graph = graph
++        self.calls: list[tuple] = []
++
++    def route(
++        self,
++        graph,
++        origin,
++        destination,
++        *,
++        profile="shortest",
++        avoid=(),
++        safer_penalty=50.0,
++    ):
++        self.calls.append((origin, destination, profile, tuple(avoid), safer_penalty))
++        return graph.route(
++            origin, destination, profile=profile, avoid=avoid, safer_penalty=safer_penalty
++        )
++
++
++def test_the_route_probes_are_asked_of_the_cache_not_the_bare_graph(config, worked):
++    """The old probe ran `graph.route` directly with its defaults: no avoid
++    list, default profile, and a cache the scan is already paying for. Both
++    questions go through the cache the trip does."""
++    graph = _graph(jumps=2, security=0.9)
++    cache = _RecordingCache(graph)
++    scan = _scan(
++        config,
++        worked,
++        graph=graph,
++        route_cache=cache,
++        profile=_profile(security_profile="highsec", avoid_systems=(90_000,)),
++    )
++    assert scan.rejected_for(NO_ROUTE)
++    # The trip itself, with the operator's avoid list...
++    assert (JITA, AMARR, "highsec", (90_000,), 50.0) in cache.calls
++    # ...then question one: the same pair, the operator's profile, no avoid.
++    assert (JITA, AMARR, "highsec", (), 50.0) in cache.calls
++    assert (JITA, AMARR, "shortest", (), 50.0) not in cache.calls, "question one already connected"
++
++    cache = _RecordingCache(graph)
++    scan = _scan(
++        config,
++        worked,
++        graph=_graph(jumps=2, security=0.2),
++        route_cache=cache,
++        profile=_profile(security_profile="highsec"),
++    )
++    assert scan.rejected_for(ROUTE_BLOCKED_SECURITY)
++    # Question one connects nothing, so question two is asked on shortest.
++    assert (JITA, AMARR, "highsec", (), 50.0) in cache.calls
++    assert (JITA, AMARR, "shortest", (), 50.0) in cache.calls
++
++
+ def test_too_many_jumps_and_too_few_minutes_are_different_refusals(config, worked):
+     far = _scan(config, worked, graph=_graph(jumps=9), profile=_profile(max_jumps=3))
+     assert far.rejected_for(OVER_JUMPS) and far.plans == []

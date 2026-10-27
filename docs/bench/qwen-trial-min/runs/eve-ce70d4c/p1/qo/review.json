@@ -1,0 +1,10 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "The cache test uses a recording stub in the route_cache= slot, not a real RouteCache: it proves the probes are asked of the cache with the right (profile, avoid) keys, while RouteCache's own storage semantics are covered by tests/test_routes.py. Within the 'don't touch the cache format' scope this is the right division of labor.",
+    "test_haul_detour.py needed four `# noqa: E402` markers (pre-existing lint debt: pytestmark sits between imports and only the first import was suppressed) to make `ruff check .` green. No behaviour change, but it is a file outside the task's stated scope; flagged so the integrator can drop it if unwanted.",
+    "Behaviour change beyond the stated defect: the old probe only fired for security_profile == HIGHSEC, so a SAFER-profile pair whose no-avoid route failed was never labelled ROUTE_BLOCKED_SECURITY. The new logic labels it when the shortest profile connects. Consistent with the label's purpose ('the operator can act on it'), and the task's question 2 is unconditional, but it is a widening, not just a fix."
+  ],
+  "summary": "Both probe questions are now asked through the route cache via _route with keyword overrides: Q1 keeps the operator's security profile and safer penalty and drops only the avoid list; Q2 asks the shortest profile. Outcomes: Q1 known -> NO_ROUTE naming the avoid list; else Q2 known -> ROUTE_BLOCKED_SECURITY naming the shortest profile; else plain NO_ROUTE with the route's own reason. The three pre-existing outcomes are pinned by tests (avoid-cut -> NO_ROUTE 'avoid' detail [red pre-fix]; low-sec corridor highsec -> ROUTE_BLOCKED_SECURITY 'shortest' detail [red pre-fix]; disconnected -> plain NO_ROUTE [regression pin]), plus a recording-cache test asserting the probes reach the cache slot with avoid=() and that Q2 is skipped when Q1 connects [red pre-fix]. 30/30 green in test_hauling.py, 47/47 in the neighboring haul/route files, ruff check . and ruff format --check clean on all touched files. No changes to the route cache format, HaulProfile, or the ranking."
+}

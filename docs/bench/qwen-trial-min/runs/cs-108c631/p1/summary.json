@@ -1,0 +1,36 @@
+{
+  "sha7": "108c631",
+  "repo": "C:/Users/Aaron/ContentSummarizer",
+  "base": "6597749",
+  "ref": "108c631",
+  "pass": "first",
+  "exit_code": 0,
+  "elapsed_s": 373,
+  "turns": 91,
+  "own_tests_rc": 0,
+  "ruff_rc": null,
+  "ref_tests_rc": 1,
+  "leak_count": 0,
+  "self_review_verdict": "GO",
+  "own_cmd": "C:/Users/Aaron/ContentSummarizer/.venv/Scripts/python.exe -m unittest discover -s tests -v",
+  "lint_cmd": null,
+  "import_ok": true,
+  "ref_pass": 29,
+  "ref_total": 36,
+  "cost_usd": 0.276125,
+  "usage": {
+    "requests": 33,
+    "input": 52132,
+    "output": 41537,
+    "thinking": 27073,
+    "cache_read": 1798400,
+    "cost": 0.276125,
+    "errors": 0,
+    "providers": {
+      "ModelRun": 33
+    }
+  },
+  "key_delta_usd": 0.413626,
+  "key_before": "OpenRouter key: <key> | used $23.143650022 | today (usage_daily) $9.312133353 | limit 50 | remaining 26.856349978\n\n[qwen/qwen3.8-27b: 59 in, 225 out, via DeepInfra]\n\n\nready",
+  "key_after": "OpenRouter key: <key> | used $23.557275962 | today (usage_daily) $9.725759293 | limit 50 | remaining 26.442724038\n\n[qwen/qwen3.8-27b: 59 in, 205 out, via DeepInfra]\n\n\nready"
+}

@@ -1,0 +1,453 @@
+FFFFFFFFFF                                                               [100%]
+================================== FAILURES ===================================
+______ test_the_config_template_names_the_lead_and_the_fallback_subagent ______
+
+    def test_the_config_template_names_the_lead_and_the_fallback_subagent() -> None:
+        path = REPO_ROOT / "templates" / CONFIG
+>       assert path.is_file(), "templates/.codex/config.toml is missing"
+E       AssertionError: templates/.codex/config.toml is missing
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-96eb4eb/templates/.codex/config.toml').is_file
+
+tests\test_codex_lead_config.py:139: AssertionError
+_______ test_the_role_templates_carry_a_top_level_name_and_description ________
+
+    def test_the_role_templates_carry_a_top_level_name_and_description() -> None:
+        for role in CODEX_ROLES:
+            path = REPO_ROOT / "templates" / ROLE_DIR / f"{role}.toml"
+            fields = _top_level_strings(path.read_text(encoding="utf-8"))
+>           assert fields.get("name") == role, f"{role} has no top-level name"
+E           AssertionError: tester has no top-level name
+E           assert None == 'tester'
+E            +  where None = <built-in method get of dict object at 0x000001769F0C8800>('name')
+E            +    where <built-in method get of dict object at 0x000001769F0C8800> = {'model': '{{CODEX_STRONG_MODEL}}', 'model_reasoning_effort': 'high', 'developer_instructions': ''}.get
+
+tests\test_codex_lead_config.py:151: AssertionError
+_____________ test_init_installs_the_config_like_the_other_files ______________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_init_installs_the_config_0/widget')
+
+    def test_init_installs_the_config_like_the_other_files(repo: Path) -> None:
+        assert init_repo(repo, include_models=True) == 0
+        config = repo / CONFIG
+>       assert config.is_file()
+E       AssertionError: assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_init_installs_the_config_0/widget/.codex/config.toml').is_file
+
+tests\test_codex_lead_config.py:158: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_init_installs_the_config_0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_init_installs_the_config_0\widget`.
+_____________ test_init_never_overwrites_the_config_without_force _____________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_init_never_overwrites_the0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E82E3F0>
+
+    def test_init_never_overwrites_the_config_without_force(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        sentinel = "approval_policy = 'never'\n"
+        (repo / CONFIG).parent.mkdir(parents=True)
+        (repo / CONFIG).write_text(sentinel, encoding="utf-8")
+    
+        assert init_repo(repo, include_models=True) == 0
+        out = capsys.readouterr().out
+>       assert "skipped  .codex/config.toml" in out
+E       AssertionError: assert 'skipped  .codex/config.toml' in 'Initialised Widget in C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_init_never_overwrit...eck C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_init_never_overwrites_the0\\widget`.\n'
+
+tests\test_codex_lead_config.py:174: AssertionError
+___________ test_check_reports_a_missing_config_and_writes_nothing ____________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_check_reports_a_missing_c0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E82F5F0>
+
+    def test_check_reports_a_missing_config_and_writes_nothing(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        filled = _green_repo(repo)
+        before = _tree_bytes(filled)
+>       (filled / CONFIG).unlink()
+
+tests\test_codex_lead_config.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_check_reports_a_missing_c0/widget/.codex/config.toml')
+missing_ok = False
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+>           os.unlink(self)
+E           FileNotFoundError: [WinError 2] The system cannot find the file specified: 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_check_reports_a_missing_c0\\widget\\.codex\\config.toml'
+
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:1342: FileNotFoundError
+---------------------------- Captured stdout call -----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_missing_c0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_missing_c0\widget`.
+________________ test_check_reports_a_missing_native_role_file ________________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_check_reports_a_missing_n0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E82F6E0>
+
+    def test_check_reports_a_missing_native_role_file(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        filled = _green_repo(repo)
+        _role_path(filled, "builder").unlink()
+>       assert run("check", str(filled)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = run('check', 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_check_reports_a_missing_n0\\widget')
+E        +    where 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_check_reports_a_missing_n0\\widget' = str(WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_check_reports_a_missing_n0/widget'))
+
+tests\test_codex_lead_config.py:205: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_missing_n0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_missing_n0\widget`.
+JumpStarter check: C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_missing_n0\widget
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (99d205ae63e3...)
+  [OK      ] checkpoint size: 71 lines (limit 1500)
+  [OK      ] plan size: 144 lines (limit 1200)
+  [OK      ] changelog recent section: 10 lines (limit 800)
+  [OK      ] CLAUDE.md size: 166 lines (limit 400)
+  [OK      ] placeholders: no unfilled {{TOKEN}} in the control set
+  [OK      ] rules carry evidence: 3 cited rule(s), each with an entry in docs/INTERNALS.md
+------------------------------------------------------------------------------
+No gaps: 7 checks passed.
+____________ test_check_reports_a_role_without_top_level_metadata _____________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_check_reports_a_role_with0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E82CF50>
+
+    def test_check_reports_a_role_without_top_level_metadata(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        filled = _green_repo(repo)
+        path = _role_path(filled, "tester")
+        lines = [
+            line
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if not line.startswith(("name =", "description ="))
+        ]
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+>       assert run("check", str(filled)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = run('check', 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_check_reports_a_role_with0\\widget')
+E        +    where 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_check_reports_a_role_with0\\widget' = str(WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_check_reports_a_role_with0/widget'))
+
+tests\test_codex_lead_config.py:222: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_role_with0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_role_with0\widget`.
+JumpStarter check: C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_check_reports_a_role_with0\widget
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (99d205ae63e3...)
+  [OK      ] checkpoint size: 71 lines (limit 1500)
+  [OK      ] plan size: 144 lines (limit 1200)
+  [OK      ] changelog recent section: 10 lines (limit 800)
+  [OK      ] CLAUDE.md size: 166 lines (limit 400)
+  [OK      ] placeholders: no unfilled {{TOKEN}} in the control set
+  [OK      ] rules carry evidence: 3 cited rule(s), each with an entry in docs/INTERNALS.md
+------------------------------------------------------------------------------
+No gaps: 7 checks passed.
+_____________________ test_retrofit_reports_the_same_gaps _____________________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_retrofit_reports_the_same0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E862180>
+
+    def test_retrofit_reports_the_same_gaps(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        filled = _green_repo(repo)
+    
+        before = _tree_bytes(filled)
+>       (filled / CONFIG).unlink()
+
+tests\test_codex_lead_config.py:241: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_retrofit_reports_the_same0/widget/.codex/config.toml')
+missing_ok = False
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+>           os.unlink(self)
+E           FileNotFoundError: [WinError 2] The system cannot find the file specified: 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_retrofit_reports_the_same0\\widget\\.codex\\config.toml'
+
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:1342: FileNotFoundError
+---------------------------- Captured stdout call -----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_retrofit_reports_the_same0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_retrofit_reports_the_same0\widget`.
+_____________ test_the_metadata_audit_reads_only_top_level_fields _____________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_the_metadata_audit_reads_0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E862570>
+
+    def test_the_metadata_audit_reads_only_top_level_fields(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        # name/description nested under a table header are not top-level: still a gap.
+        filled = _green_repo(repo)
+        _role_path(filled, "recon").write_text(
+            'model = "gpt-5.6-luna"\n'
+            'model_reasoning_effort = "medium"\n'
+            'developer_instructions = "x"\n'
+            "[identity]\n"
+            'name = "recon"\n'
+            'description = "buried in a table"\n',
+            encoding="utf-8",
+        )
+>       assert run("check", str(filled)) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = run('check', 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_the_metadata_audit_reads_0\\widget')
+E        +    where 'C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13906\\test_the_metadata_audit_reads_0\\widget' = str(WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13906/test_the_metadata_audit_reads_0/widget'))
+
+tests\test_codex_lead_config.py:280: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_the_metadata_audit_reads_0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (79):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_the_metadata_audit_reads_0\widget`.
+JumpStarter check: C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13906\test_the_metadata_audit_reads_0\widget
+==============================================================================
+  [OK      ] CLAUDE == AGENTS: byte-identical (99d205ae63e3...)
+  [OK      ] checkpoint size: 71 lines (limit 1500)
+  [OK      ] plan size: 144 lines (limit 1200)
+  [OK      ] changelog recent section: 10 lines (limit 800)
+  [OK      ] CLAUDE.md size: 166 lines (limit 400)
+  [OK      ] placeholders: no unfilled {{TOKEN}} in the control set
+  [OK      ] rules carry evidence: 3 cited rule(s), each with an entry in docs/INTERNALS.md
+------------------------------------------------------------------------------
+No gaps: 7 checks passed.
+____________________ test_this_repo_passes_the_codex_audit ____________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x000001769E863140>
+
+    def test_this_repo_passes_the_codex_audit(
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+>       assert run("check", str(REPO_ROOT)) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = run('check', 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-96eb4eb')
+E        +    where 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-96eb4eb' = str(WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-96eb4eb'))
+
+tests\test_codex_lead_config.py:317: AssertionError
+---------------------------- Captured stdout call -----------------------------
+JumpStarter check: C:\Users\Aaron\llm-harness\wt\qtm-96eb4eb
+==============================================================================
+  [DRIFT   ] CLAUDE == AGENTS: sha256 differs: 26c8bdbac90d... vs 47363accdcec...
+             -> The two tools are running on different rules. Merge by hand into CLAUDE.md (the divergence usually holds real rules), then `jumpstart.py sync-agents <path>`.
+  [OK      ] checkpoint size: 410 lines (limit 1500)
+  [OK      ] plan size: 178 lines (limit 1200)
+  [OK      ] changelog recent section: 89 lines (limit 800)
+  [OK      ] CLAUDE.md size: 193 lines (limit 400)
+  [UNFILLED] placeholders in .claude/agents/tester.md: 7 unfilled: CRITICAL_AREA, OWNER, PROJECT, BRANCH_PREFIX, MAIN_BRANCH, TOOLCHAIN, +1 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/builder.md: 11 unfilled: PROJECT, MAIN_BRANCH, OWNER, BRANCH_PREFIX, TOOLCHAIN, LIVE_STORES, +5 more
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/reviewer.md: 5 unfilled: PROJECT, OWNER, TOOLCHAIN, CRITICAL_AREA, LINT_CMD
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [UNFILLED] placeholders in .claude/agents/recon.md: 3 unfilled: PROJECT, LIVE_STORES, TOOLCHAIN
+             -> Fill them, or delete the block they are in. A half-written control file is one an agent will act on.
+  [OK      ] rules carry evidence: 10 cited rule(s), each with an entry in docs/INTERNALS.md
+------------------------------------------------------------------------------
+5 gap(s) of 10 checks.
+=========================== short test summary info ===========================
+FAILED tests/test_codex_lead_config.py::test_the_config_template_names_the_lead_and_the_fallback_subagent
+FAILED tests/test_codex_lead_config.py::test_the_role_templates_carry_a_top_level_name_and_description
+FAILED tests/test_codex_lead_config.py::test_init_installs_the_config_like_the_other_files
+FAILED tests/test_codex_lead_config.py::test_init_never_overwrites_the_config_without_force
+FAILED tests/test_codex_lead_config.py::test_check_reports_a_missing_config_and_writes_nothing
+FAILED tests/test_codex_lead_config.py::test_check_reports_a_missing_native_role_file
+FAILED tests/test_codex_lead_config.py::test_check_reports_a_role_without_top_level_metadata
+FAILED tests/test_codex_lead_config.py::test_retrofit_reports_the_same_gaps
+FAILED tests/test_codex_lead_config.py::test_the_metadata_audit_reads_only_top_level_fields
+FAILED tests/test_codex_lead_config.py::test_this_repo_passes_the_codex_audit
+10 failed in 1.04s

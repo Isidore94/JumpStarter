@@ -1,0 +1,825 @@
+# Stage 3 red run (tests written, source unmodified)
+# command: QT_QPA_PLATFORM=offscreen C:/Users/Aaron/TradingBotV3/.venv/Scripts/python.exe -m pytest -q tests/test_technical_integrity_rolling.py tests/test_mentor_technicals_levels.py
+
+F.F..F............FF.FF.FF.FF.FFFFFFFF.FF.FF.FF..FFFFFFF................ [ 79%]
+....FFFF...........                                                      [100%]
+================================== FAILURES ===================================
+_______________________ test_rolling_now_reading_golden _______________________
+
+    def test_rolling_now_reading_golden():
+        from technical_integrity import TechnicalIntegrityConfig, rolling_technical_integrity
+    
+        fixture = _fixture()
+        for case in fixture["expected"]["cases"]:
+            if "rolling" not in case:
+                continue
+            result = rolling_technical_integrity(
+                fixture["events"], as_of=case["as_of"], config=TechnicalIntegrityConfig()
+            )
+            assert result["schema"] == "technical_integrity_rolling_v1"
+            assert result["window_minutes"] == 60
+            for tf, expected in case["rolling"].items():
+                for key, value in expected.items():
+>                   fixture.assert_matches(result[tf][key], value, f"{case['as_of']}.{tf}.{key}")
+                                           ^^^^^^^^^^^^^^^
+E                   KeyError: 'support'
+
+tests\test_technical_integrity_rolling.py:83: KeyError
+___________ test_chip_and_tooltip_lead_with_the_now_reading_golden ____________
+
+    def test_chip_and_tooltip_lead_with_the_now_reading_golden():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        fixture = _fixture()
+        for case in fixture["expected"]["cases"]:
+            if "chip" not in case:
+                continue
+            snapshot = _snapshot_at(fixture, case)
+            chip, tooltip, color = format_technical_integrity_snapshot(
+                snapshot, now=datetime.fromisoformat(case["as_of"])
+            )
+>           assert chip == case["chip"]
+E           AssertionError: assert 'Levels: BOUN...2 · tape fast' == 'Levels: LEVE...0 · tape fast'
+E             
+E             - Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0 · tape fast
+E             + Levels: BOUNCES FAILING · M5 strong 9.1 · D1 very weak 2.2 · tape fast
+
+tests\test_technical_integrity_rolling.py:108: AssertionError
+______________ test_chip_omits_the_tape_when_the_source_is_none _______________
+
+    def test_chip_omits_the_tape_when_the_source_is_none():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        fixture = _fixture()
+        case = next(c for c in fixture["expected"]["cases"] if c.get("chip_without_spy"))
+        snapshot = _snapshot_at(fixture, case)
+        snapshot["market"]["tape"] = {"source": "none", "light": "unknown", "reason": "no SPY bars provider"}
+        chip, tooltip, _color = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat(case["as_of"])
+        )
+        # No tape reading counts as not fast: a STRONG M5 still reads as holding.
+>       assert chip == "Levels: LEVELS HOLDING · M5 sup 4 res 1 · D1 sup 5 res 0"
+E       AssertionError: assert 'Levels: BOUN...very weak 2.2' == 'Levels: LEVE...1 sup 5 res 0'
+E         
+E         - Levels: LEVELS HOLDING · M5 sup 4 res 1 · D1 sup 5 res 0
+E         + Levels: BOUNCES WORKING · M5 strong 9.1 · D1 very weak 2.2
+
+tests\test_technical_integrity_rolling.py:180: AssertionError
+________________ test_technicals_verdict_table[calm-VERY WEAK] ________________
+
+m5_state = 'VERY WEAK', light = 'calm'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[calm-WEAK] ___________________
+
+m5_state = 'WEAK', light = 'calm'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[calm-FIRM] ___________________
+
+m5_state = 'FIRM', light = 'calm'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[calm-STRONG] __________________
+
+m5_state = 'STRONG', light = 'calm'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_______________ test_technicals_verdict_table[normal-VERY WEAK] _______________
+
+m5_state = 'VERY WEAK', light = 'normal'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[normal-WEAK] __________________
+
+m5_state = 'WEAK', light = 'normal'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[normal-FIRM] __________________
+
+m5_state = 'FIRM', light = 'normal'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+________________ test_technicals_verdict_table[normal-STRONG] _________________
+
+m5_state = 'STRONG', light = 'normal'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+________________ test_technicals_verdict_table[fast-VERY WEAK] ________________
+
+m5_state = 'VERY WEAK', light = 'fast'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[fast-WEAK] ___________________
+
+m5_state = 'WEAK', light = 'fast'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[fast-MIXED] __________________
+
+m5_state = 'MIXED', light = 'fast'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[fast-FIRM] ___________________
+
+m5_state = 'FIRM', light = 'fast'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[fast-STRONG] __________________
+
+m5_state = 'STRONG', light = 'fast'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[fast-None] ___________________
+
+m5_state = None, light = 'fast'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+______________ test_technicals_verdict_table[unknown-VERY WEAK] _______________
+
+m5_state = 'VERY WEAK', light = 'unknown'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[unknown-WEAK] _________________
+
+m5_state = 'WEAK', light = 'unknown'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[unknown-FIRM] _________________
+
+m5_state = 'FIRM', light = 'unknown'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+________________ test_technicals_verdict_table[unknown-STRONG] ________________
+
+m5_state = 'STRONG', light = 'unknown'
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+________________ test_technicals_verdict_table[None-VERY WEAK] ________________
+
+m5_state = 'VERY WEAK', light = None
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[None-WEAK] ___________________
+
+m5_state = 'WEAK', light = None
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+__________________ test_technicals_verdict_table[None-FIRM] ___________________
+
+m5_state = 'FIRM', light = None
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+_________________ test_technicals_verdict_table[None-STRONG] __________________
+
+m5_state = 'STRONG', light = None
+
+    @pytest.mark.parametrize("m5_state", _M5_STATES)
+    @pytest.mark.parametrize("light", _TAPES)
+    def test_technicals_verdict_table(m5_state, light):
+        from technical_integrity import technicals_verdict
+    
+        # No side sub-reads in this market: the verdict falls back to the pooled M5 rule.
+        if light == "fast" or m5_state in {"WEAK", "VERY WEAK"}:
+            expected = "LEVELS FAILING"
+        elif m5_state in {"FIRM", "STRONG"}:
+            # Not fast is enough: an unknown or missing tape never downgrades a firm read.
+            expected = "LEVELS HOLDING"
+        else:
+            expected = "LEVELS NORMAL"
+>       assert technicals_verdict(_verdict_market(m5_state, light)) == expected
+E       AssertionError: assert 'BOUNCES WORKING' == 'LEVELS HOLDING'
+E         
+E         - LEVELS HOLDING
+E         + BOUNCES WORKING
+
+tests\test_technical_integrity_rolling.py:414: AssertionError
+______________________ test_chip_words_and_verdict_lead _______________________
+
+    def test_chip_words_and_verdict_lead():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        # An older snapshot without side sub-reads keeps the pooled chip form.
+        market = _verdict_market("FIRM", "normal")
+        market["rolling"]["m5"]["score"] = 6.8
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS HOLDING · M5 firm 6.8 · D1 ok 5.4 · tape normal"
+E       AssertionError: assert 'Levels: BOUN...· tape normal' == 'Levels: LEVE...· tape normal'
+E         
+E         - Levels: LEVELS HOLDING · M5 firm 6.8 · D1 ok 5.4 · tape normal
+E         ?         ^ ---  ^ ^^
+E         + Levels: BOUNCES WORKING · M5 firm 6.8 · D1 ok 5.4 · tape normal
+E         ?         ^^^^^   ^ ^^
+
+tests\test_technical_integrity_rolling.py:435: AssertionError
+____ test_technicals_verdict_side_reads_decide_when_both_sides_are_scored _____
+
+    def test_technicals_verdict_side_reads_decide_when_both_sides_are_scored():
+        from technical_integrity import technicals_verdict
+    
+>       assert technicals_verdict(_side_market(2.0, 1.5)) == "LEVELS FAILING"
+E       AssertionError: assert 'LEVELS NORMAL' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + LEVELS NORMAL
+
+tests\test_technical_integrity_rolling.py:467: AssertionError
+_____ test_technicals_verdict_falls_back_when_a_side_builds_or_is_missing _____
+
+    def test_technicals_verdict_falls_back_when_a_side_builds_or_is_missing():
+        from technical_integrity import technicals_verdict
+    
+        building = {"score": None, "state": "BUILDING"}
+        m5 = {"score": 5.0, "state": "MIXED", "support": {"score": 9.0, "state": "STRONG"},
+              "resistance": building}
+        market = {"rolling": {"m5": m5, "d1": {"score": 5.4, "state": "MIXED"}}}
+        assert technicals_verdict(market) == "LEVELS NORMAL", "the pooled M5 state decides"
+    
+        # An older snapshot without any side sub-reads: same pooled rule, new words.
+>       assert technicals_verdict(_verdict_market("WEAK", "normal")) == "LEVELS FAILING"
+E       AssertionError: assert 'BOUNCES FAILING' == 'LEVELS FAILING'
+E         
+E         - LEVELS FAILING
+E         + BOUNCES FAILING
+
+tests\test_technical_integrity_rolling.py:487: AssertionError
+_ test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines _
+
+    def test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _side_market(2.0, 8.5)
+        market["rolling"]["m5"]["support"]["test_count"] = 4
+        market["rolling"]["m5"]["resistance"]["test_count"] = 1
+        d1 = market["rolling"]["d1"]
+        d1["support"] = {"score": 2.2, "state": "VERY WEAK", "test_count": 5}
+        d1["resistance"] = {"score": None, "state": "BUILDING", "test_count": 0}
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0"
+E       AssertionError: assert 'Levels: LEVE...0 · D1 ok 5.4' == 'Levels: LEVE...1 sup 5 res 0'
+E         
+E         - Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0
+E         + Levels: LEVELS NORMAL · M5 ok 5.0 · D1 ok 5.4
+
+tests\test_technical_integrity_rolling.py:506: AssertionError
+____ test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads _____
+
+    def test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _side_market(2.0, 8.5)
+        market["rolling"]["m5"]["support"]["test_count"] = 4
+        market["rolling"]["m5"]["resistance"]["test_count"] = 1
+        # No sub-reads on the D1 row: its chip part stays the pooled reading.
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 ok 5.4"
+E       AssertionError: assert 'Levels: LEVE...0 · D1 ok 5.4' == 'Levels: LEVE...1 · D1 ok 5.4'
+E         
+E         - Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 ok 5.4
+E         + Levels: LEVELS NORMAL · M5 ok 5.0 · D1 ok 5.4
+
+tests\test_technical_integrity_rolling.py:525: AssertionError
+_____________ test_trend_hour_reads_resistance_failing_end_to_end _____________
+
+    def test_trend_hour_reads_resistance_failing_end_to_end():
+        """Supports hold and resistances break: RESISTANCE FAILING through rolling, chip and Mentor."""
+        from mentor_packs import internals_pack as ip
+        from technical_integrity import (
+            format_technical_integrity_snapshot,
+            rolling_technical_integrity,
+            technicals_verdict,
+        )
+    
+        as_of = "2026-10-02T13:00:00-04:00"
+        rolling = rolling_technical_integrity(_trend_events(), as_of=as_of)
+        m5 = rolling["m5"]
+>       assert m5["support"]["state"] == "STRONG", "all support tests held vs the hour norm"
+               ^^^^^^^^^^^^^
+E       KeyError: 'support'
+
+tests\test_technical_integrity_rolling.py:566: KeyError
+_____________ test_levels_and_tape_rows_for_the_fixture_snapshot ______________
+
+    def test_levels_and_tape_rows_for_the_fixture_snapshot():
+        rows = _rows(ip.fixture())
+        levels, tape = rows["int:levels"], rows["int:tape_speed"]
+>       assert levels["text"] == (
+            "Levels now (last 60 min vs usual for this hour, 5.5 = normal): LEVELS FAILING. Intraday M5 levels weak "
+            "4.0 (held 0.52 of 817 tests vs 0.63 usual); support 500, resistance 317; D1 levels ok 5.4 "
+            "(held 0.66 of 216 vs 0.64 usual); break pressure BEARISH. Today so far: D1 5.5, M5 5.4."
+        )
+E       AssertionError: assert 'Levels now (... 5.5, M5 5.4.' == 'Levels now (... 5.5, M5 5.4.'
+E         
+E         Skipping 53 identical leading characters in diff, use -v to show
+E         -  normal): LEVELS FAILING. Intraday M5 levels weak 4.0 (held 0.52 of 817 tests vs 0.63 usual); support 500, resistance 317; D1 levels ok 5.4 (held 0.66 of 216 vs 0.64 usual); break pressure BEARISH. Today so far: D1 5.5, M5 5.4.
+E         ?           ^ ---                                                                               -----------------------------
+E         +  normal): BOUNCES FAILING. Intraday M5 levels weak 4.0 (held 0.52 of 817 tests vs 0.63 usual); D1 levels ok 5.4 (held 0.66 of 216 vs 0.64 usual); break pressure BEARISH. Today so far: D1 5.5, M5 5.4.
+E         ?           ^^^^^
+
+tests\test_mentor_technicals_levels.py:33: AssertionError
+_ test_m5_fires_on_entering_weak_leaving_weak_and_entering_firm_but_not_leaving_firm _
+
+    def test_m5_fires_on_entering_weak_leaving_weak_and_entering_firm_but_not_leaving_firm():
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        assert state.pending == [] and state.m5_bucket == "ok", "the first bucket after the first hour is the baseline"
+        state = _hold(state, 5, [_levels("WEAK", 4.0)])
+>       assert state.pending[0]["text"] == (
+            "Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): intraday levels are failing more "
+            "than usual for this hour")
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...for this hour'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): intraday levels are failing more than usual for this hour
+E         ?           ^ ^^^^^^^^ ---
+E         + 3 usual): bounces are failing more than usual for this hour
+E         ?           ^^^ ^
+
+tests\test_mentor_technicals_levels.py:147: AssertionError
+______________________ test_lens_names_the_failing_side _______________________
+
+    def test_lens_names_the_failing_side():
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [_weak_m5_row(m5_support_state="MIXED", m5_resistance_state="VERY WEAK")])
+>       assert state.pending[0]["text"] == (
+            "Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): M5 resistance is failing more "
+            "than usual for this hour")
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...for this hour'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): M5 resistance is failing more than usual for this hour
+E         ?           ^^^^^^^^^^   --
+E         + 3 usual): bounces are failing more than usual for this hour
+E         ?           ^^^    ++++
+
+tests\test_mentor_technicals_levels.py:172: AssertionError
+________________ test_lens_firm_bucket_says_levels_are_holding ________________
+
+    def test_lens_firm_bucket_says_levels_are_holding():
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [_levels("FIRM", 6.8)])
+>       assert state.pending[0]["text"] == (
+            "Intraday levels turned FIRM (M5 now 6.8, held 0.52 vs 0.63 usual): levels are holding")
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...s are holding'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): levels are holding
+E         + 3 usual): bounces are holding better than usual for this hour
+
+tests\test_mentor_technicals_levels.py:200: AssertionError
+____________ test_older_snapshot_without_side_reads_keeps_its_text ____________
+
+    def test_older_snapshot_without_side_reads_keeps_its_text():
+        snap = ip.fixture_technicals(tape={"source": "SPY", "light": "normal", "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+        for row in (snap["market"]["rolling"]["m5"], snap["market"]["rolling"]["d1"]):
+>           row.pop("support")
+E           KeyError: 'support'
+
+tests\test_mentor_technicals_levels.py:213: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_technical_integrity_rolling.py::test_rolling_now_reading_golden
+FAILED tests/test_technical_integrity_rolling.py::test_chip_and_tooltip_lead_with_the_now_reading_golden
+FAILED tests/test_technical_integrity_rolling.py::test_chip_omits_the_tape_when_the_source_is_none
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[calm-VERY WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[calm-WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[calm-FIRM]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[calm-STRONG]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[normal-VERY WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[normal-WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[normal-FIRM]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[normal-STRONG]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[fast-VERY WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[fast-WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[fast-MIXED]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[fast-FIRM]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[fast-STRONG]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[fast-None]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[unknown-VERY WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[unknown-WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[unknown-FIRM]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[unknown-STRONG]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[None-VERY WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[None-WEAK]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[None-FIRM]
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_table[None-STRONG]
+FAILED tests/test_technical_integrity_rolling.py::test_chip_words_and_verdict_lead
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_side_reads_decide_when_both_sides_are_scored
+FAILED tests/test_technical_integrity_rolling.py::test_technicals_verdict_falls_back_when_a_side_builds_or_is_missing
+FAILED tests/test_technical_integrity_rolling.py::test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines
+FAILED tests/test_technical_integrity_rolling.py::test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads
+FAILED tests/test_technical_integrity_rolling.py::test_trend_hour_reads_resistance_failing_end_to_end
+FAILED tests/test_mentor_technicals_levels.py::test_levels_and_tape_rows_for_the_fixture_snapshot
+FAILED tests/test_mentor_technicals_levels.py::test_m5_fires_on_entering_weak_leaving_weak_and_entering_firm_but_not_leaving_firm
+FAILED tests/test_mentor_technicals_levels.py::test_lens_names_the_failing_side
+FAILED tests/test_mentor_technicals_levels.py::test_lens_firm_bucket_says_levels_are_holding
+FAILED tests/test_mentor_technicals_levels.py::test_older_snapshot_without_side_reads_keeps_its_text
+36 failed, 55 passed in 4.49s
+EXIT=1

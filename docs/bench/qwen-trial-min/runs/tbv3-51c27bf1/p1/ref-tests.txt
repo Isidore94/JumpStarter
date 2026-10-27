@@ -1,0 +1,1848 @@
+F.FF.....FFFFFFF.............FFFFFFFF...........F.F..F.................. [ 15%]
+...................................FF.........................FF...F.... [ 31%]
+.F........................FF...F.....F........................FF...F.... [ 47%]
+.F...................................................................... [ 62%]
+..............................................................FF...F.... [ 78%]
+.F........................FF...F.....F........................FF...F.... [ 94%]
+.F..........FFFFFFFFFFFFFFF                                              [100%]
+================================== FAILURES ===================================
+_____________ test_levels_and_tape_rows_for_the_fixture_snapshot ______________
+
+    def test_levels_and_tape_rows_for_the_fixture_snapshot():
+        rows = _rows(ip.fixture())
+        levels, tape = rows["int:levels"], rows["int:tape_speed"]
+>       assert levels["text"] == (
+            "Levels now (last 60 min vs usual for this hour, 5.5 = normal): LEVELS FAILING. Intraday M5 levels weak "
+            "4.0 (held 0.52 of 817 tests vs 0.63 usual; support 3.4, resistance 5.8); D1 levels ok 5.4 (held 0.66 of "
+            "216 vs 0.64 usual; support 4.1, resistance 6.0); break pressure BEARISH. Today so far: D1 5.5, M5 5.4."
+        )
+E       AssertionError: assert 'Levels now (... 5.5, M5 5.4.' == 'Levels now (... 5.5, M5 5.4.'
+E         
+E         Skipping 134 identical leading characters in diff, use -v to show
+E         - 0.63 usual; support 3.4, resistance 5.8); D1 levels ok 5.4 (held 0.66 of 216 vs 0.64 usual; support 4.1, resistance 6.0); break pressure BEARISH. Today so far: D1 5.5, M5 5.4.
+E         ?                     ^^^             ^^^^                                                  -----------------------------
+E         + 0.63 usual); support 500, resistance 317; D1 levels ok 5.4 (held 0.66 of 216 vs 0.64 usual); break pressure BEARISH. Today so far: D1 5.5, M5 5.4.
+E         ?           +          ^^^             ^^^
+
+tests\ref_test_mentor_technicals_levels.py:33: AssertionError
+_________ test_an_older_snapshot_without_side_reads_keeps_todays_text _________
+
+    def test_an_older_snapshot_without_side_reads_keeps_todays_text():
+>       snap = ip.fixture_technicals(m5_sides=None, d1_sides=None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:71: TypeError
+_______________ test_a_building_side_reads_building_in_the_row ________________
+
+    def test_a_building_side_reads_building_in_the_row():
+>       snap = ip.fixture_technicals(
+            m5=(5.9, "MIXED"),
+            m5_sides=((None, "BUILDING", 3, 0.5, 0.71), (6.1, "MIXED", 417, 0.68, 0.65)),
+            d1_sides=((6.0, "MIXED", 110, 0.66, 0.64), (None, "BUILDING", 2, 0.0, 0.63)),
+            tape={"source": "SPY", "light": "normal", "range_mean": 0.08, "expected_range": 0.08, "ratio": 1.0},
+        )
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:83: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m50-m5_sides0-normal-SUPPORT FAILING-M5 sup 3.4 res 5.8] _
+
+m5 = (4.0, 'WEAK')
+m5_sides = ((3.4, 'WEAK', 400, 0.55, 0.63), (5.8, 'MIXED', 417, 0.66, 0.65))
+light = 'normal', expected = 'SUPPORT FAILING'
+sides_text = 'M5 sup 3.4 res 5.8'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m51-m5_sides1-calm-RESISTANCE FAILING-M5 sup 5.9 res 3.9] _
+
+m5 = (4.4, 'WEAK')
+m5_sides = ((5.9, 'MIXED', 400, 0.66, 0.63), (3.9, 'WEAK', 417, 0.55, 0.65))
+light = 'calm', expected = 'RESISTANCE FAILING'
+sides_text = 'M5 sup 5.9 res 3.9'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m52-m5_sides2-normal-LEVELS FAILING-M5 sup 3.4 res 2.9] _
+
+m5 = (3.0, 'VERY WEAK')
+m5_sides = ((3.4, 'WEAK', 400, 0.55, 0.63), (2.9, 'VERY WEAK', 417, 0.52, 0.65))
+light = 'normal', expected = 'LEVELS FAILING', sides_text = 'M5 sup 3.4 res 2.9'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m53-m5_sides3-calm-LEVELS HOLDING-M5 sup 7.1 res 8.3] _
+
+m5 = (6.8, 'FIRM')
+m5_sides = ((7.1, 'FIRM', 400, 0.72, 0.63), (8.3, 'STRONG', 417, 0.77, 0.65))
+light = 'calm', expected = 'LEVELS HOLDING', sides_text = 'M5 sup 7.1 res 8.3'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m54-m5_sides4-normal-LEVELS NORMAL-M5 sup 5.6 res 5.4] _
+
+m5 = (5.6, 'MIXED')
+m5_sides = ((5.6, 'MIXED', 400, 0.64, 0.63), (5.4, 'MIXED', 417, 0.64, 0.65))
+light = 'normal', expected = 'LEVELS NORMAL', sides_text = 'M5 sup 5.6 res 5.4'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m55-m5_sides5-fast-LEVELS FAILING-M5 sup 7.1 res 8.3] _
+
+m5 = (6.8, 'FIRM')
+m5_sides = ((7.1, 'FIRM', 400, 0.72, 0.63), (8.3, 'STRONG', 417, 0.77, 0.65))
+light = 'fast', expected = 'LEVELS FAILING', sides_text = 'M5 sup 7.1 res 8.3'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_the_pack_and_the_chip_say_the_same_verdict[m56-None-normal-LEVELS HOLDING-M5 sup building res building] _
+
+m5 = (6.8, 'FIRM'), m5_sides = None, light = 'normal'
+expected = 'LEVELS HOLDING', sides_text = 'M5 sup building res building'
+
+    @pytest.mark.parametrize("m5, m5_sides, light, expected, sides_text", [
+        ((4.0, "WEAK"), _WEAK_SUP, "normal", "SUPPORT FAILING", "M5 sup 3.4 res 5.8"),
+        ((4.4, "WEAK"), _WEAK_RES, "calm", "RESISTANCE FAILING", "M5 sup 5.9 res 3.9"),
+        ((3.0, "VERY WEAK"), _BOTH_WEAK, "normal", "LEVELS FAILING", "M5 sup 3.4 res 2.9"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "calm", "LEVELS HOLDING", "M5 sup 7.1 res 8.3"),
+        ((5.6, "MIXED"), _BOTH_OK, "normal", "LEVELS NORMAL", "M5 sup 5.6 res 5.4"),
+        ((6.8, "FIRM"), _BOTH_FIRM, "fast", "LEVELS FAILING", "M5 sup 7.1 res 8.3"),
+        ((6.8, "FIRM"), None, "normal", "LEVELS HOLDING", "M5 sup building res building"),
+    ])
+    def test_the_pack_and_the_chip_say_the_same_verdict(m5, m5_sides, light, expected, sides_text):
+        from technical_integrity import format_technical_integrity_snapshot, technicals_verdict
+    
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides,
+                                     tape={"source": "SPY", "light": light, "range_mean": 0.08,
+                                           "expected_range": 0.08, "ratio": 1.0})
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:139: TypeError
+_ test_m5_fires_on_entering_weak_leaving_weak_and_entering_firm_but_not_leaving_firm _
+
+    def test_m5_fires_on_entering_weak_leaving_weak_and_entering_firm_but_not_leaving_firm():
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        assert state.pending == [] and state.m5_bucket == "ok", "the first bucket after the first hour is the baseline"
+        state = _hold(state, 5, [_levels("WEAK", 4.0)])
+>       assert state.pending[0]["text"] == (
+            "Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): bounces are failing more than usual "
+            "for this hour")
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...for this hour'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): bounces are failing more than usual for this hour
+E         ?           ^^^ ^
+E         + 3 usual): intraday levels are failing more than usual for this hour
+E         ?           ^ ^^^^^^^^ +++
+
+tests\ref_test_mentor_technicals_levels.py:196: AssertionError
+_ test_m5_weak_text_names_the_failing_side[row0-support and resistance are both failing more than usual for this hour] _
+
+row = {'id': 'int:levels', 'm5_state': 'WEAK', 'm5_score': 4.0, 'm5_held': 0.52, ...}
+what = 'support and resistance are both failing more than usual for this hour'
+
+    @pytest.mark.parametrize("row, what", [
+        (_levels("WEAK", 4.0, sup="WEAK", res="VERY WEAK"),
+         "support and resistance are both failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="VERY WEAK", res="MIXED"),
+         "support is failing more than usual for this hour while resistance holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="FIRM", res="WEAK"),
+         "resistance is failing more than usual for this hour while support holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="MIXED", res="MIXED"), "bounces are failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="WEAK", res=""), "bounces are failing more than usual for this hour"),
+    ])
+    def test_m5_weak_text_names_the_failing_side(row, what):
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [row])
+        assert _keys(state) == ["levels_m5"]
+>       assert state.pending[0]["text"] == f"Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): {what}"
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...for this hour'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): support and resistance are both failing more than usual for this hour
+E         + 3 usual): intraday levels are failing more than usual for this hour
+
+tests\ref_test_mentor_technicals_levels.py:226: AssertionError
+_ test_m5_weak_text_names_the_failing_side[row1-support is failing more than usual for this hour while resistance holds (the market, not the levels)] _
+
+row = {'id': 'int:levels', 'm5_state': 'WEAK', 'm5_score': 4.0, 'm5_held': 0.52, ...}
+what = 'support is failing more than usual for this hour while resistance holds (the market, not the levels)'
+
+    @pytest.mark.parametrize("row, what", [
+        (_levels("WEAK", 4.0, sup="WEAK", res="VERY WEAK"),
+         "support and resistance are both failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="VERY WEAK", res="MIXED"),
+         "support is failing more than usual for this hour while resistance holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="FIRM", res="WEAK"),
+         "resistance is failing more than usual for this hour while support holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="MIXED", res="MIXED"), "bounces are failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="WEAK", res=""), "bounces are failing more than usual for this hour"),
+    ])
+    def test_m5_weak_text_names_the_failing_side(row, what):
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [row])
+        assert _keys(state) == ["levels_m5"]
+>       assert state.pending[0]["text"] == f"Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): {what}"
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...t the levels)'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): support is failing more than usual for this hour while resistance holds (the market, not the levels)
+E         + 3 usual): M5 support is failing more than usual for this hour
+
+tests\ref_test_mentor_technicals_levels.py:226: AssertionError
+_ test_m5_weak_text_names_the_failing_side[row2-resistance is failing more than usual for this hour while support holds (the market, not the levels)] _
+
+row = {'id': 'int:levels', 'm5_state': 'WEAK', 'm5_score': 4.0, 'm5_held': 0.52, ...}
+what = 'resistance is failing more than usual for this hour while support holds (the market, not the levels)'
+
+    @pytest.mark.parametrize("row, what", [
+        (_levels("WEAK", 4.0, sup="WEAK", res="VERY WEAK"),
+         "support and resistance are both failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="VERY WEAK", res="MIXED"),
+         "support is failing more than usual for this hour while resistance holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="FIRM", res="WEAK"),
+         "resistance is failing more than usual for this hour while support holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="MIXED", res="MIXED"), "bounces are failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="WEAK", res=""), "bounces are failing more than usual for this hour"),
+    ])
+    def test_m5_weak_text_names_the_failing_side(row, what):
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [row])
+        assert _keys(state) == ["levels_m5"]
+>       assert state.pending[0]["text"] == f"Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): {what}"
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...t the levels)'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): resistance is failing more than usual for this hour while support holds (the market, not the levels)
+E         + 3 usual): M5 resistance is failing more than usual for this hour
+
+tests\ref_test_mentor_technicals_levels.py:226: AssertionError
+_ test_m5_weak_text_names_the_failing_side[row3-bounces are failing more than usual for this hour] _
+
+row = {'id': 'int:levels', 'm5_state': 'WEAK', 'm5_score': 4.0, 'm5_held': 0.52, ...}
+what = 'bounces are failing more than usual for this hour'
+
+    @pytest.mark.parametrize("row, what", [
+        (_levels("WEAK", 4.0, sup="WEAK", res="VERY WEAK"),
+         "support and resistance are both failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="VERY WEAK", res="MIXED"),
+         "support is failing more than usual for this hour while resistance holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="FIRM", res="WEAK"),
+         "resistance is failing more than usual for this hour while support holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="MIXED", res="MIXED"), "bounces are failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="WEAK", res=""), "bounces are failing more than usual for this hour"),
+    ])
+    def test_m5_weak_text_names_the_failing_side(row, what):
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [row])
+        assert _keys(state) == ["levels_m5"]
+>       assert state.pending[0]["text"] == f"Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): {what}"
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...for this hour'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): bounces are failing more than usual for this hour
+E         ?           ^^^ ^
+E         + 3 usual): intraday levels are failing more than usual for this hour
+E         ?           ^ ^^^^^^^^ +++
+
+tests\ref_test_mentor_technicals_levels.py:226: AssertionError
+_ test_m5_weak_text_names_the_failing_side[row4-bounces are failing more than usual for this hour] _
+
+row = {'id': 'int:levels', 'm5_state': 'WEAK', 'm5_score': 4.0, 'm5_held': 0.52, ...}
+what = 'bounces are failing more than usual for this hour'
+
+    @pytest.mark.parametrize("row, what", [
+        (_levels("WEAK", 4.0, sup="WEAK", res="VERY WEAK"),
+         "support and resistance are both failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="VERY WEAK", res="MIXED"),
+         "support is failing more than usual for this hour while resistance holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="FIRM", res="WEAK"),
+         "resistance is failing more than usual for this hour while support holds (the market, not the levels)"),
+        (_levels("WEAK", 4.0, sup="MIXED", res="MIXED"), "bounces are failing more than usual for this hour"),
+        (_levels("WEAK", 4.0, sup="WEAK", res=""), "bounces are failing more than usual for this hour"),
+    ])
+    def test_m5_weak_text_names_the_failing_side(row, what):
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [row])
+        assert _keys(state) == ["levels_m5"]
+>       assert state.pending[0]["text"] == f"Intraday levels turned WEAK (M5 now 4.0, held 0.52 vs 0.63 usual): {what}"
+E       AssertionError: assert 'Intraday lev...for this hour' == 'Intraday lev...for this hour'
+E         
+E         Skipping 57 identical leading characters in diff, use -v to show
+E         - 3 usual): bounces are failing more than usual for this hour
+E         ?           ^ ^^^^ ----
+E         + 3 usual): M5 support is failing more than usual for this hour
+E         ?           ^^^^^^^ ^^^^
+
+tests\ref_test_mentor_technicals_levels.py:226: AssertionError
+__________________ test_m5_firm_text_says_levels_are_holding __________________
+
+    def test_m5_firm_text_says_levels_are_holding():
+        state = lens.observe(None, now=_at(0), internals=[_levels("MIXED", 5.5)])
+        state = _hold(state, 5, [_levels("FIRM", 6.8, sup="FIRM", res="STRONG")])
+>       assert state.pending[0]["text"] == (
+            "Intraday levels turned FIRM (M5 now 6.8, held 0.52 vs 0.63 usual): levels are holding better than usual "
+            "for this hour")
+E       AssertionError: assert 'Intraday lev...s are holding' == 'Intraday lev...for this hour'
+E         
+E         Skipping 74 identical leading characters in diff, use -v to show
+E         - are holding better than usual for this hour
+E         + are holding
+
+tests\ref_test_mentor_technicals_levels.py:232: AssertionError
+_________________ test_the_pack_row_drives_the_lens_side_text _________________
+
+    def test_the_pack_row_drives_the_lens_side_text():
+        def rows(m5, m5_sides):
+            snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides)
+            return list(ip.build(now=ip.FIXTURE_NOW, sources=ip.fixture_sources(technicals=snap)).rows)
+    
+>       state = lens.observe(None, now=_at(0), internals=rows((5.6, "MIXED"), _BOTH_OK))
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\ref_test_mentor_technicals_levels.py:242: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+m5 = (5.6, 'MIXED')
+m5_sides = ((5.6, 'MIXED', 400, 0.64, 0.63), (5.4, 'MIXED', 417, 0.64, 0.65))
+
+    def rows(m5, m5_sides):
+>       snap = ip.fixture_technicals(m5=m5, m5_sides=m5_sides)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: fixture_technicals() got an unexpected keyword argument 'm5_sides'
+
+tests\ref_test_mentor_technicals_levels.py:239: TypeError
+_______________________ test_rolling_now_reading_golden _______________________
+
+    def test_rolling_now_reading_golden():
+        from technical_integrity import TechnicalIntegrityConfig, rolling_technical_integrity
+    
+        fixture = _fixture()
+        for case in fixture["expected"]["cases"]:
+            if "rolling" not in case:
+                continue
+            result = rolling_technical_integrity(
+                fixture["events"], as_of=case["as_of"], config=TechnicalIntegrityConfig()
+            )
+            assert result["schema"] == "technical_integrity_rolling_v1"
+            assert result["window_minutes"] == 60
+            # Support/resistance sub-reads are per timeframe only; the all-levels read gets none.
+            assert "support" not in result["all"] and "resistance" not in result["all"]
+            for tf in ("d1", "m5"):
+                assert "support" in case["rolling"][tf] and "resistance" in case["rolling"][tf]
+            for tf, expected in case["rolling"].items():
+                for key, value in expected.items():
+>                   fixture.assert_matches(result[tf][key], value, f"{case['as_of']}.{tf}.{key}")
+
+tests\ref_test_technical_integrity_rolling.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = FixtureContract(name='technical_integrity_rolling_v1', path=WindowsPath('C:/Users/Aaron/llm-harness/wt/qtm-51c27bf/tes... {'dt': '2026-10-05T11:00:00-04:00', 'open': 600.0, 'high': 600.05, 'low': 599.95, 'close': 600.0, 'volume': 1000.0}]})
+actual = {'score': 2.2, 'state': 'VERY WEAK', 'pressure': 'BEARISH', 'test_count': 5, ...}
+expected = {'score': 2.1, 'state': 'VERY WEAK', 'pressure': 'BEARISH', 'test_count': 5, ...}
+context = '2026-10-05T11:00:00-04:00.d1.support'
+
+    def assert_matches(self, actual: Any, expected: Any, context: str = "") -> None:
+        """Assert ``actual`` equals ``expected`` within the declared tolerance."""
+        if self.matches(actual, expected):
+            return
+        where = f" [{context}]" if context else ""
+>       raise AssertionError(
+            f"{self.name}{where}: expected {expected!r}, got {actual!r} "
+            f"(numeric_tolerance={self.tolerance!r})"
+        )
+E       AssertionError: technical_integrity_rolling_v1 [2026-10-05T11:00:00-04:00.d1.support]: expected {'score': 2.1, 'state': 'VERY WEAK', 'pressure': 'BEARISH', 'test_count': 5, 'chop_count': 1, 'symbol_count': 4, 'resolved_weight': 12.5, 'observed_probability': 0.53, 'expected_probability': 0.6446, 'residual': -0.1146}, got {'score': 2.2, 'state': 'VERY WEAK', 'pressure': 'BEARISH', 'test_count': 5, 'chop_count': 1, 'symbol_count': 4, 'resolved_weight': 12.5, 'observed_probability': 0.53, 'expected_probability': 0.641, 'residual': -0.111} (numeric_tolerance=1e-09)
+
+tests\conftest.py:576: AssertionError
+___________ test_chip_and_tooltip_lead_with_the_now_reading_golden ____________
+
+    def test_chip_and_tooltip_lead_with_the_now_reading_golden():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        fixture = _fixture()
+        for case in fixture["expected"]["cases"]:
+            if "chip" not in case:
+                continue
+            snapshot = _snapshot_at(fixture, case)
+            chip, tooltip, color = format_technical_integrity_snapshot(
+                snapshot, now=datetime.fromisoformat(case["as_of"])
+            )
+>           assert chip == case["chip"]
+E           AssertionError: assert 'Levels: LEVE...0 � tape fast' == 'Levels: LEVE...g � tape fast'
+E             
+E             - Levels: LEVELS FAILING � M5 sup 10.0 res building � D1 sup 2.1 res building � tape fast
+E             ?                                 ^^^^     ^^^^^^^^          ^^^     ^^^^^^^^
+E             + Levels: LEVELS FAILING � M5 sup 4 res 1 � D1 sup 5 res 0 � tape fast
+E             ?                                 ^     ^          ^     ^
+
+tests\ref_test_technical_integrity_rolling.py:112: AssertionError
+______________ test_chip_omits_the_tape_when_the_source_is_none _______________
+
+    def test_chip_omits_the_tape_when_the_source_is_none():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        fixture = _fixture()
+        case = next(c for c in fixture["expected"]["cases"] if c.get("chip_without_spy"))
+        snapshot = _snapshot_at(fixture, case)
+        snapshot["market"]["tape"] = {"source": "none", "light": "unknown", "reason": "no SPY bars provider"}
+        chip, tooltip, _color = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat(case["as_of"])
+        )
+        # No tape reading counts as not fast. Resistance is still building, so the pooled STRONG M5 decides.
+>       assert chip == "Levels: LEVELS HOLDING � M5 sup 10.0 res building � D1 sup 2.1 res building"
+E       AssertionError: assert 'Levels: LEVE...1 sup 5 res 0' == 'Levels: LEVE... res building'
+E         
+E         - Levels: LEVELS HOLDING � M5 sup 10.0 res building � D1 sup 2.1 res building
+E         ?                                 ^^^^     ^^^^^^^^          ^^^     ^^^^^^^^
+E         + Levels: LEVELS HOLDING � M5 sup 4 res 1 � D1 sup 5 res 0
+E         ?                                 ^     ^          ^     ^
+
+tests\ref_test_technical_integrity_rolling.py:184: AssertionError
+_ test_technicals_verdict_reads_support_and_resistance[FIRM-MIXED-FIRM-normal-LEVELS NORMAL] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'FIRM', light = 'normal'
+expected = 'LEVELS NORMAL'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, expected", [
+        # Both sides scored: the sides decide.
+        ("WEAK", "VERY WEAK", "VERY WEAK", "normal", "LEVELS FAILING"),
+        ("VERY WEAK", "WEAK", "WEAK", None, "LEVELS FAILING"),
+        ("FIRM", "STRONG", "STRONG", "normal", "LEVELS HOLDING"),
+        ("STRONG", "FIRM", "MIXED", "calm", "LEVELS HOLDING"),
+        ("FIRM", "FIRM", "FIRM", "unknown", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("VERY WEAK", "FIRM", "MIXED", "calm", "SUPPORT FAILING"),
+        ("WEAK", "STRONG", "FIRM", None, "SUPPORT FAILING"),
+        ("MIXED", "WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("STRONG", "VERY WEAK", "MIXED", "unknown", "RESISTANCE FAILING"),
+        ("MIXED", "MIXED", "MIXED", "normal", "LEVELS NORMAL"),
+        ("FIRM", "MIXED", "FIRM", "normal", "LEVELS NORMAL"),
+        ("MIXED", "STRONG", "STRONG", "calm", "LEVELS NORMAL"),
+        # A fast tape overrides every side read.
+        ("FIRM", "FIRM", "FIRM", "fast", "LEVELS FAILING"),
+        ("WEAK", "MIXED", "WEAK", "fast", "LEVELS FAILING"),
+        ("MIXED", "WEAK", "WEAK", "fast", "LEVELS FAILING"),
+        ("MIXED", "MIXED", "MIXED", "fast", "LEVELS FAILING"),
+        # A side still building: the pooled M5 state decides, as before.
+        ("WEAK", None, "FIRM", "normal", "LEVELS HOLDING"),
+        ("STRONG", None, "VERY WEAK", "calm", "LEVELS FAILING"),
+        (None, "WEAK", "MIXED", "normal", "LEVELS NORMAL"),
+        (None, "MIXED", "WEAK", "normal", "LEVELS FAILING"),
+        (None, None, "STRONG", None, "LEVELS HOLDING"),
+        (None, "FIRM", "FIRM", "fast", "LEVELS FAILING"),
+    ])
+    def test_technicals_verdict_reads_support_and_resistance(support, resistance, pooled, light, expected):
+        from technical_integrity import technicals_verdict
+    
+        market = _verdict_market(pooled, light, sides=(support, resistance))
+>       assert technicals_verdict(market) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:479: AssertionError
+_ test_technicals_verdict_reads_support_and_resistance[MIXED-STRONG-STRONG-calm-LEVELS NORMAL] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'STRONG', light = 'calm'
+expected = 'LEVELS NORMAL'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, expected", [
+        # Both sides scored: the sides decide.
+        ("WEAK", "VERY WEAK", "VERY WEAK", "normal", "LEVELS FAILING"),
+        ("VERY WEAK", "WEAK", "WEAK", None, "LEVELS FAILING"),
+        ("FIRM", "STRONG", "STRONG", "normal", "LEVELS HOLDING"),
+        ("STRONG", "FIRM", "MIXED", "calm", "LEVELS HOLDING"),
+        ("FIRM", "FIRM", "FIRM", "unknown", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("VERY WEAK", "FIRM", "MIXED", "calm", "SUPPORT FAILING"),
+        ("WEAK", "STRONG", "FIRM", None, "SUPPORT FAILING"),
+        ("MIXED", "WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("STRONG", "VERY WEAK", "MIXED", "unknown", "RESISTANCE FAILING"),
+        ("MIXED", "MIXED", "MIXED", "normal", "LEVELS NORMAL"),
+        ("FIRM", "MIXED", "FIRM", "normal", "LEVELS NORMAL"),
+        ("MIXED", "STRONG", "STRONG", "calm", "LEVELS NORMAL"),
+        # A fast tape overrides every side read.
+        ("FIRM", "FIRM", "FIRM", "fast", "LEVELS FAILING"),
+        ("WEAK", "MIXED", "WEAK", "fast", "LEVELS FAILING"),
+        ("MIXED", "WEAK", "WEAK", "fast", "LEVELS FAILING"),
+        ("MIXED", "MIXED", "MIXED", "fast", "LEVELS FAILING"),
+        # A side still building: the pooled M5 state decides, as before.
+        ("WEAK", None, "FIRM", "normal", "LEVELS HOLDING"),
+        ("STRONG", None, "VERY WEAK", "calm", "LEVELS FAILING"),
+        (None, "WEAK", "MIXED", "normal", "LEVELS NORMAL"),
+        (None, "MIXED", "WEAK", "normal", "LEVELS FAILING"),
+        (None, None, "STRONG", None, "LEVELS HOLDING"),
+        (None, "FIRM", "FIRM", "fast", "LEVELS FAILING"),
+    ])
+    def test_technicals_verdict_reads_support_and_resistance(support, resistance, pooled, light, expected):
+        from technical_integrity import technicals_verdict
+    
+        market = _verdict_market(pooled, light, sides=(support, resistance))
+>       assert technicals_verdict(market) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:479: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-MIXED-FIRM] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'WEAK', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-MIXED-STRONG] _
+
+support = 'STRONG', resistance = 'MIXED', pooled = 'WEAK', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-FIRM-MIXED] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'WEAK', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-STRONG-MIXED] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'WEAK', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-MIXED-FIRM] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'MIXED', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-MIXED-STRONG] _
+
+support = 'STRONG', resistance = 'MIXED', pooled = 'MIXED', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-FIRM-MIXED] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'MIXED', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-STRONG-MIXED] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'MIXED', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-MIXED-FIRM] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'FIRM', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-MIXED-STRONG] _
+
+support = 'STRONG', resistance = 'MIXED', pooled = 'FIRM', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-FIRM-MIXED] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'FIRM', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-STRONG-MIXED] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'FIRM', light = 'calm'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-MIXED-FIRM] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'WEAK', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-MIXED-STRONG] _
+
+support = 'STRONG', resistance = 'MIXED', pooled = 'WEAK', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-FIRM-MIXED] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'WEAK', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-STRONG-MIXED] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'WEAK', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-MIXED-FIRM] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'MIXED', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-MIXED-STRONG] _
+
+support = 'STRONG', resistance = 'MIXED', pooled = 'MIXED', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-FIRM-MIXED] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'MIXED', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-STRONG-MIXED] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'MIXED', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-MIXED-FIRM] _
+
+support = 'FIRM', resistance = 'MIXED', pooled = 'FIRM', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-MIXED-STRONG] _
+
+support = 'STRONG', resistance = 'MIXED', pooled = 'FIRM', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-FIRM-MIXED] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'FIRM', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-STRONG-MIXED] _
+
+support = 'MIXED', resistance = 'STRONG', pooled = 'FIRM', light = 'unknown'
+
+    @pytest.mark.parametrize("support", _M5_STATES)
+    @pytest.mark.parametrize("resistance", _M5_STATES)
+    @pytest.mark.parametrize("pooled", ("WEAK", "MIXED", "FIRM"))
+    @pytest.mark.parametrize("light", ("calm", "fast", "unknown"))
+    def test_technicals_verdict_never_says_bounces_and_follows_the_side_rule(support, resistance, pooled, light):
+        from technical_integrity import technicals_verdict
+    
+        weak, firm = {"WEAK", "VERY WEAK"}, {"FIRM", "STRONG"}
+        if light == "fast":
+            expected = "LEVELS FAILING"
+        elif support is not None and resistance is not None:
+            if support in weak and resistance in weak:
+                expected = "LEVELS FAILING"
+            elif support in firm and resistance in firm:
+                expected = "LEVELS HOLDING"
+            elif support in weak:
+                expected = "SUPPORT FAILING"
+            elif resistance in weak:
+                expected = "RESISTANCE FAILING"
+            else:
+                expected = "LEVELS NORMAL"
+        else:
+            expected = {"WEAK": "LEVELS FAILING", "MIXED": "LEVELS NORMAL", "FIRM": "LEVELS HOLDING"}[pooled]
+>       assert technicals_verdict(_verdict_market(pooled, light, sides=(support, resistance))) == expected
+E       AssertionError: assert 'LEVELS HOLDING' == 'LEVELS NORMAL'
+E         
+E         - LEVELS NORMAL
+E         + LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:505: AssertionError
+_ test_tooltip_head_explains_each_verdict[WEAK-WEAK-WEAK-normal-LEVELS FAILING] _
+
+support = 'WEAK', resistance = 'WEAK', pooled = 'WEAK', light = 'normal'
+verdict = 'LEVELS FAILING'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, verdict", [
+        ("WEAK", "WEAK", "WEAK", "normal", "LEVELS FAILING"),
+        ("FIRM", "STRONG", "FIRM", "normal", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("MIXED", "VERY WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("MIXED", "FIRM", "MIXED", "normal", "LEVELS NORMAL"),
+    ])
+    def test_tooltip_head_explains_each_verdict(support, resistance, pooled, light, verdict):
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        snapshot = {"session_date": "2026-10-05",
+                    "market": _verdict_market(pooled, light, sides=(support, resistance))}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+        assert chip.split(" � ")[0] == f"Levels: {verdict}"
+>       assert tooltip.splitlines()[0] == _EXPLAINED[verdict] + " 5.5 = normal for this hour."
+E       AssertionError: assert 'LEVELS FAILI...or this hour.' == 'LEVELS FAILI...or this hour.'
+E         
+E         - LEVELS FAILING = both support and resistance are breaking more than usual for this hour, or the tape is fast. 5.5 = normal for this hour.
+E         ?                  ^^ ^^ ---------------------     ^^^ ^
+E         + LEVELS FAILING = intraday levels are failing more than usual for this hour, or the tape is fast. 5.5 = normal for this hour.
+E         ?                  ^^ ^^^^^^^^^^^      ^ ^^
+
+tests\ref_test_technical_integrity_rolling.py:536: AssertionError
+_ test_tooltip_head_explains_each_verdict[FIRM-STRONG-FIRM-normal-LEVELS HOLDING] _
+
+support = 'FIRM', resistance = 'STRONG', pooled = 'FIRM', light = 'normal'
+verdict = 'LEVELS HOLDING'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, verdict", [
+        ("WEAK", "WEAK", "WEAK", "normal", "LEVELS FAILING"),
+        ("FIRM", "STRONG", "FIRM", "normal", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("MIXED", "VERY WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("MIXED", "FIRM", "MIXED", "normal", "LEVELS NORMAL"),
+    ])
+    def test_tooltip_head_explains_each_verdict(support, resistance, pooled, light, verdict):
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        snapshot = {"session_date": "2026-10-05",
+                    "market": _verdict_market(pooled, light, sides=(support, resistance))}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+        assert chip.split(" � ")[0] == f"Levels: {verdict}"
+>       assert tooltip.splitlines()[0] == _EXPLAINED[verdict] + " 5.5 = normal for this hour."
+E       AssertionError: assert 'LEVELS HOLDI...or this hour.' == 'LEVELS HOLDI...or this hour.'
+E         
+E         - LEVELS HOLDING = both support and resistance are holding better than usual for this hour and the tape is not fast. 5.5 = normal for this hour.
+E         ?                  ^^ ^^ ---------------------
+E         + LEVELS HOLDING = intraday levels are holding better than usual for this hour and the tape is not fast. 5.5 = normal for this hour.
+E         ?                  ^^ ^^^^^^^^^^^
+
+tests\ref_test_technical_integrity_rolling.py:536: AssertionError
+_ test_tooltip_head_explains_each_verdict[WEAK-MIXED-WEAK-normal-SUPPORT FAILING] _
+
+support = 'WEAK', resistance = 'MIXED', pooled = 'WEAK', light = 'normal'
+verdict = 'SUPPORT FAILING'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, verdict", [
+        ("WEAK", "WEAK", "WEAK", "normal", "LEVELS FAILING"),
+        ("FIRM", "STRONG", "FIRM", "normal", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("MIXED", "VERY WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("MIXED", "FIRM", "MIXED", "normal", "LEVELS NORMAL"),
+    ])
+    def test_tooltip_head_explains_each_verdict(support, resistance, pooled, light, verdict):
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        snapshot = {"session_date": "2026-10-05",
+                    "market": _verdict_market(pooled, light, sides=(support, resistance))}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+        assert chip.split(" � ")[0] == f"Levels: {verdict}"
+>       assert tooltip.splitlines()[0] == _EXPLAINED[verdict] + " 5.5 = normal for this hour."
+E       AssertionError: assert 'SUPPORT FAIL...or this hour.' == 'SUPPORT FAIL...or this hour.'
+E         
+E         - SUPPORT FAILING = support is breaking more than usual for this hour while resistance is not: the market is pressing down, the levels still work. 5.5 = normal for this hour.
+E         + SUPPORT FAILING = levels approached from above (support) are failing more than usual for this hour. 5.5 = normal for this hour.
+
+tests\ref_test_technical_integrity_rolling.py:536: AssertionError
+_ test_tooltip_head_explains_each_verdict[MIXED-VERY WEAK-WEAK-normal-RESISTANCE FAILING] _
+
+support = 'MIXED', resistance = 'VERY WEAK', pooled = 'WEAK', light = 'normal'
+verdict = 'RESISTANCE FAILING'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, verdict", [
+        ("WEAK", "WEAK", "WEAK", "normal", "LEVELS FAILING"),
+        ("FIRM", "STRONG", "FIRM", "normal", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("MIXED", "VERY WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("MIXED", "FIRM", "MIXED", "normal", "LEVELS NORMAL"),
+    ])
+    def test_tooltip_head_explains_each_verdict(support, resistance, pooled, light, verdict):
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        snapshot = {"session_date": "2026-10-05",
+                    "market": _verdict_market(pooled, light, sides=(support, resistance))}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+        assert chip.split(" � ")[0] == f"Levels: {verdict}"
+>       assert tooltip.splitlines()[0] == _EXPLAINED[verdict] + " 5.5 = normal for this hour."
+E       AssertionError: assert 'RESISTANCE F...or this hour.' == 'RESISTANCE F...or this hour.'
+E         
+E         - RESISTANCE FAILING = resistance is breaking more than usual for this hour while support is not: the market is pressing up, the levels still work. 5.5 = normal for this hour.
+E         + RESISTANCE FAILING = levels approached from below (resistance) are breaking more than usual for this hour. 5.5 = normal for this hour.
+
+tests\ref_test_technical_integrity_rolling.py:536: AssertionError
+_ test_tooltip_head_explains_each_verdict[MIXED-FIRM-MIXED-normal-LEVELS NORMAL] _
+
+support = 'MIXED', resistance = 'FIRM', pooled = 'MIXED', light = 'normal'
+verdict = 'LEVELS NORMAL'
+
+    @pytest.mark.parametrize("support, resistance, pooled, light, verdict", [
+        ("WEAK", "WEAK", "WEAK", "normal", "LEVELS FAILING"),
+        ("FIRM", "STRONG", "FIRM", "normal", "LEVELS HOLDING"),
+        ("WEAK", "MIXED", "WEAK", "normal", "SUPPORT FAILING"),
+        ("MIXED", "VERY WEAK", "WEAK", "normal", "RESISTANCE FAILING"),
+        ("MIXED", "FIRM", "MIXED", "normal", "LEVELS NORMAL"),
+    ])
+    def test_tooltip_head_explains_each_verdict(support, resistance, pooled, light, verdict):
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        snapshot = {"session_date": "2026-10-05",
+                    "market": _verdict_market(pooled, light, sides=(support, resistance))}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip.split(" � ")[0] == f"Levels: {verdict}"
+E       AssertionError: assert 'Levels: LEVELS HOLDING' == 'Levels: LEVELS NORMAL'
+E         
+E         - Levels: LEVELS NORMAL
+E         + Levels: LEVELS HOLDING
+
+tests\ref_test_technical_integrity_rolling.py:535: AssertionError
+__ test_chip_shows_both_sides_per_timeframe_and_the_tooltip_adds_side_lines ___
+
+    def test_chip_shows_both_sides_per_timeframe_and_the_tooltip_adds_side_lines():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        m5 = {"score": 4.4, "state": "WEAK", "pressure": "BEARISH", "test_count": 78, "chop_count": 9,
+              "symbol_count": 30, "resolved_weight": 160.0, "observed_probability": 0.6,
+              "expected_probability": 0.72, "residual": -0.12,
+              "support": _side_read("WEAK", tests=40, held=0.55, usual=0.714),
+              "resistance": _side_read("MIXED", tests=38, held=0.70, usual=0.727)}
+        d1 = {"score": 6.1, "state": "MIXED", "pressure": "BALANCED", "test_count": 50, "chop_count": 3,
+              "symbol_count": 20, "resolved_weight": 125.0, "observed_probability": 0.68,
+              "expected_probability": 0.65, "residual": 0.03,
+              "support": _side_read("FIRM", tests=30, held=0.75, usual=0.65),
+              "resistance": _side_read(None)}
+        market = {"rolling": {"schema": "technical_integrity_rolling_v1", "window_minutes": 60, "m5": m5, "d1": d1},
+                  "tape": {"source": "SPY", "light": "normal", "range_mean": 0.08, "expected_range": 0.0834}}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            {"session_date": "2026-10-05", "market": market}, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: SUPPORT FAILING � M5 sup 4.1 res 5.6 � D1 sup 7.0 res building � tape normal"
+E       AssertionError: assert 'Levels: SUPP...� tape normal' == 'Levels: SUPP...� tape normal'
+E         
+E         - Levels: SUPPORT FAILING � M5 sup 4.1 res 5.6 � D1 sup 7.0 res building � tape normal
+E         ?                                   ^^     ^^^          ^^      ^^^^^^^^
+E         + Levels: SUPPORT FAILING � M5 sup 40 res 38 � D1 sup 30 res 3 � tape normal
+E         ?                                   ^     ^^          ^      ^
+
+tests\ref_test_technical_integrity_rolling.py:558: AssertionError
+__ test_chip_words_and_verdict_lead_for_an_older_snapshot_without_side_reads __
+
+    def test_chip_words_and_verdict_lead_for_an_older_snapshot_without_side_reads():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _verdict_market("FIRM", "normal")
+        market["rolling"]["m5"]["score"] = 6.8
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+        # No sub-reads: each side reads "building"; the verdict falls back to the pooled M5 state.
+>       assert chip == "Levels: LEVELS HOLDING � M5 sup building res building � D1 sup building res building � tape normal"
+E       AssertionError: assert 'Levels: LEVE...� tape normal' == 'Levels: LEVE...� tape normal'
+E         
+E         - Levels: LEVELS HOLDING � M5 sup building res building � D1 sup building res building � tape normal
+E         + Levels: LEVELS HOLDING � M5 firm 6.8 � D1 ok 5.4 � tape normal
+
+tests\ref_test_technical_integrity_rolling.py:581: AssertionError
+____________ test_a_trend_hour_reads_resistance_failing_end_to_end ____________
+
+    def test_a_trend_hour_reads_resistance_failing_end_to_end():
+        """Supports hold and every resistance breaks: the pooled M5 is very weak, but the levels still work."""
+        from technical_integrity import format_technical_integrity_snapshot, rolling_technical_integrity
+    
+        rows = [_event(f"s{i}", "m5", "10:35", "10:50", "held", 2.0, symbol=f"S{i}") for i in range(5)]
+        rows += [_event(f"r{i}", "m5", "10:35", "10:50", "broke", 2.0, symbol=f"R{i}", direction="up", side="below")
+                 for i in range(5)]
+        as_of = "2026-10-05T11:00:00-04:00"
+        rolling = rolling_technical_integrity(rows, as_of=as_of)
+        m5 = rolling["m5"]
+        # Pooled is unchanged: 0.50 held vs the pooled hour-1 m5 norm 0.714 -> 1.0.
+        assert (m5["score"], m5["state"], m5["test_count"]) == (1.0, "VERY WEAK", 10)
+        assert m5["expected_probability"] == 0.714
+        support, resistance = m5["support"], m5["resistance"]
+        # Support: 5 held vs m5_above hour 1 = 0.714 -> residual 0.286 -> 10.0.
+        assert (support["score"], support["state"], support["test_count"]) == (10.0, "STRONG", 5)
+        assert (support["observed_probability"], support["expected_probability"], support["residual"]) == (
+            1.0, 0.714, 0.286)
+        assert (support["resolved_weight"], support["symbol_count"], support["pressure"]) == (10.0, 5, "BALANCED")
+        # Resistance: 5 broke vs m5_below hour 1 = 0.727 -> 1.0.
+        assert (resistance["score"], resistance["state"], resistance["test_count"]) == (1.0, "VERY WEAK", 5)
+>       assert (resistance["observed_probability"], resistance["expected_probability"], resistance["residual"]) == (
+            0.0, 0.727, -0.727)
+E       assert (0.0, 0.714, -0.714) == (0.0, 0.727, -0.727)
+E         
+E         At index 1 diff: 0.714 != 0.727
+E         Use -v to get more diff
+
+tests\ref_test_technical_integrity_rolling.py:606: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[0] ____________
+
+hour = 0
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+>       assert result["m5"]["support"]["expected_probability"] == m5_above
+E       assert 0.631 == 0.633
+
+tests\ref_test_technical_integrity_rolling.py:646: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[1] ____________
+
+hour = 1
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+        assert result["m5"]["support"]["expected_probability"] == m5_above
+>       assert result["m5"]["resistance"]["expected_probability"] == m5_below
+E       assert 0.714 == 0.727
+
+tests\ref_test_technical_integrity_rolling.py:647: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[2] ____________
+
+hour = 2
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+>       assert result["m5"]["support"]["expected_probability"] == m5_above
+E       assert 0.764 == 0.815
+
+tests\ref_test_technical_integrity_rolling.py:646: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[3] ____________
+
+hour = 3
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+>       assert result["m5"]["support"]["expected_probability"] == m5_above
+E       assert 0.791 == 0.775
+
+tests\ref_test_technical_integrity_rolling.py:646: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[4] ____________
+
+hour = 4
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+>       assert result["m5"]["support"]["expected_probability"] == m5_above
+E       assert 0.794 == 0.785
+
+tests\ref_test_technical_integrity_rolling.py:646: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[5] ____________
+
+hour = 5
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+>       assert result["m5"]["support"]["expected_probability"] == m5_above
+E       assert 0.784 == 0.781
+
+tests\ref_test_technical_integrity_rolling.py:646: AssertionError
+____________ test_each_side_is_scored_against_its_own_hour_norm[6] ____________
+
+hour = 6
+
+    @pytest.mark.parametrize("hour", sorted(_SIDE_NORMS))
+    def test_each_side_is_scored_against_its_own_hour_norm(hour):
+        from technical_integrity import rolling_technical_integrity
+    
+        touch_minutes = 9 * 60 + 30 + 60 * hour + 5
+        touch = f"{touch_minutes // 60:02d}:{touch_minutes % 60:02d}"
+        resolved = f"{(touch_minutes + 20) // 60:02d}:{(touch_minutes + 20) % 60:02d}"
+        as_of = f"2026-10-05T{resolved}:00-04:00"
+        rows = []
+        for tf in ("m5", "d1"):
+            for side in ("above", "below"):
+                rows += [_event(f"{tf}{side}{i}", tf, touch, resolved, "held", 2.0, symbol=f"X{i}", side=side)
+                         for i in range(4)]
+        result = rolling_technical_integrity(rows, as_of=as_of)
+        m5_above, m5_below, d1_above, d1_below = _SIDE_NORMS[hour]
+>       assert result["m5"]["support"]["expected_probability"] == m5_above
+E       assert 0.719 == 0.676
+
+tests\ref_test_technical_integrity_rolling.py:646: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/ref_test_mentor_technicals_levels.py::test_levels_and_tape_rows_for_the_fixture_snapshot
+FAILED tests/ref_test_mentor_technicals_levels.py::test_an_older_snapshot_without_side_reads_keeps_todays_text
+FAILED tests/ref_test_mentor_technicals_levels.py::test_a_building_side_reads_building_in_the_row
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m50-m5_sides0-normal-SUPPORT FAILING-M5 sup 3.4 res 5.8]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m51-m5_sides1-calm-RESISTANCE FAILING-M5 sup 5.9 res 3.9]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m52-m5_sides2-normal-LEVELS FAILING-M5 sup 3.4 res 2.9]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m53-m5_sides3-calm-LEVELS HOLDING-M5 sup 7.1 res 8.3]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m54-m5_sides4-normal-LEVELS NORMAL-M5 sup 5.6 res 5.4]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m55-m5_sides5-fast-LEVELS FAILING-M5 sup 7.1 res 8.3]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_and_the_chip_say_the_same_verdict[m56-None-normal-LEVELS HOLDING-M5 sup building res building]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_fires_on_entering_weak_leaving_weak_and_entering_firm_but_not_leaving_firm
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_weak_text_names_the_failing_side[row0-support and resistance are both failing more than usual for this hour]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_weak_text_names_the_failing_side[row1-support is failing more than usual for this hour while resistance holds (the market, not the levels)]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_weak_text_names_the_failing_side[row2-resistance is failing more than usual for this hour while support holds (the market, not the levels)]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_weak_text_names_the_failing_side[row3-bounces are failing more than usual for this hour]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_weak_text_names_the_failing_side[row4-bounces are failing more than usual for this hour]
+FAILED tests/ref_test_mentor_technicals_levels.py::test_m5_firm_text_says_levels_are_holding
+FAILED tests/ref_test_mentor_technicals_levels.py::test_the_pack_row_drives_the_lens_side_text
+FAILED tests/ref_test_technical_integrity_rolling.py::test_rolling_now_reading_golden
+FAILED tests/ref_test_technical_integrity_rolling.py::test_chip_and_tooltip_lead_with_the_now_reading_golden
+FAILED tests/ref_test_technical_integrity_rolling.py::test_chip_omits_the_tape_when_the_source_is_none
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_reads_support_and_resistance[FIRM-MIXED-FIRM-normal-LEVELS NORMAL]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_reads_support_and_resistance[MIXED-STRONG-STRONG-calm-LEVELS NORMAL]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-MIXED-FIRM]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-MIXED-STRONG]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-FIRM-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-WEAK-STRONG-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-MIXED-FIRM]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-MIXED-STRONG]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-FIRM-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-MIXED-STRONG-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-MIXED-FIRM]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-MIXED-STRONG]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-FIRM-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[calm-FIRM-STRONG-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-MIXED-FIRM]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-MIXED-STRONG]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-FIRM-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-WEAK-STRONG-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-MIXED-FIRM]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-MIXED-STRONG]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-FIRM-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-MIXED-STRONG-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-MIXED-FIRM]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-MIXED-STRONG]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-FIRM-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_technicals_verdict_never_says_bounces_and_follows_the_side_rule[unknown-FIRM-STRONG-MIXED]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_tooltip_head_explains_each_verdict[WEAK-WEAK-WEAK-normal-LEVELS FAILING]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_tooltip_head_explains_each_verdict[FIRM-STRONG-FIRM-normal-LEVELS HOLDING]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_tooltip_head_explains_each_verdict[WEAK-MIXED-WEAK-normal-SUPPORT FAILING]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_tooltip_head_explains_each_verdict[MIXED-VERY WEAK-WEAK-normal-RESISTANCE FAILING]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_tooltip_head_explains_each_verdict[MIXED-FIRM-MIXED-normal-LEVELS NORMAL]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_chip_shows_both_sides_per_timeframe_and_the_tooltip_adds_side_lines
+FAILED tests/ref_test_technical_integrity_rolling.py::test_chip_words_and_verdict_lead_for_an_older_snapshot_without_side_reads
+FAILED tests/ref_test_technical_integrity_rolling.py::test_a_trend_hour_reads_resistance_failing_end_to_end
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[0]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[1]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[2]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[3]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[4]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[5]
+FAILED tests/ref_test_technical_integrity_rolling.py::test_each_side_is_scored_against_its_own_hour_norm[6]
+62 failed, 397 passed in 6.58s

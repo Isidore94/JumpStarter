@@ -1,0 +1,3 @@
+warning: in the working copy of 'tests/test_technical_integrity_tape.py', LF will be replaced by CRLF the next time Git touches it
+243279e first exit=0 turns=192 own=1 ref=1 ref_pass=14/18 ruff=0 import=n/a leak=0 self=GO cost=$1.01345 (key delta 0.952362) elapsed=754s
+exit 0

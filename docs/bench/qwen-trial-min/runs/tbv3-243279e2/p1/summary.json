@@ -1,0 +1,36 @@
+{
+  "sha7": "243279e",
+  "repo": "C:/Users/Aaron/TradingBotV3",
+  "base": "8dd4110",
+  "ref": "243279e2",
+  "pass": "first",
+  "exit_code": 0,
+  "elapsed_s": 754,
+  "turns": 192,
+  "own_tests_rc": 1,
+  "ruff_rc": 0,
+  "ref_tests_rc": 1,
+  "leak_count": 0,
+  "self_review_verdict": "GO",
+  "own_cmd": "C:/Users/Aaron/TradingBotV3/.venv/Scripts/python.exe -m pytest tests/ -q -n 4 -p no:cacheprovider",
+  "lint_cmd": "C:/Users/Aaron/TradingBotV3/.venv/Scripts/python.exe -m ruff check scripts tests",
+  "import_ok": "n/a",
+  "ref_pass": 14,
+  "ref_total": 18,
+  "cost_usd": 1.01345,
+  "usage": {
+    "requests": 73,
+    "input": 357911,
+    "output": 124109,
+    "thinking": 74095,
+    "cache_read": 7017728,
+    "cost": 1.01345,
+    "errors": 0,
+    "providers": {
+      "ModelRun": 73
+    }
+  },
+  "key_delta_usd": 0.952362,
+  "key_before": "OpenRouter key: <key> | used $26.092614182 | today (usage_daily) $12.261097513 | limit 50 | remaining 23.907385818\n\n[qwen/qwen3.8-27b: 59 in, 25 out, via DeepInfra]\n\n\nready",
+  "key_after": "OpenRouter key: <key> | used $27.044976547 | today (usage_daily) $13.213459878 | limit 50 | remaining 22.955023453\n\n[qwen/qwen3.8-27b: 59 in, 28 out, via DeepInfra]\n\n\nready"
+}

@@ -1,0 +1,8 @@
+== pytest (tests/test_technical_integrity_tape.py + tests/test_technical_integrity_rolling.py)
+.........................................                                [100%]
+41 passed in 1.50s
+pytest exit: 0
+
+== ruff check scripts tests
+All checks passed!
+ruff exit: 0

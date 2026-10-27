@@ -1,0 +1,87 @@
+# Stage 4 green run
+# pytest: QT_QPA_PLATFORM=offscreen C:/Users/Aaron/TradingBotV3/.venv/Scripts/python.exe -m pytest -q tests/test_technical_integrity_rolling.py tests/test_mentor_technicals_levels.py tests/test_technical_integrity.py
+
+....................................................FFF................. [ 62%]
+............................................                             [100%]
+================================== FAILURES ===================================
+_ test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines _
+
+    def test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _side_market(2.0, 8.5)
+        market["rolling"]["m5"]["support"]["test_count"] = 4
+        market["rolling"]["m5"]["resistance"]["test_count"] = 1
+        d1 = market["rolling"]["d1"]
+        d1["support"] = {"score": 2.2, "state": "VERY WEAK", "test_count": 5}
+        d1["resistance"] = {"score": None, "state": "BUILDING", "test_count": 0}
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0"
+E       AssertionError: assert 'Levels: SUPP...1 sup 5 res 0' == 'Levels: LEVE...1 sup 5 res 0'
+E         
+E         - Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0
+E         ?         -----
+E         + Levels: SUPPORT FAILING · M5 sup 4 res 1 · D1 sup 5 res 0
+E         ?          ++++++
+
+tests\test_technical_integrity_rolling.py:506: AssertionError
+____ test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads _____
+
+    def test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _side_market(2.0, 8.5)
+        market["rolling"]["m5"]["support"]["test_count"] = 4
+        market["rolling"]["m5"]["resistance"]["test_count"] = 1
+        # No sub-reads on the D1 row: its chip part stays the pooled reading.
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 ok 5.4"
+E       AssertionError: assert 'Levels: SUPP...1 · D1 ok 5.4' == 'Levels: LEVE...1 · D1 ok 5.4'
+E         
+E         - Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 ok 5.4
+E         ?         -----
+E         + Levels: SUPPORT FAILING · M5 sup 4 res 1 · D1 ok 5.4
+E         ?          ++++++
+
+tests\test_technical_integrity_rolling.py:525: AssertionError
+_____________ test_trend_hour_reads_resistance_failing_end_to_end _____________
+
+    def test_trend_hour_reads_resistance_failing_end_to_end():
+        """Supports hold and resistances break: RESISTANCE FAILING through rolling, chip and Mentor."""
+        from mentor_packs import internals_pack as ip
+        from technical_integrity import (
+            format_technical_integrity_snapshot,
+            rolling_technical_integrity,
+            technicals_verdict,
+        )
+    
+        as_of = "2026-10-02T13:00:00-04:00"
+        rolling = rolling_technical_integrity(_trend_events(), as_of=as_of)
+        m5 = rolling["m5"]
+>       assert m5["support"]["state"] == "STRONG", "all support tests held vs the hour norm"
+E       AssertionError: all support tests held vs the hour norm
+E       assert 'BUILDING' == 'STRONG'
+E         
+E         - STRONG
+E         + BUILDING
+
+tests\test_technical_integrity_rolling.py:566: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_technical_integrity_rolling.py::test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines
+FAILED tests/test_technical_integrity_rolling.py::test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads
+FAILED tests/test_technical_integrity_rolling.py::test_trend_hour_reads_resistance_failing_end_to_end
+3 failed, 113 passed in 4.68s
+
+PYTEST_EXIT=1
+
+# ruff: C:/Users/Aaron/TradingBotV3/.venv/Scripts/python.exe -m ruff check scripts tests
+
+All checks passed!
+
+RUFF_EXIT=0

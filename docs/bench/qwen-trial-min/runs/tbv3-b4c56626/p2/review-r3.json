@@ -1,0 +1,15 @@
+{"reviewer": "haiku-medium", "round": 3, "verdict": "NO-GO",
+ "blockers": [
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "line": 100, "claim": "judge() returns (False, None) when evaluate() returns a result but no fire falls on or after the session open, so a tape with no bars for the target session gets False (measured no) instead of None (unknown); brief says missing bars must be None."}
+ ],
+ "advisories": [
+  {"file": "scripts/master_avwap_lib/trader_fit.py", "claim": "Diff only renames _fit_inputs; confirm FLAG_EXTENDED_PULLBACK, EXTENDED_PULLBACK_POINTS, WAIVABLE_RULES and the waiver already exist at the parent."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "Naive datetime.now() treated as market-local."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "_daily_bars takes the daily frame as-is; confirm today's partial D1 bar is excluded for the dip-gate ATR."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "One WARNING per failed chunk, not one per run."},
+  {"file": "scripts/master_avwap_lib/runner.py", "claim": "Confirm ai_state, feature_rows_by_symbol and daily_frames_by_symbol are bound above the call; tests only grep the source."},
+  {"file": "tests/test_m30_extended_pullback.py", "claim": "Brief asks for synthetic tapes; tests use the real QDEL fixture with appended bars. Whole-suite run skipped this round."}
+ ],
+ "tests": "19 tests cover fire in session, fire yesterday, short tape, failed fetch, malformed tape, non-extended rows, batching, session clock; not a tape missing today's bars; runner check is a source grep.",
+ "brief_mistakes": "Brief asks for synthetic tapes and lists trader_fit waiver/bonus as work but the diff does not add them (they pre-existed); docstring promises a stale-tape unknown the code never checks.",
+ "lead_reproduction": "The blocker does NOT reproduce as a defect: the reference commit's own judge does the same thing (evaluate result present but no fire in the session date -> False with reason 'no M30 65-SMA LRSI reversal in the <date> session'; None only when bars are missing or fewer than SMA length + 10). Qwen's behaviour matches the reference here. The advisory about trader_fit was answered in the round-3 lead note (code pre-existed at the parent). Final gate for this task: NO-GO after 3 rounds, with the only reproducible blocker (round 2) fixed in the one rework pass; rounds 1 and 3 blockers were false flags."}

@@ -1,0 +1,4 @@
+warning: in the working copy of 'scripts/master_avwap_lib/m30_extended_pullback.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_m30_extended_pullback.py', LF will be replaced by CRLF the next time Git touches it
+b4c5662 rework exit=0 turns=62 own=none ref=1 ref_pass=5/21 ruff=0 import=n/a leak=2 self=unparsed cost=$0.137574 (key delta 0.1117) elapsed=170s
+exit 0

@@ -1,0 +1,81 @@
+..........FF.F................                                           [100%]
+================================== FAILURES ===================================
+___ test_the_avoid_list_that_cuts_the_route_is_named_not_blamed_on_security ___
+
+config = Config(app=AppConfig(contact='aaron.siano@gmail.com', project_url='https://github.com/Isidore94/EveTradingbot', compat...efault_handling_minutes=4.0, max_exposure_pct_per_trade=25.0, max_exposure_pct_per_destination=50.0), source_path=None)
+worked = {'provenance': {'source': 'plan.md §23.17, frozen before the code that computes it (§11 D5)', 'authored_at': '2026-08-...ion_id': 10000002, 'station_id': 60003760, 'system_id': 30000142, 'asks': [[100000.0, 800.0], [107250.0, 400.0]]}, ...}
+
+    def test_the_avoid_list_that_cuts_the_route_is_named_not_blamed_on_security(config, worked):
+        """A pair whose route is cut by the operator's own avoid list used to come
+        back ROUTE_BLOCKED_SECURITY: the probe re-ran the route with the default
+        profile and no avoid list, so it blamed the security profile for what the
+        operator's list did. The avoid list is the blocker, and it is the operator's
+        to drop — which is not what 'blocked by security' says."""
+        graph = _graph(jumps=2, security=0.9)  # Jita — 90000 — Amarr, all high-sec
+        scan = _scan(
+            config,
+            worked,
+            graph=graph,
+            profile=_profile(security_profile="highsec", avoid_systems=(90_000,)),
+        )
+        assert scan.plans == []
+>       assert not scan.rejected_for(ROUTE_BLOCKED_SECURITY)
+E       AssertionError: assert not [Rejection(reason='ROUTE_BLOCKED_SECURITY', type_id=None, type_name=None, source_station=60003760, dest_station=600084... dest_station=60003760, quantity=None, detail='no high-sec route exists between these systems (avoiding 1 system(s))')]
+E        +  where [Rejection(reason='ROUTE_BLOCKED_SECURITY', type_id=None, type_name=None, source_station=60003760, dest_station=600084... dest_station=60003760, quantity=None, detail='no high-sec route exists between these systems (avoiding 1 system(s))')] = rejected_for('ROUTE_BLOCKED_SECURITY')
+E        +    where rejected_for = HaulScan(generated_at='2026-08-25T12:00:00+00:00', profile=HaulProfile(current_system=30000142, ship=ShipProfile(name=...': False, 'reason': ''}}, pairs_considered=2, types_considered=0, candidates_considered=0, sde_build=3478781, notes=[]).rejected_for
+
+tests\test_hauling.py:289: AssertionError
+__ test_a_security_profile_that_blocks_the_route_names_the_shortest_profile ___
+
+config = Config(app=AppConfig(contact='aaron.siano@gmail.com', project_url='https://github.com/Isidore94/EveTradingbot', compat...efault_handling_minutes=4.0, max_exposure_pct_per_trade=25.0, max_exposure_pct_per_destination=50.0), source_path=None)
+worked = {'provenance': {'source': 'plan.md §23.17, frozen before the code that computes it (§11 D5)', 'authored_at': '2026-08-...ion_id': 10000002, 'station_id': 60003760, 'system_id': 30000142, 'asks': [[100000.0, 800.0], [107250.0, 400.0]]}, ...}
+
+    def test_a_security_profile_that_blocks_the_route_names_the_shortest_profile(config, worked):
+        """No avoid list involved: the profile itself empties the graph. Dropping
+        the avoid list changes nothing, the shortest profile connects, so this is
+        ROUTE_BLOCKED_SECURITY — and the detail says what the operator can do
+        about it."""
+        scan = _scan(
+            config,
+            worked,
+            graph=_graph(jumps=2, security=0.2),
+            profile=_profile(security_profile="highsec"),
+        )
+        assert scan.plans == []
+        rejections = scan.rejected_for(ROUTE_BLOCKED_SECURITY)
+        assert rejections, f"expected ROUTE_BLOCKED_SECURITY; got {scan.rejection_counts}"
+        assert not scan.rejected_for(NO_ROUTE)
+>       assert "shortest" in rejections[0].detail
+E       AssertionError: assert 'shortest' in 'origin system 30000142 is not high-sec, so this profile has no route'
+E        +  where 'origin system 30000142 is not high-sec, so this profile has no route' = Rejection(reason='ROUTE_BLOCKED_SECURITY', type_id=None, type_name=None, source_station=60003760, dest_station=60008494, quantity=None, detail='origin system 30000142 is not high-sec, so this profile has no route').detail
+
+tests\test_hauling.py:310: AssertionError
+_______ test_the_route_probes_are_asked_of_the_cache_not_the_bare_graph _______
+
+config = Config(app=AppConfig(contact='aaron.siano@gmail.com', project_url='https://github.com/Isidore94/EveTradingbot', compat...efault_handling_minutes=4.0, max_exposure_pct_per_trade=25.0, max_exposure_pct_per_destination=50.0), source_path=None)
+worked = {'provenance': {'source': 'plan.md §23.17, frozen before the code that computes it (§11 D5)', 'authored_at': '2026-08-...ion_id': 10000002, 'station_id': 60003760, 'system_id': 30000142, 'asks': [[100000.0, 800.0], [107250.0, 400.0]]}, ...}
+
+    def test_the_route_probes_are_asked_of_the_cache_not_the_bare_graph(config, worked):
+        """The old probe ran `graph.route` directly with its defaults: no avoid
+        list, default profile, and a cache the scan is already paying for. Both
+        questions go through the cache the trip does."""
+        graph = _graph(jumps=2, security=0.9)
+        cache = _RecordingCache(graph)
+        scan = _scan(
+            config,
+            worked,
+            graph=graph,
+            route_cache=cache,
+            profile=_profile(security_profile="highsec", avoid_systems=(90_000,)),
+        )
+>       assert scan.rejected_for(NO_ROUTE)
+E       AssertionError: assert []
+E        +  where [] = rejected_for('NO_ROUTE')
+E        +    where rejected_for = HaulScan(generated_at='2026-08-25T12:00:00+00:00', profile=HaulProfile(current_system=30000142, ship=ShipProfile(name=...': False, 'reason': ''}}, pairs_considered=2, types_considered=0, candidates_considered=0, sde_build=3478781, notes=[]).rejected_for
+
+tests\test_hauling.py:366: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_hauling.py::test_the_avoid_list_that_cuts_the_route_is_named_not_blamed_on_security
+FAILED tests/test_hauling.py::test_a_security_profile_that_blocks_the_route_names_the_shortest_profile
+FAILED tests/test_hauling.py::test_the_route_probes_are_asked_of_the_cache_not_the_bare_graph
+3 failed, 27 passed in 1.48s

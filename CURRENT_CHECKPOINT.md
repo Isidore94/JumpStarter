@@ -17,10 +17,10 @@ with the newest dated entry, the dated entry wins and this block is stale.**
 
 | | |
 |---|---|
-| Working branch | **`main`** — fast-forwarded through M1 at `556cffd`; this reconciliation records integration after independent reviewer GO |
-| Also in flight | **NOTHING unmerged.** M1 workspace memory is integrated. C2 remains integrated; its interrupted final reviewer GO is not claimed |
-| Active items | **M1 COMPLETE**, including fresh Codex session and independent native-agent person/project recall. Phase 1 item 1/gate 2 remain unstarted; item 2/gate 4 remains closed. I2 is not authorized |
-| Last verified baseline | Measured 2026-09-11 on **CPython 3.9.25**, M1 `556cffd`: pytest **63 passed, exit 0**; ruff **0.16.6 clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Fresh Codex recall PASS, exit 0; independent review GO. Retrofit was last measured 2026-09-10: 30 checks, 1 advisory, exit 0; not remeasured for M1 |
+| Working branch | **`claude/qwen-trial-min`** off `main` at `664e083`; docs-only bench, not merged |
+| Also in flight | `claude/qwen-orchestrate-test` and `claude/qwen-trial-10` (earlier Qwen benches, PRs open, awaiting Aaron's merge). M1 and C2 remain integrated on `main` |
+| Active items | **qwen-trial-min bench DONE** (see the 2026-10-27 entry; its verdict is a finding, not a pipeline change). **M1 COMPLETE**. Phase 1 item 1/gate 2 remain unstarted; item 2/gate 4 remains closed. I2 is not authorized |
+| Last verified baseline | Remeasured 2026-10-27 on `claude/qwen-trial-min` with the TraderTaxHelper venv (CPython 3.12.13, ruff 0.16.10): pytest **63 passed, exit 0**; ruff **clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Previous: 2026-09-11 on **CPython 3.9.25**, M1 `556cffd`: pytest **63 passed, exit 0**; ruff **0.16.6 clean, exit 0**; self-check **12 checks, no gaps, exit 0**. Fresh Codex recall PASS, exit 0; independent review GO. Retrofit was last measured 2026-09-10: 30 checks, 1 advisory, exit 0; not remeasured for M1 |
 | Artifact state | There is no build artifact. `tools/jumpstart.py` runs from source, standard library only. The 3.9 floor is now **measured, not claimed** — see the gate 3 row |
 | Restart owed | **No.** Nothing runs continuously from this checkout |
 
@@ -52,6 +52,16 @@ A gate is closed by striking its row through and writing what was observed — n
 deleting the row.
 
 ---
+
+### 2026-10-27 — qwen-trial-min: Qwen on a minimal brief, nine tasks, docs only
+Branch `claude/qwen-trial-min`. Everything landed under `docs/bench/qwen-trial-min/` plus the `docs/README.md`
+row, this entry, the CHANGELOG entry, a `ruff.toml` exclude for `docs/bench/*/runs` and two `.gitignore` lines for
+the raw transcripts and copied session dirs. Nothing under `templates/`, `tools/` or `tests/` changed; the baseline
+was remeasured anyway (glance block). Nine runs, all graded: Opus 2 MERGE, 3 MINOR, 4 MAJOR; Haiku MEDIUM 7 GO, 2 NO-GO
+(two false rounds on one task, three real blockers on another); $7.04 on OpenRouter of a $7.50 cap; the tenth task
+(TradingBotV3 swing SMA guard) was skipped for the cap and because the OpenRouter account ran dry on run 9. Verdict:
+`docs/bench/qwen-trial-min/results.md`. The `~/llm-harness/wt/qtm-*` worktrees are throwaway and were never merged
+or pushed. No live pipeline rule changed.
 
 ### 2026-09-11 — Packet M1: workspace memory and Codex recall
 

@@ -1,0 +1,4 @@
+warning: in the working copy of 'scripts/bounce_bot_lib/setup_tier.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_setup_tier.py', LF will be replaced by CRLF the next time Git touches it
+4b830d0 first exit=0 turns=202 own=1 ref=2 ref_pass=0/3 ruff=0 import=n/a leak=1 self=GO cost=$0.92797 (key delta 0.825785) elapsed=1032s
+exit 0

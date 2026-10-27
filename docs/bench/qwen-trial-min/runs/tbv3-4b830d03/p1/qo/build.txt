@@ -1,0 +1,14 @@
+== ruff check scripts tests ==
+All checks passed!
+ruff exit=0
+
+== pytest (four files) ==
+..................................................................       [100%]
+66 passed in 2.46s
+pytest exit=0
+
+== pytest (neighboring areas, extra) ==
+........................................................................ [ 84%]
+.............                                                            [100%]
+85 passed in 1.90s
+pytest exit=0

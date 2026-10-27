@@ -1,0 +1,1 @@
+own suite skipped (SKIP_OWN=1)

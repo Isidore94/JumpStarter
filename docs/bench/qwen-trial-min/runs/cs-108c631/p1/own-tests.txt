@@ -1,0 +1,51 @@
+test_custom_prompt_reaches_the_model_and_plain_summaries_are_unchanged (test_app.CustomPromptTests.test_custom_prompt_reaches_the_model_and_plain_summaries_are_unchanged) ... ok
+test_empty_prompt_produces_no_issue_body (test_app.CustomPromptTests.test_empty_prompt_produces_no_issue_body) ... ok
+test_long_prompts_are_bounded (test_app.CustomPromptTests.test_long_prompts_are_bounded) ... ok
+test_prompt_containing_a_code_fence_round_trips (test_app.CustomPromptTests.test_prompt_containing_a_code_fence_round_trips) ... ok
+test_prompt_survives_a_round_trip_through_the_issue_body (test_app.CustomPromptTests.test_prompt_survives_a_round_trip_through_the_issue_body) ... ok
+test_unmarked_body_is_taken_as_the_prompt (test_app.CustomPromptTests.test_unmarked_body_is_taken_as_the_prompt) ... ok
+test_gui_labels_never_grow_unbounded (test_app.GitHubErrorTests.test_gui_labels_never_grow_unbounded) ... ok
+test_html_outage_page_becomes_one_short_line (test_app.GitHubErrorTests.test_html_outage_page_becomes_one_short_line) ... ok
+test_json_api_errors_keep_their_message (test_app.GitHubErrorTests.test_json_api_errors_keep_their_message) ... ok
+test_long_plain_text_error_is_truncated (test_app.GitHubErrorTests.test_long_plain_text_error_is_truncated) ... ok
+test_badge_cache_remembers_an_offline_node (test_app.GpuBadgeCacheTests.test_badge_cache_remembers_an_offline_node) ... ok
+test_badge_probes_at_most_every_30_seconds (test_app.GpuBadgeCacheTests.test_badge_probes_at_most_every_30_seconds) ... ok
+test_transcribe_routes_on_a_live_probe_not_the_badge_cache (test_app.GpuBadgeCacheTests.test_transcribe_routes_on_a_live_probe_not_the_badge_cache) ... ok
+test_existing_repository_markdown_is_imported_as_text (test_app.OutputTests.test_existing_repository_markdown_is_imported_as_text) ... ok
+test_filenames_include_video_id_and_do_not_collide (test_app.OutputTests.test_filenames_include_video_id_and_do_not_collide) ... ok
+test_write_summary_creates_plain_text_file (test_app.OutputTests.test_write_summary_creates_plain_text_file) ... ok
+test_every_offered_interval_round_trips_through_the_cookie (test_app.RefreshControlTests.test_every_offered_interval_round_trips_through_the_cookie) ... ok
+test_hand_edited_cookie_cannot_set_a_faster_interval (test_app.RefreshControlTests.test_hand_edited_cookie_cannot_set_a_faster_interval) ... ok
+test_home_badge_uses_the_cached_probe_not_the_live_one (test_app.RefreshControlTests.test_home_badge_uses_the_cached_probe_not_the_live_one) ... ok
+test_home_ignores_a_cookie_outside_the_offered_values (test_app.RefreshControlTests.test_home_ignores_a_cookie_outside_the_offered_values) ... ok
+test_home_offers_refresh_now_and_the_offered_intervals (test_app.RefreshControlTests.test_home_offers_refresh_now_and_the_offered_intervals) ... ok
+test_home_renders_the_meta_refresh_for_a_valid_cookie (test_app.RefreshControlTests.test_home_renders_the_meta_refresh_for_a_valid_cookie) ... ok
+test_refresh_post_redirects_and_sets_the_cookie (test_app.RefreshControlTests.test_refresh_post_redirects_and_sets_the_cookie) ... ok
+test_search_page_stays_still_even_when_auto_refresh_is_on (test_app.RefreshControlTests.test_search_page_stays_still_even_when_auto_refresh_is_on) ... ok
+test_settings_refresh_route_is_registered (test_app.RefreshControlTests.test_settings_refresh_route_is_registered) ... ok
+test_summary_page_stays_still_even_when_auto_refresh_is_on (test_app.RefreshControlTests.test_summary_page_stays_still_even_when_auto_refresh_is_on) ... C:\Users\Aaron\llm-harness\wt\qtm-108c631\dashboard.py:439: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\Aaron\\AppData\\Local\\Temp\\tmpc5rgucfi\\abc.txt' mode='r' encoding='utf-8'>
+  text = open(path, encoding="utf-8").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_failure_comments_are_bounded_and_single_line (test_app.SafetyTests.test_failure_comments_are_bounded_and_single_line) ... ok
+test_frozen_yt_dlp_uses_bundled_entrypoint (test_app.SafetyTests.test_frozen_yt_dlp_uses_bundled_entrypoint) ... ok
+test_non_youtube_and_local_urls_are_rejected (test_app.SafetyTests.test_non_youtube_and_local_urls_are_rejected) ... ok
+test_youtube_url_allowlist (test_app.SafetyTests.test_youtube_url_allowlist) ... ok
+test_yt_dlp_timeout_becomes_pipeline_error (test_app.SafetyTests.test_yt_dlp_timeout_becomes_pipeline_error) ... ok
+test_detail_levels_are_distinct (test_app.SummaryConfigurationTests.test_detail_levels_are_distinct) ... ok
+test_prompts_are_learning_first (test_app.SummaryConfigurationTests.test_prompts_are_learning_first)
+Summaries must teach the content, not mention topics (Aaron's prime ... ok
+test_settings_round_trip (test_app.SummaryConfigurationTests.test_settings_round_trip) ... ok
+test_settings_written_before_the_chime_option_still_load (test_app.SummaryConfigurationTests.test_settings_written_before_the_chime_option_still_load) ... ok
+test_unknown_pipeline_detail_is_rejected (test_app.SummaryConfigurationTests.test_unknown_pipeline_detail_is_rejected) ... ok
+test_ages_read_as_plain_english (test_app.SummaryListTests.test_ages_read_as_plain_english) ... ok
+test_clipboard_only_offers_a_real_youtube_link (test_app.SummaryListTests.test_clipboard_only_offers_a_real_youtube_link) ... ok
+test_filter_matches_every_word_in_any_order (test_app.SummaryListTests.test_filter_matches_every_word_in_any_order) ... ok
+test_only_unseen_files_count_as_new (test_app.SummaryListTests.test_only_unseen_files_count_as_new) ... ok
+test_pretty_title_drops_the_video_id_suffix (test_app.SummaryListTests.test_pretty_title_drops_the_video_id_suffix)
+It must undo exactly what drain.summary_filename() builds. ... ok
+
+----------------------------------------------------------------------
+Ran 41 tests in 0.215s
+
+OK

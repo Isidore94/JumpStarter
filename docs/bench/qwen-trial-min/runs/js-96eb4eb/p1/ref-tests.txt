@@ -1,0 +1,207 @@
+.F.FF..F.F.                                                              [100%]
+================================== FAILURES ===================================
+_ test_init_installs_lead_config_without_overwriting_and_keeps_unknown_models_visible _
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13921/test_init_installs_lead_config0/widget')
+tmp_path = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13921/test_init_installs_lead_config0')
+capsys = <_pytest.capture.CaptureFixture object at 0x00000204A99CA540>
+
+    def test_init_installs_lead_config_without_overwriting_and_keeps_unknown_models_visible(
+        repo: Path,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Lead config follows init's normal fill, skip, force, and placeholder contract."""
+>       assert init_repo(repo, lead_model="gpt-6-astra") == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\ref_test_c2_native_codex_lead.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\ref_test_c2_native_codex_lead.py:62: in init_repo
+    return run(*argv)
+           ^^^^^^^^^^
+tests\ref_test_c2_native_codex_lead.py:26: in run
+    return jumpstart.main(list(argv))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\jumpstart.py:1244: in main
+    args = parser.parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\argparse.py:1908: in parse_args
+    self.error(msg)
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\argparse.py:2650: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='jumpstart', usage=None, description="Bootstrap, audit and enforce a project's agent control set.", formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'jumpstart: error: unrecognized arguments: --codex-lead-model gpt-6-astra\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\argparse.py:2637: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: jumpstart [-h] {init,retrofit,sync-agents,check} ...
+jumpstart: error: unrecognized arguments: --codex-lead-model gpt-6-astra
+_________ test_native_metadata_audit_reads_only_top_level_toml_fields _________
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13921/test_native_metadata_audit_rea0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x00000204A99CA450>
+
+    def test_native_metadata_audit_reads_only_top_level_toml_fields(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Role prose cannot masquerade as native metadata; valid scalar TOML can."""
+        assert init_repo(repo) == 0
+        tester = repo / ".codex" / "agents" / "tester.toml"
+        tester_text = tester.read_text(encoding="utf-8")
+        tester.write_text(
+            tester_text.replace('name = "tester"', "name = 'tester' # native name").replace(
+                'description = "Writes packet behaviour tests before the fix, proves they fail, and hands the red branch to the builder without changing production code."',
+                "description = 'A valid tester role' # native description",
+            ),
+            encoding="utf-8",
+        )
+        builder = repo / ".codex" / "agents" / "builder.toml"
+        builder_text = builder.read_text(encoding="utf-8")
+        builder_text = builder_text.replace('name = "builder"\n', "").replace(
+            'description = "Builds one approved packet in an isolated worktree, makes the tester\'s red tests pass without weakening them, and reconciles the required documentation."\n',
+            "",
+        )
+        builder.write_text(
+            builder_text.replace(
+                'developer_instructions = """',
+                'developer_instructions = """\nname = "only role prose"\ndescription = "also role prose"',
+            ),
+            encoding="utf-8",
+        )
+    
+        assert run("check", str(repo)) == 1
+        check_output = capsys.readouterr().out
+>       assert "native role metadata tester" in check_output
+E       AssertionError: assert 'native role metadata tester' in 'Initialised Widget in C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13921\\test_native_metadata_aud...description\n------------------------------------------------------------------------------\n20 gap(s) of 29 checks.\n'
+
+tests\ref_test_c2_native_codex_lead.py:214: AssertionError
+_ test_native_metadata_audit_reports_an_empty_top_level_value_without_crashing _
+
+repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13921/test_native_metadata_audit_rep0/widget')
+capsys = <_pytest.capture.CaptureFixture object at 0x00000204A99CA630>
+
+    def test_native_metadata_audit_reports_an_empty_top_level_value_without_crashing(
+        repo: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Empty scalar metadata remains a gap even when its TOML syntax is valid."""
+        assert init_repo(repo) == 0
+        _fill_remaining_placeholders(repo)
+        tester = repo / ".codex" / "agents" / "tester.toml"
+        tester.write_text(
+            tester.read_text(encoding="utf-8").replace('name = "tester"', 'name = ""'),
+            encoding="utf-8",
+        )
+    
+        assert run("check", str(repo)) == 1
+        check_output = capsys.readouterr().out
+>       assert "native role metadata tester" in check_output
+E       AssertionError: assert 'native role metadata tester' in 'Initialised Widget in C:\\Users\\Aaron\\AppData\\Local\\Temp\\pytest-of-Aaron\\pytest-13921\\test_native_metadata_aud... description\n------------------------------------------------------------------------------\n1 gap(s) of 12 checks.\n'
+
+tests\ref_test_c2_native_codex_lead.py:238: AssertionError
+_________ test_matching_survives_line_wrapping_case_and_html_comments _________
+
+filled_repo = WindowsPath('C:/Users/Aaron/AppData/Local/Temp/pytest-of-Aaron/pytest-13921/test_matching_survives_line_wr0/widget')
+
+    def test_matching_survives_line_wrapping_case_and_html_comments(
+        filled_repo: Path,
+    ) -> None:
+        """The three shapes this repo's own CLAUDE.md actually contains.
+    
+        `CLAUDE.md:122-123` wraps a citation across a line break; `CLAUDE.md:88` cites
+        `"unfilled placeholders are visible"` against the heading
+        `## Unfilled placeholders are visible`; and `templates/CLAUDE.md:90` puts a
+        citation inside an HTML comment as the example shape. A check that misreads any
+        of the three fires on correct work, and a check that fires on correct work gets
+        ignored - taking the real findings with it.
+        """
+        claude = filled_repo / "CLAUDE.md"
+        internals = filled_repo / "docs/INTERNALS.md"
+    
+        shipped = claude.read_text(encoding="utf-8").count(CITATION_MARK)
+>       assert shipped == TEMPLATE_CITATIONS_IN_TEXT, (
+            "premise moved: templates/CLAUDE.md no longer ships "
+            f"{TEMPLATE_CITATIONS_IN_TEXT} citations, it ships {shipped}"
+        )
+E       AssertionError: premise moved: templates/CLAUDE.md no longer ships 6 citations, it ships 4
+E       assert 4 == 6
+
+tests\ref_test_i1_rules_carry_evidence.py:163: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+Initialised Widget in C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13921\test_matching_survives_line_wr0\widget
+------------------------------------------------------------------------------
+  wrote    .claude/agents/builder.md
+  wrote    .claude/agents/recon.md
+  wrote    .claude/agents/reviewer.md
+  wrote    .claude/agents/tester.md
+  wrote    .claude/packets/PACKET_TEMPLATE.md
+  wrote    .claude/settings.json
+  wrote    .codex/agents/builder.toml
+  wrote    .codex/agents/recon.toml
+  wrote    .codex/agents/reviewer.toml
+  wrote    .codex/agents/tester.toml
+  wrote    .codex/config.toml
+  wrote    CHANGELOG.md
+  wrote    CLAUDE.md
+  wrote    CURRENT_CHECKPOINT.md
+  wrote    WISHLIST.md
+  wrote    docs/CODEX_NOTES.md
+  wrote    docs/AGENT_TEAM.md
+  wrote    docs/INTERNALS.md
+  wrote    docs/README.md
+  wrote    docs/decisions/0000-template.md
+  wrote    docs/decisions/0001-owner-goals-and-priorities.md
+  wrote    plan.md
+  wrote    AGENTS.md
+  wrote    .gitignore (appended)
+------------------------------------------------------------------------------
+Unfilled placeholders, to complete by hand (81):
+  ADD_YOUR_OWN, ANSWER, ARCHIVE, AREA_1, AREA_2, ASK_FIRST_AREA, ASK_FIRST_FILES, BRANCH, CADENCE, CAPABILITY, CHANGE, CODE, CODEX_CHEAP_MODEL, CODEX_STRONG_MODEL, COMMIT, CRITICAL_AREA, CURRENT_STATE, DATED_ENTRY, DONE_1, DONE_2, DURATION, ENTRYPOINT, ENTRY_TITLE, EXTRA_COMMANDS, EXTRA_GATES, GATE, GOAL, HEADLINE_MEASURE, IDEA, IN_SCOPE, ITEM, LINT_RESULT, LIVE_STORES, MODULE_OR_PATH, N, ONE_LINE_DESCRIPTION, OTHER_GATE, OUT_OF_SCOPE, PERIOD_AND_WHAT_IT_HOLDS, PHASE, PHASE_0, PHASE_0_OUTCOME, PHASE_1, PHASE_1_OUTCOME, PHASE_2, PHASE_2_OUTCOME, PHASE_3, PHASE_3_OUTCOME, RULE_NAME, RUNBOOK, SELFCHECK_CMD, SPEC, STACK, TEST, THE_ONE_ACTIVE_ITEM, THE_ONE_LINE, THE_ONE_QUESTION_THAT_BLOCKS_IT, THE_THING_THAT_IS_EASY_TO_GET_WRONG, THE_TIE_BREAKER_FROM_THE_ANSWERS, TOOLCHAIN, UNMERGED_BRANCHES_OR_NOTHING, WHAT_CONTRACT_IT_OWNS, WHAT_EXISTS, WHAT_IS_ON_IT, WHAT_LANDED, WHAT_MUST_BE_OBSERVED_IN_THE_REAL_WORLD, WHAT_NEW_WORK_THIS_CREATES, WHAT_PROMPTED_IT, WHAT_PROMPTED_THIS_RECORD, WHAT_THE_APP_ACTUALLY_RUNS_FROM, WHAT_THE_SUITE_COVERS, WHAT_THIS_REORDERS_IN_THE_PLAN, WHAT_THIS_RETIRES, WHAT_WAS_RETIRED, WHEN_THE_SUITE_IS_NOT_A_BASELINE, WHEN_TO_USE_IT, WHERE_THE_ANSWER_LIVES, WHICH_TESTS_FAILED_ON_THE_BASE_COMMIT, WHY, YES_WITH_REASON_OR_NO, YYYY_MM
+
+Next: playbooks/new-project.md - the owner questionnaire comes first,
+then fill the placeholders, then `jumpstart.py check C:\Users\Aaron\AppData\Local\Temp\pytest-of-Aaron\pytest-13921\test_matching_survives_line_wr0\widget`.
+CLAUDE.md -> AGENTS.md
+sha256 99d205ae63e30946e86b6d4a318e3e89022c9e0d3a0b5028b739c42999bf76d0 (identical)
+__ test_retrofit_carries_one_rules_carry_evidence_finding_with_codex_audits ___
+
+capsys = <_pytest.capture.CaptureFixture object at 0x00000204A99E3A70>
+
+    def test_retrofit_carries_one_rules_carry_evidence_finding_with_codex_audits(
+        capsys,
+    ) -> None:
+        """The new audit replaces retrofit's presence-only finding; it does not add one.
+    
+        C2 adds five named Codex findings to the historical 25. The rules audit still
+        replaces its old presence-only finding rather than duplicating it. Read-only:
+        `retrofit` writes nothing, ever.
+        """
+        before = _tracked_tree()
+    
+        assert run("retrofit", str(REPO_ROOT)) == 0
+        out = capsys.readouterr().out
+    
+        lines = [line for line in out.splitlines() if "rules carry evidence" in line]
+        assert len(lines) == 1, lines
+        assert "[OK      ]" in lines[0]
+>       assert "No gaps: 30 checks passed." in out
+E       AssertionError: assert 'No gaps: 30 checks passed.' in 'JumpStarter retrofit audit: C:\\Users\\Aaron\\llm-harness\\wt\\qtm-96eb4eb\n=========================================...failure.\n\nThis audit changed nothing. Next: playbooks/retrofit.md.\nArchive, do not delete. Never rewrite history.\n'
+
+tests\ref_test_i1_rules_carry_evidence.py:265: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/ref_test_c2_native_codex_lead.py::test_init_installs_lead_config_without_overwriting_and_keeps_unknown_models_visible
+FAILED tests/ref_test_c2_native_codex_lead.py::test_native_metadata_audit_reads_only_top_level_toml_fields
+FAILED tests/ref_test_c2_native_codex_lead.py::test_native_metadata_audit_reports_an_empty_top_level_value_without_crashing
+FAILED tests/ref_test_i1_rules_carry_evidence.py::test_matching_survives_line_wrapping_case_and_html_comments
+FAILED tests/ref_test_i1_rules_carry_evidence.py::test_retrofit_carries_one_rules_carry_evidence_finding_with_codex_audits
+5 failed, 6 passed in 1.41s

@@ -1,0 +1,8 @@
+{
+  "judge": "opus-5.5 effort high, blind",
+  "round": "first (no rework; Haiku medium GO)",
+  "correctness": 1, "completeness": 2, "tests": 2, "scope": 3, "brief_awareness": 0, "self_review": 1, "trading_risk": 2,
+  "verdict": "MAJOR",
+  "notes": "Plumbing matches the reference closely: shown tier from the rule, learning letter kept as learning_tier, learning fallback B, mutes and shadow_s9 untouched, record_alert_tier row gains learning_tier. The rule itself is invented: every fact +/-1, session-relative bar hour, totals 1/0/-1 all map to D; the reference scores hour 7/8 +2, hour 11 -1, hour 12 -2, regime_pause_rs +2, tiers A>=4 / B>=2 / C>=0 / D<0. Smaller divergences: any type containing 'regime' scores +1 (reference: only regime_pause_rs); hour from signal_time rather than the bounce bar in the event_id. API names differ (evaluate_setup_tier with points/reasons vs setup_tier with setup_score/setup_reasons), so 0 of 3 hidden modules collect. The brief gave neither names nor point values, so the naming miss is fair; the real failure is that the builder never flagged the missing table and shipped a guessed one under a GO self-review. Its 35 tests are thorough but lock in the guessed table. No orders, sizing or mutes touched, but the A-D letter the trader sees would be wrong on most alerts.",
+  "lead_note": "Final verdict = first-round verdict (no rework: gate was GO). Cause: brief too thin (no point table, no public names). Cost $0.93, 17.2 min, 202 turns, 1 pass."
+}

@@ -1,0 +1,2 @@
+run-task.sh: line 123: syntax error near unexpected token `done'
+run-task.sh: line 123: `5; done'

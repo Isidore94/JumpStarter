@@ -1,0 +1,16 @@
+{
+  "reviewer": "haiku-5.5 effort medium",
+  "round": 1,
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    {"file": "scripts/bounce_bot_lib/setup_tier.py", "claim": "_tape_points matches only exact risk_on, risk_on_tilt, risk_off, risk_off_tilt; other risk_on*/risk_off* values score 0. Confirm the tape vocabulary."},
+    {"file": "scripts/bounce_bot_lib/legacy.py", "claim": "_setup_tier_for_alert reads event-row keys bounce_types, rrs_sector, internals_tape, which the brief never names; wrong names would score 0 in production while tests pass."},
+    {"file": "scripts/bounce_bot_lib/setup_tier.py", "claim": "Top-level import of market_session.get_market_session_window; an ImportError would be swallowed into {} by the hook's except."},
+    {"file": "scripts/bounce_bot_lib/legacy.py", "claim": "quality['tier'] now carries the setup letter; grep every reader of quality['tier'] and tier_assigned rows for branches on it."},
+    {"file": "tests/test_s9_p14_tier_golden.py, tests/test_s9_shadow_tier.py", "claim": "Two existing tests outside the brief's Files list are edited; golden assertion restructured (prefix swap plus a points check assuming a 10:00 bar)."}
+  ],
+  "tests": "Covers every boundary, each fact and reason string, case and semicolon handling, regime-over-h1 precedence, aware and naive times, both fallbacks, the recorded row. Misses production field names and the real tape vocabulary.",
+  "brief_mistakes": "Brief does not name the event-row fields or the tape vocabulary, says risk_on* where the code matches exact values, and does not list the two existing s9 tests the diff edits.",
+  "lead_reproduction": "No blockers, no rework. Advisory 2 checked: the keys bounce_types, rrs_sector, internals_tape and signal_time all exist in legacy.py at the parent (13/5/4/2 hits) and are the same keys the reference commit reads, so the production names are right. Advisory 4 is the intended behaviour of the brief (setup tier replaces the shown letter, learning letter kept beside it); the reference does the same. Advisories 1, 3, 5 not reproduced (advisory only)."
+}

@@ -1,0 +1,11 @@
+{
+  "verdict": "GO",
+  "blockers": [],
+  "advisories": [
+    "SESSION_HOUR_SPY_RANGE_NORMS is derived from 4 local sessions (2026-09-30/10-01/10-02/10-05), not the task's 30-session target: the 30-session window does not exist locally. The constant's comment and the recon label it a short-window stub to be re-derived; the task explicitly allowed 'derive or stub them clearly'.",
+    "Snapshots published before this change (on disk overnight, e.g. read by the night AI) have market.tick but no market.tape: they now render without a light in the chip instead of the old 'TICK wide' part. Transient - the next _publish_snapshot writes market.tape; no persisted chip strings exist.",
+    "The stale check uses the newest bar's END (ordered[-1][0] in the kept tuple), exactly matching the pre-change TICK light; the first draft of the new stale test assumed the start and was corrected to the real semantics before going green.",
+    "hour_norms defaults to the module-level SESSION_HOUR_SPY_RANGE_NORMS dict; it is only ever read (.get), never mutated - safe default, ruff-clean."
+  ],
+  "summary": "Diff does exactly what the task asks: generic tape_speed_light() over completed-M5 bars vs per-session-hour norms (calm < 0.8, fast > 1.25, unknown under 3 bars or a bar whose end is > 15 min old, 30-min completed-bar window), tick_range_light() as a thin wrapper preserving its historical schema, 'wide' label, 1-decimal rounding and reason strings (all pre-existing TICK goldens and the parametrized threshold test pass untouched); SESSION_HOUR_SPY_RANGE_NORMS added with a provenance comment; tape_light() fallback order SPY -> TICK (wide=fast) -> none-with-SPY-reason; monitor gains spy_bars_provider and writes market.tape in two fail-open try/except blocks after the unchanged market.tick block; legacy.py wires the provider from the latest_bars SPY M5 cache only (no IB); chip says 'tape fast/normal/calm' (omitted when source none) and the tooltip names SPY or 'TICK fallback'; fixture raw inputs byte-identical (sha256 stays valid) with only case-1 chip/tooltip expected values updated; CHANGELOG line added. Tests: 41/41 in the two touched files, 25/25 in the adjacent main module file, ruff clean. No order/sizing/IB behaviour touched; no ask-first file edited beyond the task's explicit one-line legacy.py change (which the task names)."
+}

@@ -1,0 +1,14 @@
+{"reviewer": "haiku-medium", "round": 2, "verdict": "NO-GO",
+ "blockers": [
+  {"file": "packet-review.md", "line": 707, "claim": "The lead's suite log shows failing tests (F marks) never identified or compared against the parent; no clean full-suite run exists."},
+  {"file": "scripts/master_avwap_lib/trader_fit.py", "line": 336, "claim": "_fit_inputs renamed to fit_input with only one call site updated; any other reference raises NameError."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "line": 250, "claim": "Only the downloader call is in try/except; frame_to_bars, judge and _daily_bars are not, so an exception there escapes stamp_m30_extended_pullbacks and fails the scan, against the brief's never-a-failed-scan rule."}
+ ],
+ "advisories": [
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "_as_market_local passes naive datetimes through; datetime.now() system-local treated as market-local."},
+  {"file": "tests/test_m30_extended_pullback.py", "claim": "test_the_extended_check_uses_the_same_merged_input_as_the_fit may not exercise the condition its comment gives."},
+  {"file": "scripts/master_avwap_lib/m30_extended_pullback.py", "claim": "Failed fetch warns once per chunk, not once per run; brief ambiguous."}
+ ],
+ "tests": "18 tests cover the done-when cases; miss tz-aware frames, a raising frame, multi-chunk failure, and the full suite.",
+ "brief_mistakes": "'one warning' not defined per chunk or per run; brief does not say whether _fit_inputs has other callers.",
+ "lead_reproduction": "Blocker 1: targeted run of every test module importing master_avwap_lib or trader_fit in the worktree = 1877 passed, 2 failed, both test_ws_rp_shared_report git-history tests that fail in any harness worktree (known from run 6, no git history there); the crashed whole-suite log's F marks are not attributable. Blocker 2 does NOT reproduce: grep finds no other _fit_inputs reference in scripts or tests. Blocker 3 reproduces by reading: frame_to_bars/judge/_daily_bars sit outside the try, so a malformed tape raises out of the stamp. One rework pass sent with blocker 3 only."}

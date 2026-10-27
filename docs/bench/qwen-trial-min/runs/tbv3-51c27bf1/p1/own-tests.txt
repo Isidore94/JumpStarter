@@ -1,0 +1,676 @@
+bringing up nodes...
+bringing up nodes...
+
+..........................s............................................. [  0%]
+........................................................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  4%]
+........................................................................ [  5%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  6%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+........................................................................ [  8%]
+...............F........................................................ [  9%]
+..................uuuuu................................................. [  9%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+........................................................................ [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 12%]
+........................................................................ [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................................................................ [ 14%]
+........................................................................ [ 15%]
+........................................................................ [ 15%]
+................uuuu.uuuuuuuuuuuuu..........uuuuuu..uuuuuuuuuuuuuuuu.... [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 17%]
+...........................uu.................................uuuuuu.uu. [ 17%]
+.....uu.uu..uuu....uuuu.......uuuu...................................... [ 18%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 19%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+........................................................................ [ 22%]
+........................................................................ [ 22%]
+........................................................................ [ 23%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+........................................................................ [ 24%]
+........................................................................ [ 25%]
+........................................................................ [ 25%]
+........................................................................ [ 25%]
+........................................................................ [ 26%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 28%]
+........................................................................ [ 28%]
+........................................................................ [ 29%]
+........................................................................ [ 29%]
+........................................................................ [ 30%]
+........................................................................ [ 30%]
+........................................................................ [ 31%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 32%]
+........................................................................ [ 32%]
+........................................................................ [ 33%]
+........................................................................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 35%]
+........................................................................ [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+.....................sss................................s...........s... [ 38%]
+....................................s.s....s............................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 40%]
+........................................................................ [ 41%]
+........................................................................ [ 41%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 44%]
+........................................................................ [ 44%]
+........................................................................ [ 45%]
+........................................................................ [ 45%]
+...................................................................F.... [ 46%]
+........................................................................ [ 46%]
+........................................................................ [ 47%]
+........................................................................ [ 47%]
+.............................................................s.......... [ 48%]
+........................................................................ [ 48%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 50%]
+........................................................................ [ 51%]
+........................................................................ [ 51%]
+........................................................................ [ 51%]
+......................................QFontDatabase: Cannot find font directory C:/Users/Aaron/TradingBotV3/.venv/Lib/site-packages/PySide6/lib/fonts.
+Note that Qt no longer ships fonts. Deploy some (from https://dejavu-fonts.github.io/ for example) or switch to fontconfig.
+.................................. [ 52%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+........................................................................ [ 53%]
+................................................s....................... [ 54%]
+........................................................................ [ 54%]
+........................................................................ [ 54%]
+........................................................................ [ 55%]
+........................................................................ [ 55%]
+........................................................................ [ 56%]
+........................................................................ [ 56%]
+..................s..................................................... [ 57%]
+........................................................................ [ 57%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 58%]
+........................................................................ [ 59%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 60%]
+........................................................................ [ 60%]
+........................................................................ [ 61%]
+........................................................................ [ 61%]
+........................................................................ [ 62%]
+........................................................................ [ 62%]
+........................................................................ [ 63%]
+........................................................................ [ 63%]
+........................................................................ [ 64%]
+........................................................................ [ 64%]
+..............................FFF....................................... [ 64%]
+........................................................................ [ 65%]
+........................................................................ [ 65%]
+........................................................................ [ 66%]
+........................................................................ [ 66%]
+.......s................................................................ [ 67%]
+........................................................................ [ 67%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+........................................................................ [ 69%]
+.....................................s.................................. [ 70%]
+........................................................................ [ 70%]
+s....................................................................... [ 70%]
+..........................................................F............. [ 71%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 72%]
+............................F........................................... [ 73%]
+........................................................................ [ 73%]
+........................................................................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 74%]
+........................................................................ [ 75%]
+........................................................................ [ 75%]
+...uuu.................................................................. [ 76%]
+........................................................................ [ 76%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 78%]
+........................................................................ [ 79%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 80%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 83%]
+........................................................................ [ 83%]
+........................................................................ [ 84%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 86%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+........................................................................ [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 89%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+........................F............................................... [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 91%]
+........................................................................ [ 92%]
+........................................................................ [ 92%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........s............................................................... [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 96%]
+........................................................................ [ 96%]
+..................................................................F.Fs.. [ 97%]
+............................s........................................... [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+........................................................................ [ 99%]
+........................................................................ [ 99%]
+..................                                                       [100%]
+================================== FAILURES ===================================
+_________ test_the_ops_scripts_are_versioned_here_and_installed_there _________
+[gw2] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_the_ops_scripts_are_versioned_here_and_installed_there():
+        r"""`push_cold_to_das.ps1` lived ONLY in C:\TradingBotData\_tools until R10.A.
+    
+        The script that protects the evidence was itself unversioned, untested and
+        unreviewable. The repo copy is now the source of truth; `_tools` holds an
+        installed copy. If they drift, the installed one is running code nobody
+        reviewed - so this compares them byte for byte when both exist.
+        """
+        installed_root = Path("C:/TradingBotData/_tools")
+    
+        def _content(path: Path) -> str:
+            # Content, not bytes: git normalises line endings on checkout, so a
+            # byte comparison would fail on a clean clone for a reason that has
+            # nothing to do with anyone editing the running script.
+            return path.read_text(encoding="utf-8").replace("\r\n", "\n").rstrip()
+    
+        for name in ("push_cold_to_das.ps1", "snapshot_to_das.ps1", "restore_from_das.ps1"):
+            repo = SCRIPTS_DIR / "ops" / name
+            assert repo.exists(), f"{name} must be versioned in the repo"
+            installed = installed_root / name
+            if not installed.exists():
+                continue  # a fresh checkout, or a machine without the home folder
+>           assert _content(repo) == _content(installed), (
+                f"{name} differs between the repo and _tools; the installed copy is "
+                "running code nobody reviewed"
+            )
+E           AssertionError: push_cold_to_das.ps1 differs between the repo and _tools; the installed copy is running code nobody reviewed
+E           assert "<#\n    push... ==='\nexit 0" == "<#\n    push... ==='\nexit 0"
+E             
+E             Skipping 1011 identical leading characters in diff, use -v to show
+E             [0m[90m [39;49;00m ror.[90m[39;49;00m
+E             [91m- [39;49;00m[90m[39;49;00m
+E             [91m-     While Plex on the mini PC has a session open the push is skipped (exit 0),[39;49;00m[90m[39;49;00m
+E             [91m-     unless Plex has been playing for PlexFailsafeHours, then it pushes anyway.[39;49;00m[90m[39;49;00m
+E             [90m [39;49;00m [90m[39;49;00m...
+E             
+E             ...Full output truncated (118 lines hidden), use '-vv' to show
+
+tests\test_evidence_snapshot.py:355: AssertionError
+____________ test_chart_pane_outgrows_the_alert_feed_in_its_column ____________
+[gw1] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_chart_pane_outgrows_the_alert_feed_in_its_column():
+        """The declared 5:2 must actually measure that way, not invert."""
+        desk = _desk()
+        sizes = desk.alert_center.splitter.sizes()
+        desk.close()
+>       assert sizes[0] > sizes[1], (
+            f"chart pane must beat the feed tabs, measured {sizes[0]} vs {sizes[1]}"
+        )
+E       AssertionError: chart pane must beat the feed tabs, measured 353 vs 381
+E       assert 353 > 381
+
+tests\test_qt_desk_layout.py:85: AssertionError
+---------------------------- Captured stderr setup ----------------------------
+2026-10-27 14:53:36,340 INFO [legacy.py]: Outcome sweep autorun is OFF (default). Pending outcomes are finalized only by the per-symbol path; set outcome_sweep_autorun="on" once its first live session is signed off, or call sweep_pending_bounce_outcomes() by hand.
+2026-10-27 14:53:36,340 INFO [legacy.py]: After-close jobs due at 2026-10-27T14:53:36-07:00 (sweep=False, refresh=True); starting the worker.
+---------------------------- Captured stderr call -----------------------------
+2026-10-27 14:53:36,344 INFO [legacy.py]: Scanning paused.
+2026-10-27 14:53:36,345 INFO [learning.py]: Bounce learning state refreshed: 0 dimension(s), 0 segment(s).
+2026-10-27 14:53:36,346 INFO [legacy.py]: After-close learning refresh ran in SHADOW (0 segments); 0 segment(s) would change mute/proven (0 mute, 0 unmute, 0 prove). Live tiers are unchanged. Set bounce_learning_refresh_mode="live" to adopt.
+2026-10-27 14:53:36,874 INFO [legacy.py]: Connected to IB API. NextValidId=1
+2026-10-27 14:53:36,874 INFO [legacy.py]: IB Status. ReqId=-1, Code=2104, Msg=Market data farm connection is OK:usopt
+2026-10-27 14:53:36,874 INFO [legacy.py]: IB Status. ReqId=-1, Code=2104, Msg=Market data farm connection is OK:usfarm
+2026-10-27 14:53:36,874 INFO [legacy.py]: IB Status. ReqId=-1, Code=2106, Msg=HMDS data farm connection is OK:ushmds
+2026-10-27 14:53:36,874 INFO [legacy.py]: IB Status. ReqId=-1, Code=2158, Msg=Sec-def data farm connection is OK:secdefil
+2026-10-27 14:53:37,600 WARNING [legacy.py]: C:\Users\Aaron\AppData\Local\Temp\tradingbotv3-pytest-shared-kdvsb72_\longs.txt does not exist.
+2026-10-27 14:53:37,601 WARNING [legacy.py]: C:\Users\Aaron\AppData\Local\Temp\tradingbotv3-pytest-shared-kdvsb72_\shorts.txt does not exist.
+2026-10-27 14:53:37,601 WARNING [legacy.py]: C:\Users\Aaron\AppData\Local\Temp\tradingbotv3-pytest-shared-kdvsb72_\autolongs.txt does not exist.
+2026-10-27 14:53:37,601 WARNING [legacy.py]: C:\Users\Aaron\AppData\Local\Temp\tradingbotv3-pytest-shared-kdvsb72_\autoshorts.txt does not exist.
+2026-10-27 14:53:37,604 INFO [legacy.py]: Starting strategy loop (connection will auto-retry until IB is available)...
+2026-10-27 14:53:37,608 INFO [legacy.py]: Scanning paused.
+2026-10-27 14:53:37,615 INFO [legacy.py]: Outcome sweep autorun is OFF (default). Pending outcomes are finalized only by the per-symbol path; set outcome_sweep_autorun="on" once its first live session is signed off, or call sweep_pending_bounce_outcomes() by hand.
+2026-10-27 14:53:37,615 INFO [legacy.py]: After-close jobs due at 2026-10-27T14:53:37-07:00 (sweep=False, refresh=True); starting the worker.
+2026-10-27 14:53:37,619 INFO [learning.py]: Bounce learning state refreshed: 0 dimension(s), 0 segment(s).
+2026-10-27 14:53:37,620 INFO [legacy.py]: After-close learning refresh ran in SHADOW (0 segments); 0 segment(s) would change mute/proven (0 mute, 0 unmute, 0 prove). Live tiers are unchanged. Set bounce_learning_refresh_mode="live" to adopt.
+-------------------------- Captured stderr teardown ---------------------------
+2026-10-27 14:53:38,161 INFO [legacy.py]: Connected to IB API. NextValidId=1
+2026-10-27 14:53:38,161 INFO [legacy.py]: IB Status. ReqId=-1, Code=2104, Msg=Market data farm connection is OK:usopt
+2026-10-27 14:53:38,161 INFO [legacy.py]: IB Status. ReqId=-1, Code=2104, Msg=Market data farm connection is OK:usfarm
+2026-10-27 14:53:38,161 INFO [legacy.py]: IB Status. ReqId=-1, Code=2106, Msg=HMDS data farm connection is OK:ushmds
+2026-10-27 14:53:38,161 INFO [legacy.py]: IB Status. ReqId=-1, Code=2158, Msg=Sec-def data farm connection is OK:secdefil
+_ test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines _
+[gw3] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _side_market(2.0, 8.5)
+        market["rolling"]["m5"]["support"]["test_count"] = 4
+        market["rolling"]["m5"]["resistance"]["test_count"] = 1
+        d1 = market["rolling"]["d1"]
+        d1["support"] = {"score": 2.2, "state": "VERY WEAK", "test_count": 5}
+        d1["resistance"] = {"score": None, "state": "BUILDING", "test_count": 0}
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0"
+E       AssertionError: assert 'Levels: SUPP...1 sup 5 res 0' == 'Levels: LEVE...1 sup 5 res 0'
+E         
+E         [0m[91m- Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 sup 5 res 0[39;49;00m[90m[39;49;00m
+E         ?         -----[90m[39;49;00m
+E         [92m+ Levels: SUPPORT FAILING · M5 sup 4 res 1 · D1 sup 5 res 0[39;49;00m[90m[39;49;00m
+E         ?          ++++++[90m[39;49;00m
+
+tests\test_technical_integrity_rolling.py:506: AssertionError
+____ test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads _____
+[gw3] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads():
+        from technical_integrity import format_technical_integrity_snapshot
+    
+        market = _side_market(2.0, 8.5)
+        market["rolling"]["m5"]["support"]["test_count"] = 4
+        market["rolling"]["m5"]["resistance"]["test_count"] = 1
+        # No sub-reads on the D1 row: its chip part stays the pooled reading.
+        snapshot = {"session_date": "2026-10-05", "market": market}
+        chip, tooltip, _ = format_technical_integrity_snapshot(
+            snapshot, now=datetime.fromisoformat("2026-10-05T11:00:00-04:00")
+        )
+>       assert chip == "Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 ok 5.4"
+E       AssertionError: assert 'Levels: SUPP...1 · D1 ok 5.4' == 'Levels: LEVE...1 · D1 ok 5.4'
+E         
+E         [0m[91m- Levels: LEVELS FAILING · M5 sup 4 res 1 · D1 ok 5.4[39;49;00m[90m[39;49;00m
+E         ?         -----[90m[39;49;00m
+E         [92m+ Levels: SUPPORT FAILING · M5 sup 4 res 1 · D1 ok 5.4[39;49;00m[90m[39;49;00m
+E         ?          ++++++[90m[39;49;00m
+
+tests\test_technical_integrity_rolling.py:525: AssertionError
+_____________ test_trend_hour_reads_resistance_failing_end_to_end _____________
+[gw3] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_trend_hour_reads_resistance_failing_end_to_end():
+        """Supports hold and resistances break: RESISTANCE FAILING through rolling, chip and Mentor."""
+        from mentor_packs import internals_pack as ip
+        from technical_integrity import (
+            format_technical_integrity_snapshot,
+            rolling_technical_integrity,
+            technicals_verdict,
+        )
+    
+        as_of = "2026-10-02T13:00:00-04:00"
+        rolling = rolling_technical_integrity(_trend_events(), as_of=as_of)
+        m5 = rolling["m5"]
+>       assert m5["support"]["state"] == "STRONG", "all support tests held vs the hour norm"
+E       AssertionError: all support tests held vs the hour norm
+E       assert 'BUILDING' == 'STRONG'
+E         
+E         [0m[91m- STRONG[39;49;00m[90m[39;49;00m
+E         [92m+ BUILDING[39;49;00m[90m[39;49;00m
+
+tests\test_technical_integrity_rolling.py:566: AssertionError
+_______________ test_the_m5_formula_itself_has_not_been_edited ________________
+[gw0] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_the_m5_formula_itself_has_not_been_edited():
+        """The hard rule, checked rather than remembered - and narrowed, not lifted.
+    
+        ``strength_scan.py`` was fenced whole by the R8 spec's §2 and §8: R8
+        reimplements the ~20-line board orchestration in its own module and imports
+        the formula, and if this file ever needed editing the spec said stop and ask.
+    
+        **The trader asked, on 2026-09-02, in packet V1** - decision 0016 answer 9
+        makes their TC2000 scan the specification for this board, and the packet
+        names this file: *"Build the RVOL as a pure function in strength_scan.py."*
+        So the module is no longer frozen whole.
+    
+        What the fence protects is the FORMULA, and that is now checked directly:
+        every function in :data:`FENCED_FUNCTIONS` must be byte-identical to the R8
+        baseline. That is a stronger guard than "no edits at all", which could be
+        satisfied by not touching the file while the numbers changed underneath it,
+        and it is the guard the spec was actually reaching for. The golden in
+        `m5_strength_functions_v1.json` pins the same functions numerically, so a
+        rewrite that preserved the text and changed a constant is caught there.
+        """
+        import subprocess
+    
+        base = subprocess.run(
+            ["git", "merge-base", "HEAD", "4420bbf"],
+            capture_output=True, text=True, cwd=ROOT_DIR,
+        ).stdout.strip() or "4420bbf"
+        original = subprocess.run(
+            ["git", "show", f"{base}:scripts/strength_scan.py"],
+            capture_output=True, text=True, cwd=ROOT_DIR,
+        ).stdout
+>       assert original, "the R8 baseline of strength_scan.py could not be read"
+E       AssertionError: the R8 baseline of strength_scan.py could not be read
+E       assert ''
+
+tests\test_m5_strength_characterization.py:128: AssertionError
+__________ test_regime_infer_reads_a_phone_doc_note_as_a_trader_note __________
+[gw0] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_regime_infer_reads_a_phone_doc_note_as_a_trader_note():
+        import market_journal
+        from ai_jobs import regime_infer
+    
+        entry = market_journal.build_entry(
+            text="Bulls hold 570.", session_date="2026-10-08", timeframe=market_journal.TIMEFRAME_D1,
+            origin=market_journal.ORIGIN_PHONE_DOC,
+        )
+        found = regime_infer._sources_from_journal([entry], date(2026, 10, 8))
+>       assert [note["text"] for note in found["trader_notes"]] == ["Bulls hold 570."]
+E       AssertionError: assert [] == ['Bulls hold 570.']
+E         
+E         Right contains one more item: [0m[33m'[39;49;00m[33mBulls hold 570.[39;49;00m[33m'[39;49;00m[90m[39;49;00m
+E         Use -v to get more diff
+
+tests\test_market_read_inbox.py:436: AssertionError
+________ test_the_name_chart_sits_beside_the_table_and_takes_the_rest _________
+[gw2] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+panel = <ui.panels.day_review_panel.DayReviewPanel(0x1bbeceaf2d0, name="Panel") at 0x000001BBDDFAAD40>
+qapp = <PySide6.QtWidgets.QApplication(0x1ba954938d0) at 0x000001BA98034300>
+
+    def test_the_name_chart_sits_beside_the_table_and_takes_the_rest(panel, qapp):
+        panel.resize(1900, 1000)
+        panel.show()
+        qapp.processEvents()
+        try:
+            table = panel.miss_table.geometry()
+            chart = panel._name_chart_holder
+            assert chart.mapTo(panel, chart.rect().topLeft()).x() > panel.miss_table.mapTo(
+                panel, panel.miss_table.rect().topLeft()
+            ).x() + table.width() - 1
+>           assert chart.width() >= table.width() / 2, (chart.width(), table.width())
+E           AssertionError: (452, 1036)
+E           assert 452 >= (1036 / 2)
+E            +  where 452 = <built-in method width of PySide6.QtWidgets.QWidget object at 0x000001BBDDFF3C80>()
+E            +    where <built-in method width of PySide6.QtWidgets.QWidget object at 0x000001BBDDFF3C80> = <PySide6.QtWidgets.QWidget(0x1bbeceb48e0) at 0x000001BBDDFF3C80>.width
+E            +  and   1036 = <built-in method width of PySide6.QtCore.QRect object at 0x000001BBDE483900>()
+E            +    where <built-in method width of PySide6.QtCore.QRect object at 0x000001BBDE483900> = PySide6.QtCore.QRect(0, 39, 1036, 340).width
+
+tests\test_tj1l_day_review_layout.py:355: AssertionError
+_______ test_n3s_narration_tests_are_byte_identical_to_the_branch_point _______
+[gw0] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_n3s_narration_tests_are_byte_identical_to_the_branch_point():
+        for relative in N3_PINNED_FILES:
+>           base = _git("show", f"{N3_BASE_COMMIT}:{relative}")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_ws_rp_shared_report.py:1347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_ws_rp_shared_report.py:1338: in _git
+    result = subprocess.run(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (['git', '-C', 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-51c27bf', 'show', '68b1fd7b:tests/test_n3_narration_bounded.py'],)
+kwargs = {'text': True, 'stdout': -1, 'stderr': -1}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['git', '-C', 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-51c27bf', 'show', '68b1fd7b:tests/test_n3_narration_bounded.py']' returned non-zero exit status 128.
+
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\subprocess.py:571: CalledProcessError
+_____________ test_the_bounded_narration_view_itself_is_unchanged _____________
+[gw0] win32 -- Python 3.12.13 C:\Users\Aaron\TradingBotV3\.venv\Scripts\python.exe
+
+    def test_the_bounded_narration_view_itself_is_unchanged():
+        import ast
+        import inspect
+    
+        from ai_jobs import setup_research
+    
+>       base_source = _git("show", f"{N3_BASE_COMMIT}:scripts/ai_jobs/setup_research.py")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_ws_rp_shared_report.py:1358: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_ws_rp_shared_report.py:1338: in _git
+    result = subprocess.run(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (['git', '-C', 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-51c27bf', 'show', '68b1fd7b:scripts/ai_jobs/setup_research.py'],)
+kwargs = {'text': True, 'stdout': -1, 'stderr': -1}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['git', '-C', 'C:\\Users\\Aaron\\llm-harness\\wt\\qtm-51c27bf', 'show', '68b1fd7b:scripts/ai_jobs/setup_research.py']' returned non-zero exit status 128.
+
+..\..\..\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\subprocess.py:571: CalledProcessError
+============================== warnings summary ===============================
+tests/test_earnings_anchor_bridge.py::BridgeToCsvTests::test_rerun_appends_nothing_and_a_new_anchor_appends_at_the_end
+tests/test_earnings_anchor_bridge.py::BridgeToCsvTests::test_rows_land_in_the_csv_with_the_anchor_columns
+  C:\Users\Aaron\llm-harness\wt\qtm-51c27bf\scripts\master_avwap_lib\legacy.py:17832: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+    combined = pd.concat([existing, pd.DataFrame(new_rows)], ignore_index=True)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_evidence_snapshot.py::test_the_ops_scripts_are_versioned_here_and_installed_there
+FAILED tests/test_qt_desk_layout.py::test_chart_pane_outgrows_the_alert_feed_in_its_column
+FAILED tests/test_technical_integrity_rolling.py::test_chip_counts_the_decisive_tests_per_side_and_side_lines_follow_the_pooled_lines
+FAILED tests/test_technical_integrity_rolling.py::test_chip_keeps_the_pooled_d1_part_when_the_d1_row_has_no_side_reads
+FAILED tests/test_technical_integrity_rolling.py::test_trend_hour_reads_resistance_failing_end_to_end
+FAILED tests/test_m5_strength_characterization.py::test_the_m5_formula_itself_has_not_been_edited
+FAILED tests/test_market_read_inbox.py::test_regime_infer_reads_a_phone_doc_note_as_a_trader_note
+FAILED tests/test_tj1l_day_review_layout.py::test_the_name_chart_sits_beside_the_table_and_takes_the_rest
+FAILED tests/test_ws_rp_shared_report.py::test_n3s_narration_tests_are_byte_identical_to_the_branch_point
+FAILED tests/test_ws_rp_shared_report.py::test_the_bounded_narration_view_itself_is_unchanged
+10 failed, 16622 passed, 18 skipped, 2 warnings, 72 subtests passed in 971.36s (0:16:11)
